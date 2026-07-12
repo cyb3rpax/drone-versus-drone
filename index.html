@@ -508,20 +508,27 @@ function spawnFlock(cx,cz,cy){
   for(let i=0;i<n;i++){
     const g=new THREE.Group();
     const wL=new THREE.Mesh(new THREE.BoxGeometry(1.7,0.06,0.45), birdWingMat);
-    wL.position.x=-0.85; g.add(wL);
+    wL.position.x=-0.85; wL.castShadow=true; g.add(wL);
     const wR=new THREE.Mesh(new THREE.BoxGeometry(1.7,0.06,0.45), birdWingMat);
-    wR.position.x=0.85; g.add(wR);
+    wR.position.x=0.85; wR.castShadow=true; g.add(wR);
     const body=new THREE.Mesh(new THREE.ConeGeometry(0.22,1.1,6), birdBodyMat);
-    body.rotation.x=-Math.PI/2; g.add(body);
+    body.rotation.x=-Math.PI/2; body.castShadow=true; g.add(body);
     scene.add(g);
     const row=Math.ceil(i/2), side=i%2===0?1:-1;      // V formation
     flock.birds.push({g, ox:side*row*2.2, oy:-row*0.35, oz:row*2.6, flap:Math.random()*6});
   }
   flocks.push(flock);
 }
-// flocks along the route: over the water crossings and the forest
-spawnFlock(-120,420,20); spawnFlock(150,300,26); spawnFlock(-60,80,18);
-spawnFlock(180,-120,30); spawnFlock(-200,-320,22); spawnFlock(80,-560,24); spawnFlock(-40,-800,20);
+// a different sky every mission: random flock count, random placement
+function clearFlocks(){ for(const f of flocks){ for(const b of f.birds) scene.remove(b.g); } flocks.length=0; }
+function spawnAllFlocks(){
+  clearFlocks();
+  const n=6+Math.floor(Math.random()*8);            // 6–13 flocks per mission
+  for(let i=0;i<n;i++){
+    spawnFlock((Math.random()*2-1)*380, 550-Math.random()*1450, 12+Math.random()*24);
+  }
+}
+spawnAllFlocks();
 let birdCd=0;
 
 // ---------- Drone (quadcopter) ----------
@@ -592,6 +599,7 @@ const maxSpdF =()=>46+4*up.motor+DRONES[curDrone].spd;
 const accF    =()=>75+8*up.motor+DRONES[curDrone].acc;
 const maxBattF=()=>100+15*up.batt+DRONES[curDrone].batt;
 const crashTol=()=>26+2*up.frame+DRONES[curDrone].tough;
+let SPEEDF=1;   // route-length pacing: real-route editions set this so longer routes take proportionally longer to fly
 function applySkin(id){
   curSkin=id; const s=SKINS[id];
   player.mats.body.color.set(s.body);
@@ -725,7 +733,7 @@ function applySave(s){
   curSkin=(s.curSkin&&SKINS[s.curSkin]&&ownedSkins[s.curSkin])?s.curSkin:'stock';
   curDrone=(s.curDrone&&DRONES[s.curDrone]&&ownedDrones[s.curDrone])?s.curDrone:'sparrow';
   routeInfo=s.route||null;
-  if(routeInfo&&routeInfo.miles) MILE=TRIP/routeInfo.miles;
+  if(routeInfo&&routeInfo.miles){ MILE=TRIP/routeInfo.miles; SPEEDF=Math.min(3,Math.max(0.35,12.4/routeInfo.miles)); }
   applySkin(curSkin); applyDrone(curDrone);
   P.batt=maxBattF();
   moneyHUD();
@@ -895,6 +903,7 @@ $('addrConfirm').addEventListener('click',()=>{
   if(!routePending) return;
   routeInfo=routePending;
   MILE=TRIP/routeInfo.miles;                       // the 3D world now represents your real route
+  SPEEDF=Math.min(3,Math.max(0.35,12.4/routeInfo.miles));   // farther home = accurately longer flight
   saveGame();
   $('addr').style.display='none';
   banner('ROUTE SET — '+routeInfo.miles+' REAL MILES TO HARMONY MONTESSORI');
@@ -980,6 +989,7 @@ function fail(){
 function badCrash(){
   broken=PARTS[Math.floor(Math.random()*PARTS.length)];
   resetBattPickup();
+  spawnAllFlocks();
   P.pos.set(COVE.x,10,COVE.z); P.vel.set(0,0,0); P.yaw=Math.PI; P.batt=maxBattF();
   phase=1;
   $('mission').textContent='GO TO THE PARTS SHOP — follow the orange beacon';
@@ -991,6 +1001,7 @@ function complete(){
   trips++; money+=100; saveGame(); moneyHUD();
   phase=1; $('mission').textContent='FLY TO HARMONY';
   resetBattPickup();
+  spawnAllFlocks();                                  // new birds, new count, new spots
   showOverlay('complete','MISSION COMPLETE  +🪙100','#7bffb8',
     'There and back again — '+(TRIP*2/MILE).toFixed(1)+' miles round trip. You earned 100 Drone Coins (balance: 🪙'+money+'). Spend them in the hangar on upgrades, skins and new drones.','RETURN TO HANGAR');
 }
@@ -1071,7 +1082,7 @@ $('overlayBtn').addEventListener('click',()=>{
     return;
   }
   $('overlay').style.display='none';
-  if(ovMode==='fail'){ resetPlayer(); phase=1; $('mission').textContent='FLY TO HARMONY'; resetBattPickup(); }
+  if(ovMode==='fail'){ resetPlayer(); phase=1; $('mission').textContent='FLY TO HARMONY'; resetBattPickup(); spawnAllFlocks(); }
   else if(ovMode==='complete'){ resetPlayer(); openHome(); }   // back to the hangar screen
   ovMode='';
 });
@@ -1142,10 +1153,10 @@ function spawnBattPickup(){
   const bc=new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.5,55,8,1,true),
     new THREE.MeshBasicMaterial({color:0x4db8ff,transparent:true,opacity:0.14,side:THREE.DoubleSide,depthWrite:false,fog:false}));
   bc.position.y=27; g.add(bc);
-  const f=0.3+Math.random()*0.4;                     // somewhere near the middle of the crossing
-  const x=COVE.x+(HARMONY.x-COVE.x)*f+(Math.random()*2-1)*100;
-  const z=COVE.z+(HARMONY.z-COVE.z)*f+(Math.random()*2-1)*100;
-  g.position.set(x, 13+Math.random()*15, z);
+  const f=0.15+Math.random()*0.7;                    // anywhere along the route — different spot every time
+  const x=COVE.x+(HARMONY.x-COVE.x)*f+(Math.random()*2-1)*150;
+  const z=COVE.z+(HARMONY.z-COVE.z)*f+(Math.random()*2-1)*150;
+  g.position.set(x, 10+Math.random()*24, z);
   scene.add(g);
   battPickup={g, t:Math.random()*6};
 }
@@ -1196,7 +1207,7 @@ function loop(){
 
   if(P.alive && !uiBlocked()){
     const limp=!!broken;                              // broken part: barely flyable, just enough to reach the shop
-    const acc=accF()*(limp?0.3:1), cap=maxSpdF()*(limp?0.35:1);
+    const acc=accF()*SPEEDF*(limp?0.3:1), cap=maxSpdF()*SPEEDF*(limp?0.35:1);
     const turn=(keys['ArrowLeft']||keys['KeyQ']?1:0)-(keys['ArrowRight']||keys['KeyE']?1:0);
     P.yaw+=turn*2.2*dt;
     fwd.set(-Math.sin(P.yaw),0,-Math.cos(P.yaw));
@@ -1281,7 +1292,7 @@ function loop(){
 
     // ---- battery drain (only while airborne, not while charging) ----
     if(!charging && P.pos.y>4.5){
-      P.batt=Math.max(0,P.batt-DRAIN*dt);
+      P.batt=Math.max(0,P.batt-DRAIN*SPEEDF*dt);    // drain scales with pacing so one-way stays ~60%
       if(P.batt<=0) fail();
     }
 
