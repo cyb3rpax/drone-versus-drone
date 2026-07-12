@@ -867,7 +867,7 @@ async function geocodeAddr(){
       return;
     }
     const lat=+hit.lat, lon=+hit.lon;
-    const miles=Math.max(1, +haversineMi(lat,lon,HARMONY_GEO.lat,HARMONY_GEO.lon).toFixed(1));
+    const miles=Math.max(0.1, +haversineMi(lat,lon,HARMONY_GEO.lat,HARMONY_GEO.lon).toFixed(1));   // true distance, even under a mile
     routePending={addr:(hit.display_name||q).split(',').slice(0,2).join(','), lat, lon, miles};
     $('addrErr').textContent='';
     $('addrMapWrap').style.display='block';
