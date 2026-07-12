@@ -564,14 +564,12 @@ scene.add(player.group);
 const P={pos:player.group.position, vel:new THREE.Vector3(), yaw:0, batt:100, alive:true};
 
 // ---------- Garage: upgrades, skins & drones ----------
-const up={batt:0,motor:0,frame:0,luck:0};
+const up={batt:0,motor:0,frame:0};
 const UPS=[
   {k:'batt', name:'BATTERY', desc:'+15 battery capacity per level',                    costs:[120,220,380,600,900]},
   {k:'motor',name:'MOTORS',  desc:'+4 top speed & stronger thrust per level',          costs:[150,260,420,650,950]},
-  {k:'frame',name:'AIRFRAME',desc:'+2 crash tolerance per level — survive harder hits',costs:[130,240,400,620,920]},
-  {k:'luck', name:'LUCKY CHARM 🍀',desc:'+6% luck per level — crash saves, double pay, more lucky crates',costs:[100,200,350,550,800]}
+  {k:'frame',name:'AIRFRAME',desc:'+2 crash tolerance per level — survive harder hits',costs:[130,240,400,620,920]}
 ];
-const luckF=()=>0.10+0.06*up.luck;      // base 10% luck, up to 40%
 const SKINS={
   stock:  {name:'STOCK',      body:0x9fb8d8, accent:0x35d0ff, cost:0},
   ember:  {name:'EMBER',      body:0x9a3a1f, accent:0xffa040, cost:150},
@@ -719,7 +717,7 @@ function snapshotSave(){
 function applySave(s){
   s=s||{};
   money=s.money||0; trips=s.trips||0;
-  up.batt=0; up.motor=0; up.frame=0; up.luck=0; Object.assign(up,s.up||{});
+  up.batt=0; up.motor=0; up.frame=0; Object.assign(up,s.up||{});
   for(const k in ownedSkins) delete ownedSkins[k];
   Object.assign(ownedSkins,{stock:true},s.ownedSkins||{});
   for(const k in ownedDrones) delete ownedDrones[k];
@@ -837,7 +835,7 @@ $('logoutBtn').addEventListener('click',()=>{
 function moneyHUD(){
   $('money').textContent='🪙 '+money+' DC'+(money<0?' (DEBT)':'');
   $('money').style.color=money<0?'#ff8a8a':'#ffd66b';
-  $('trips').textContent='Round trips: '+trips+' · 🍀 '+Math.round(luckF()*100)+'%';
+  $('trips').textContent='Round trips: '+trips;
 }
 // ---------- Home page (hangar) ----------
 function uiBlocked(){ return $('splash').style.display!=='none'||$('overlay').style.display==='flex'||$('home').style.display==='flex'||$('signup').style.display==='flex'||$('addr').style.display==='flex'; }
@@ -980,12 +978,8 @@ function fail(){
     'The battery ran dry. One charge can’t make the round trip — top up at Harmony before turning back.','FLY AGAIN');
 }
 function badCrash(){
-  if(Math.random()<luckF()){                        // 🍀 luck save: the drone somehow holds together
-    P.vel.multiplyScalar(-0.35);
-    banner('🍀 LUCKY! THE DRONE HELD TOGETHER');
-    return;
-  }
   broken=PARTS[Math.floor(Math.random()*PARTS.length)];
+  resetBattPickup();
   P.pos.set(COVE.x,10,COVE.z); P.vel.set(0,0,0); P.yaw=Math.PI; P.batt=maxBattF();
   phase=1;
   $('mission').textContent='GO TO THE PARTS SHOP — follow the orange beacon';
@@ -994,12 +988,11 @@ function badCrash(){
     'That was a bad one — you were hauled back to the hangar and your '+broken.name+' is wrecked. Limp over to the PARTS SHOP (orange beacon next to the hangar) and buy a new one for 🪙'+broken.cost+'.','OK — HEAD TO THE SHOP');
 }
 function complete(){
-  const lucky=Math.random()<luckF();                // 🍀 double-pay roll
-  const pay=lucky?200:100;
-  trips++; money+=pay; saveGame(); moneyHUD();
+  trips++; money+=100; saveGame(); moneyHUD();
   phase=1; $('mission').textContent='FLY TO HARMONY';
-  showOverlay('complete', lucky?'🍀 LUCKY RUN — DOUBLE PAY +🪙200':'MISSION COMPLETE  +🪙100','#7bffb8',
-    'There and back again — '+(TRIP*2/MILE).toFixed(1)+' miles round trip. '+(lucky?'Fortune smiled: your pay was DOUBLED to 200 Drone Coins!':'You earned 100 Drone Coins.')+' Balance: 🪙'+money+'.','RETURN TO HANGAR');
+  resetBattPickup();
+  showOverlay('complete','MISSION COMPLETE  +🪙100','#7bffb8',
+    'There and back again — '+(TRIP*2/MILE).toFixed(1)+' miles round trip. You earned 100 Drone Coins (balance: 🪙'+money+'). Spend them in the hangar on upgrades, skins and new drones.','RETURN TO HANGAR');
 }
 // ---------- Repair bench: drag each screw to the right spot, then turn it ----------
 let screwing=false, screwIdx=0, screwStep=0, benchStage='', dragging=false;
@@ -1078,7 +1071,7 @@ $('overlayBtn').addEventListener('click',()=>{
     return;
   }
   $('overlay').style.display='none';
-  if(ovMode==='fail'){ resetPlayer(); phase=1; $('mission').textContent='FLY TO HARMONY'; }
+  if(ovMode==='fail'){ resetPlayer(); phase=1; $('mission').textContent='FLY TO HARMONY'; resetBattPickup(); }
   else if(ovMode==='complete'){ resetPlayer(); openHome(); }   // back to the hangar screen
   ovMode='';
 });
@@ -1094,9 +1087,9 @@ function drawMap(){
   for(const is of islands) mapX.fillRect(mx(is.x)-1.5,mz(is.z)-1.5,3,3);
   mapX.fillStyle='#5cb8ff'; mapX.fillRect(mx(COVE.x)-4,mz(COVE.z)-4,8,8);
   mapX.fillStyle='#7bffb8'; mapX.fillRect(mx(HARMONY.x)-4,mz(HARMONY.z)-4,8,8);
-  if(luckyCrate){
-    mapX.fillStyle='#2eea8b';
-    mapX.beginPath(); mapX.arc(mx(luckyCrate.g.position.x),mz(luckyCrate.g.position.z),3,0,Math.PI*2); mapX.fill();
+  if(battPickup){
+    mapX.fillStyle='#4db8ff';
+    mapX.beginPath(); mapX.arc(mx(battPickup.g.position.x),mz(battPickup.g.position.z),3,0,Math.PI*2); mapX.fill();
   }
   mapX.save();
   mapX.translate(mx(P.pos.x),mz(P.pos.z));
@@ -1128,31 +1121,33 @@ function collide(pos){
   return null;
 }
 
-// ---------- 🍀 Lucky crates ----------
-let luckyCrate=null;
-function spawnLuckyCrate(){
-  const g=new THREE.Group();
-  const box=new THREE.Mesh(new THREE.BoxGeometry(2.2,2.2,2.2), new THREE.MeshBasicMaterial({color:0x2eea8b}));
-  g.add(box);
-  const ring=new THREE.Mesh(new THREE.TorusGeometry(2.4,0.18,8,22), new THREE.MeshBasicMaterial({color:0xbfffdc,transparent:true,opacity:0.85}));
-  g.add(ring);
-  const bc=new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.5,55,8,1,true),
-    new THREE.MeshBasicMaterial({color:0x2eea8b,transparent:true,opacity:0.15,side:THREE.DoubleSide,depthWrite:false,fog:false}));
-  bc.position.y=27; g.add(bc);
-  const x=P.pos.x-Math.sin(P.yaw)*140+(Math.random()*2-1)*60;
-  const z=P.pos.z-Math.cos(P.yaw)*140+(Math.random()*2-1)*60;
-  g.position.set(x, 12+Math.random()*18, z);
-  scene.add(g);
-  luckyCrate={g, ring, life:25};
-  banner('🍀 LUCKY CRATE SPOTTED — GRAB IT!');
+// ---------- 🔋 Field battery: ONE floats along the route each leg — grab it for a full refuel ----------
+let battPickup=null, battTaken=false;
+function resetBattPickup(){
+  if(battPickup){ scene.remove(battPickup.g); battPickup=null; }
+  battTaken=false;
 }
-function collectLuckyCrate(){
-  const r=Math.random();
-  if(r<0.5){ const c=20+Math.floor(Math.random()*31); money+=c; banner('🍀 LUCKY CRATE — 🪙'+c); }
-  else if(r<0.8){ P.batt=Math.min(maxBattF(),P.batt+40); banner('🍀 LUCKY CRATE — +40 BATTERY'); }
-  else { money+=100; banner('🍀🍀 JACKPOT CRATE — 🪙100!'); }
-  saveGame(); moneyHUD();
-  scene.remove(luckyCrate.g); luckyCrate=null;
+function spawnBattPickup(){
+  const g=new THREE.Group();
+  const body=new THREE.Mesh(new THREE.CylinderGeometry(1.1,1.1,3,14), new THREE.MeshStandardMaterial({color:0x1a7ac8,metalness:0.5,roughness:0.35}));
+  g.add(body);
+  const band=new THREE.Mesh(new THREE.CylinderGeometry(1.12,1.12,0.7,14), new THREE.MeshStandardMaterial({color:0xd8e4f0,metalness:0.6,roughness:0.3}));
+  band.position.y=1.0; g.add(band);
+  const tip=new THREE.Mesh(new THREE.CylinderGeometry(0.45,0.45,0.5,10), new THREE.MeshStandardMaterial({color:0xd8e4f0,metalness:0.7,roughness:0.3}));
+  tip.position.y=1.75; g.add(tip);
+  const bolt=new THREE.Mesh(new THREE.BoxGeometry(0.5,1.4,0.12), new THREE.MeshBasicMaterial({color:0xffd66b}));
+  bolt.position.z=1.12; g.add(bolt);
+  const bolt2=bolt.clone(); bolt2.position.z=-1.12; g.add(bolt2);
+  const lt=new THREE.PointLight(0x4db8ff,0.9,18); g.add(lt);
+  const bc=new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.5,55,8,1,true),
+    new THREE.MeshBasicMaterial({color:0x4db8ff,transparent:true,opacity:0.14,side:THREE.DoubleSide,depthWrite:false,fog:false}));
+  bc.position.y=27; g.add(bc);
+  const f=0.3+Math.random()*0.4;                     // somewhere near the middle of the crossing
+  const x=COVE.x+(HARMONY.x-COVE.x)*f+(Math.random()*2-1)*100;
+  const z=COVE.z+(HARMONY.z-COVE.z)*f+(Math.random()*2-1)*100;
+  g.position.set(x, 13+Math.random()*15, z);
+  scene.add(g);
+  battPickup={g, t:Math.random()*6};
 }
 
 // ---------- Engine & wind audio ----------
@@ -1265,20 +1260,23 @@ function loop(){
       charging=true;
     }
     if(overHarmony && phase===1 && P.batt>maxBattF()*0.95){
-      phase=2;
+      phase=2;                                        // ONE field battery per round trip — no refresh here
       $('mission').textContent='RECHARGED! NOW FLY HOME';
       banner('WELCOME TO HARMONY — head home for your 🪙100');
     }
     if(overCove && phase===2) complete();
 
-    // ---- 🍀 lucky crates drift in now and then (more often with Lucky Charm) ----
-    if(!luckyCrate && !broken && Math.random()<0.00045*(1+up.luck*0.5)) spawnLuckyCrate();
-    if(luckyCrate){
-      luckyCrate.life-=dt;
-      luckyCrate.g.rotation.y+=dt*1.4;
-      luckyCrate.ring.rotation.x+=dt*2.2;
-      if(luckyCrate.life<=0){ scene.remove(luckyCrate.g); luckyCrate=null; }
-      else if(P.pos.distanceTo(luckyCrate.g.position)<6) collectLuckyCrate();
+    // ---- 🔋 ONE floating field battery per round trip — full refuel ----
+    if(!battPickup && !battTaken) spawnBattPickup();
+    if(battPickup){
+      battPickup.t+=dt;
+      battPickup.g.rotation.y+=dt*1.2;
+      battPickup.g.position.y+=Math.sin(battPickup.t*2)*0.02;
+      if(P.pos.distanceTo(battPickup.g.position)<6){
+        P.batt=maxBattF();
+        banner('🔋 FIELD BATTERY — FULLY RECHARGED');
+        scene.remove(battPickup.g); battPickup=null; battTaken=true;
+      }
     }
 
     // ---- battery drain (only while airborne, not while charging) ----
