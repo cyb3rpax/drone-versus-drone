@@ -55,6 +55,37 @@ export default async (req)=>{
       await accounts.setJSON(a.email,a);
       return json(200,{ok:true});
     }
+    // --- coin codes: sell packs, hand out a code, player redeems it here ---
+    if(route==='redeem'&&req.method==='POST'){
+      const a=await authed();
+      if(!a) return json(401,{error:'Not logged in.'});
+      const b=await req.json();
+      const code=String(b.code||'').trim().toUpperCase();
+      if(!code) return json(400,{error:'Enter a code.'});
+      const codes=getStore('codes');
+      const c=await codes.get(code,{type:'json'});
+      if(!c) return json(404,{error:'That code isn’t valid.'});
+      if(c.used) return json(409,{error:'That code was already redeemed.'});
+      c.used=true; c.by=a.email; c.at=Date.now();
+      await codes.setJSON(code,c);
+      return json(200,{coins:c.coins});
+    }
+    if(route==='gencode'&&req.method==='GET'){
+      const secret=url.searchParams.get('secret')||'';
+      if(!process.env.ADMIN_SECRET||secret!==process.env.ADMIN_SECRET){
+        return json(403,{error:'Owner only. Set an ADMIN_SECRET environment variable in Netlify, then call /api/gencode?secret=YOURSECRET&coins=500&n=5'});
+      }
+      const coins=Math.max(1,parseInt(url.searchParams.get('coins')||'500',10));
+      const n=Math.min(20,Math.max(1,parseInt(url.searchParams.get('n')||'1',10)));
+      const codes=getStore('codes');
+      const out=[];
+      for(let i=0;i<n;i++){
+        const code='DC-'+crypto.randomBytes(4).toString('hex').toUpperCase();
+        await codes.setJSON(code,{coins,used:false,created:Date.now()});
+        out.push(code);
+      }
+      return json(200,{coins,codes:out});
+    }
     return json(404,{error:'Not found.'});
   }catch(e){
     return json(500,{error:'Server error.'});
