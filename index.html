@@ -933,7 +933,7 @@ $('addrConfirm').addEventListener('click',()=>{
   banner('ROUTE SET — '+routeInfo.miles+' REAL MILES TO HARMONY MONTESSORI');
   openHome();
 });
-function openHome(){ renderHome(); $('home').style.display='flex'; }
+function openHome(){ renderHome(); $('home').style.display='flex'; claimPending(); }
 function closeHome(){
   if(!account){ initAccount(); return; }            // no account, no flying
   $('home').style.display='none';
@@ -1002,8 +1002,14 @@ function renderHome(){
     btn.innerHTML='<b>🪙 '+p.coins+'</b>'+p.price;
     btn.addEventListener('click',()=>{
       if(p.url){
-        window.open(p.url,'_blank');
-        $('storeNote').textContent='After you pay, you’ll get a coin code — come back and redeem it below.';
+        let link=p.url;
+        if(account&&account.email){                    // tag the checkout with this pilot's account
+          const ref=btoa(account.email).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+          link+=(link.includes('?')?'&':'?')+'client_reference_id='+ref+'&prefilled_email='+encodeURIComponent(account.email);
+        }
+        window.open(link,'_blank');
+        $('storeNote').textContent='Complete the payment in the new tab — your coins land here automatically a few seconds after. ✨';
+        startClaimPolling();
       } else {
         $('storeNote').textContent='Store opening soon — payment links aren’t connected yet. Got a coin code? Redeem it below.';
       }
@@ -1025,6 +1031,28 @@ $('redeemBtn').addEventListener('click',async ()=>{
   banner('💳 +🪙'+res.coins+' ADDED TO YOUR ACCOUNT');
 });
 $('codeIn').addEventListener('keydown',e=>{ if(e.key==='Enter') $('redeemBtn').click(); });
+// ---- automatic coin delivery after Stripe payments ----
+let claimT=null, claimUntil=0;
+async function claimPending(){
+  if(!REMOTE||!account||!account.token) return;
+  const res=await api('claim',{},account.token).catch(()=>null);
+  if(res&&res.coins>0){
+    money+=res.coins;
+    saveGame(); moneyHUD();
+    if($('home').style.display==='flex') renderHome();
+    $('storeNote').textContent='✅ Payment received — +🪙'+res.coins+' added to your account!';
+    banner('💳 PAYMENT RECEIVED — +🪙'+res.coins);
+  }
+}
+function startClaimPolling(){
+  claimUntil=Date.now()+5*60*1000;                   // watch for the payment for 5 minutes
+  if(claimT) clearInterval(claimT);
+  claimT=setInterval(()=>{
+    if(Date.now()>claimUntil){ clearInterval(claimT); claimT=null; return; }
+    claimPending();
+  },6000);
+}
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) claimPending(); });
 let bannerT=null;
 function banner(t){ const b=$('banner'); b.textContent=t; b.style.opacity=1; clearTimeout(bannerT); bannerT=setTimeout(()=>b.style.opacity=0,2200); }
 function showOverlay(mode,title,color,text,btn){

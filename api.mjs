@@ -55,6 +55,43 @@ export default async (req)=>{
       await accounts.setJSON(a.email,a);
       return json(200,{ok:true});
     }
+    // --- Stripe webhook: coins credit themselves the moment someone pays ---
+    if(route==='stripe-webhook'&&req.method==='POST'){
+      const secret=process.env.STRIPE_WEBHOOK_SECRET||'';
+      if(!secret) return json(503,{error:'Set STRIPE_WEBHOOK_SECRET in Netlify environment variables.'});
+      const payload=await req.text();
+      const sig=req.headers.get('stripe-signature')||'';
+      const t=(sig.match(/t=(\d+)/)||[])[1];
+      const v1=(sig.match(/v1=([0-9a-f]+)/)||[])[1];
+      if(!t||!v1) return json(400,{error:'bad signature'});
+      const expected=crypto.createHmac('sha256',secret).update(t+'.'+payload).digest('hex');
+      if(expected!==v1) return json(400,{error:'bad signature'});
+      let ev; try{ ev=JSON.parse(payload); }catch(e){ return json(400,{error:'bad json'}); }
+      if(ev.type==='checkout.session.completed'){
+        const s=(ev.data&&ev.data.object)||{};
+        let email='';
+        try{
+          const ref=String(s.client_reference_id||'');
+          if(ref) email=Buffer.from(ref.replace(/-/g,'+').replace(/_/g,'/'),'base64').toString('utf8').toLowerCase();
+        }catch(e){}
+        if(!email&&s.customer_details&&s.customer_details.email) email=String(s.customer_details.email).toLowerCase();
+        const amount=s.amount_total||0;                       // cents
+        const coins=amount>=499?5000:amount>=199?1500:amount>=99?500:0;
+        if(email&&coins){
+          const a=await accounts.get(email,{type:'json'});
+          if(a){ a.pending=(a.pending||0)+coins; await accounts.setJSON(email,a); }
+        }
+      }
+      return json(200,{received:true});
+    }
+    // --- players collect webhook-credited coins here ---
+    if(route==='claim'&&req.method==='POST'){
+      const a=await authed();
+      if(!a) return json(401,{error:'Not logged in.'});
+      const p=a.pending||0;
+      if(p>0){ a.pending=0; await accounts.setJSON(a.email,a); }
+      return json(200,{coins:p});
+    }
     // --- coin codes: sell packs, hand out a code, player redeems it here ---
     if(route==='redeem'&&req.method==='POST'){
       const a=await authed();
