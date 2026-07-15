@@ -68,8 +68,12 @@
   #redeemBtn{padding:10px 22px;border-radius:9px;border:1px solid #7bffb8;background:rgba(30,120,80,.5);color:#eafff3;font-weight:700;cursor:pointer;font-size:12px}
   #redeemBtn:hover{background:rgba(40,160,105,.7)}
   #storeNote{font-size:11px;color:#9a8ab8;margin-top:8px;min-height:14px;line-height:1.5}
-  #flyBtn{margin-top:16px;width:100%;padding:14px;border-radius:12px;border:1px solid #7bffb8;background:rgba(30,120,80,.5);color:#eafff3;font-size:18px;font-weight:700;letter-spacing:3px;cursor:pointer}
-  #flyBtn:hover{background:rgba(40,160,105,.7)}
+  #flyBtn{margin:14px 0 4px;width:100%;padding:18px;border-radius:14px;border:2px solid #7bffb8;
+    background:linear-gradient(90deg,rgba(30,140,90,.85),rgba(45,190,120,.85),rgba(30,140,90,.85));
+    color:#fff;font-size:22px;font-weight:800;letter-spacing:3px;cursor:pointer;
+    box-shadow:0 0 24px rgba(123,255,184,.55);animation:flyPulse 1.6s infinite}
+  #flyBtn:hover{transform:scale(1.02);box-shadow:0 0 36px rgba(123,255,184,.8)}
+  @keyframes flyPulse{50%{box-shadow:0 0 40px rgba(123,255,184,.9)}}
   #signup{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:linear-gradient(rgba(8,5,18,.96),rgba(8,5,18,.99));z-index:40;color:#f3ecff;font-family:'Segoe UI',Arial,sans-serif}
   #signupBox{width:380px;background:rgba(22,16,42,.98);border:1px solid #b98aff;border-radius:18px;padding:30px 36px;box-shadow:0 0 60px rgba(140,80,255,.35);text-align:center}
   #signupBox h1{margin:0;font-size:26px;color:#d9b8ff;letter-spacing:3px}
@@ -254,6 +258,7 @@
   <div id="homeSub">Drone courier of the archipelago · fly the round trip, earn Drone Coins, build your fleet</div>
   <div id="coinBig">🪙 0 DRONE COINS</div>
   <div id="homeTrips"></div>
+  <button id="flyBtn">🚁 ▲ FLY THE MISSION ▲</button>
   <div class="hSect"><h2>UPGRADES</h2><div id="homeUps"></div></div>
   <div class="hSect"><h2>SKINS</h2><div id="skinRow"></div></div>
   <div class="hSect"><h2>DRONES</h2><div id="droneRow"></div></div>
@@ -265,7 +270,6 @@
     </div>
     <div id="storeNote"></div>
   </div>
-  <button id="flyBtn">▲ FLY THE MISSION</button>
 </div></div>
 <div id="overlay"><h1 id="ovTitle"></h1><p id="ovText"></p>
   <div id="bench">
@@ -466,89 +470,92 @@ const harmonyBoxes=[];
   scene.add(harmonyG);
 })();
 
-// the landmass between the settlements — grass, hills and tall pines to climb over
-const LAND={x:0, z:-150, r:620};
-const land=new THREE.Mesh(new THREE.CylinderGeometry(LAND.r,LAND.r+20,4,40), new THREE.MeshStandardMaterial({map:grassTex,roughness:1}));
-land.position.set(LAND.x,1,LAND.z); scene.add(land);
-function onLand(x,z){ return Math.hypot(x-LAND.x,z-LAND.z)<LAND.r; }
-function farFromPads(x,z,m){ return Math.hypot(x-COVE.x,z-COVE.z)>m && Math.hypot(x-HARMONY.x,z-HARMONY.z)>m; }
-
-// rolling hills
-for(let i=0;i<17;i++){
-  const x=(Math.random()*2-1)*480, z=LAND.z+(Math.random()*2-1)*480;
-  if(!onLand(x,z)||!farFromPads(x,z,90)) continue;
-  const r=35+Math.random()*50, h=26+Math.random()*46;
-  const hill=new THREE.Mesh(new THREE.SphereGeometry(r,16,12), new THREE.MeshStandardMaterial({map:grassTex,color:0xc9d8c0,roughness:1}));
-  hill.scale.y=h/r; hill.position.set(x,2,z); hill.rotation.y=Math.random()*3; scene.add(hill);
-  addSolid(x,h/2,z,r*1.1,h,r*1.1);
-}
-// tall pines, each slightly different like a real forest
+// ---------- Route terrain: the WHOLE map is generated to fit the route, however long ----------
+const islands=[];                                 // rock positions for the minimap
+const landDiscs=[];                               // grassy islands: ground height + tree placement
+const terrainMeshes=[];
 const trunkMat=new THREE.MeshStandardMaterial({color:0x4a3626,roughness:1});
-for(let i=0;i<60;i++){
-  const x=(Math.random()*2-1)*540, z=LAND.z+(Math.random()*2-1)*540;
-  if(!onLand(x,z)||!farFromPads(x,z,70)) continue;
-  const th=24+Math.random()*24;                                   // tall trunks now
-  const lean=(Math.random()-0.5)*0.06;
-  const shade=new THREE.Color(0x1e4d2e); shade.offsetHSL((Math.random()-0.5)*0.03,(Math.random()-0.5)*0.1,(Math.random()-0.5)*0.06);
-  const pineMat=new THREE.MeshStandardMaterial({color:shade,roughness:1});
-  const trunk=new THREE.Mesh(new THREE.CylinderGeometry(1,1.9,th,8), trunkMat);
-  trunk.position.set(x,th/2+2,z); trunk.rotation.z=lean; scene.add(trunk);
-  let cy=th+2;
-  for(let c=0;c<5;c++){
-    const cr=11.5-c*2.0;
-    const cone=new THREE.Mesh(new THREE.ConeGeometry(cr,9,9), pineMat);
-    cone.position.set(x+lean*cy,cy+3.5,z); scene.add(cone); cy+=5.6;
+const rockMatT=new THREE.MeshLambertMaterial({color:0x3e3850});
+const coneMatT=new THREE.MeshLambertMaterial({color:0x2e6a4a});
+function onLand(x,z){ for(const d of landDiscs){ if(Math.hypot(x-d.x,z-d.z)<d.r) return true; } return false; }
+function farFromPads(x,z,m){
+  return Math.hypot(x-COVE.x,z-COVE.z)>m && Math.hypot(x-HARMONY.x,z-HARMONY.z)>m && Math.hypot(x-SHOP.x,z-SHOP.z)>Math.min(m,70);
+}
+function addT(m){ m.castShadow=true; m.receiveShadow=true; scene.add(m); terrainMeshes.push(m); return m; }
+function buildRouteTerrain(){
+  for(const m of terrainMeshes) scene.remove(m);
+  terrainMeshes.length=0; landDiscs.length=0; islands.length=0;
+  const z0=COVE.z-280, z1=HARMONY.z+280;
+  const span=Math.max(300, z0-z1);
+  // grassy landmasses spread evenly across the whole crossing
+  const nLand=Math.max(1, Math.round(span/900));
+  for(let li=0; li<nLand; li++){
+    const cz=z0-span*(li+0.5)/nLand;
+    const cx=(Math.random()*2-1)*170;
+    const r=Math.max(240, Math.min(600, span/nLand*0.42));
+    landDiscs.push({x:cx,z:cz,r:r});
+    const land=addT(new THREE.Mesh(new THREE.CylinderGeometry(r,r+20,4,40), new THREE.MeshStandardMaterial({map:grassTex,roughness:1})));
+    land.position.set(cx,1,cz);
+    // rolling hills
+    const nH=Math.max(4, Math.round(r/40));
+    for(let i=0;i<nH;i++){
+      const x=cx+(Math.random()*2-1)*r*0.78, z=cz+(Math.random()*2-1)*r*0.78;
+      if(!onLand(x,z)||!farFromPads(x,z,90)) continue;
+      const hr=35+Math.random()*50, h=26+Math.random()*46;
+      const hill=addT(new THREE.Mesh(new THREE.SphereGeometry(hr,16,12), new THREE.MeshStandardMaterial({map:grassTex,color:0xc9d8c0,roughness:1})));
+      hill.scale.y=h/hr; hill.position.set(x,2,z); hill.rotation.y=Math.random()*3;
+      addSolid(x,h/2,z,hr*1.1,h,hr*1.1);
+    }
+    // tall pines
+    const nT=Math.max(10, Math.round(r/9));
+    for(let i=0;i<nT;i++){
+      const x=cx+(Math.random()*2-1)*r*0.85, z=cz+(Math.random()*2-1)*r*0.85;
+      if(!onLand(x,z)||!farFromPads(x,z,70)) continue;
+      const th=24+Math.random()*24, lean=(Math.random()-0.5)*0.06;
+      const shade=new THREE.Color(0x1e4d2e); shade.offsetHSL((Math.random()-0.5)*0.03,(Math.random()-0.5)*0.1,(Math.random()-0.5)*0.06);
+      const pineMat=new THREE.MeshStandardMaterial({color:shade,roughness:1});
+      const trunk=addT(new THREE.Mesh(new THREE.CylinderGeometry(1,1.9,th,8), trunkMat));
+      trunk.position.set(x,th/2+2,z); trunk.rotation.z=lean;
+      let cy=th+2;
+      for(let c=0;c<5;c++){
+        const cone=addT(new THREE.Mesh(new THREE.ConeGeometry(11.5-c*2.0,9,9), pineMat));
+        cone.position.set(x+lean*cy,cy+3.5,z); cy+=5.6;
+      }
+      addSolid(x,(cy+2)/2,z,11,cy+2,11);
+    }
   }
-  addSolid(x,(cy+2)/2,z,11,cy+2,11);
+  // sea rocks along the whole way
+  const nR=Math.max(12, Math.round(span/60));
+  for(let i=0;i<nR;i++){
+    const z=z0-Math.random()*span;
+    const x=(Math.random()*2-1)*400;
+    if(onLand(x,z)) continue;
+    if(Math.abs(x)<40 && Math.random()<0.5) continue;       // keep a rough corridor
+    if(!farFromPads(x,z,120)) continue;
+    const r=14+Math.random()*26, h=6+Math.random()*20;
+    const rock=addT(new THREE.Mesh(new THREE.SphereGeometry(r,10,8), rockMatT));
+    rock.scale.y=h/r; rock.position.set(x,1,z);
+    addSolid(x,h/2,z,r*1.4,h,r*1.4);
+    islands.push({x,z});
+    if(Math.random()<0.5){
+      const tree=addT(new THREE.Mesh(new THREE.ConeGeometry(4,10,7), coneMatT));
+      tree.position.set(x+r*0.3,h+5,z);
+    }
+  }
 }
 
-// islands along the way
-const islands=[];
-for(let i=0;i<28;i++){
-  const z=COVE.z-150-Math.random()*(TRIP-320);
-  const x=(Math.random()*2-1)*380;
-  if(Math.abs(x)<40 && Math.random()<0.5) continue;         // keep a rough corridor
-  const r=14+Math.random()*26, h=6+Math.random()*20;
-  const rock=new THREE.Mesh(new THREE.SphereGeometry(r,10,8), new THREE.MeshLambertMaterial({color:0x3e3850}));
-  rock.scale.y=h/r; rock.position.set(x,1,z); scene.add(rock);
-  addSolid(x,h/2,z,r*1.4,h,r*1.4);
-  islands.push({x,z});
-  if(Math.random()<0.6){
-    const tree=new THREE.Mesh(new THREE.ConeGeometry(4,10,7), new THREE.MeshLambertMaterial({color:0x2e6a4a}));
-    tree.position.set(x+r*0.3,h+5,z); scene.add(tree);
-  }
-}
-
-// ---------- Movable route: Harmony can sit at any true distance ----------
-const BASE_SOLIDS=solids.length;                 // everything static is registered by now
-const extRocks=[];
-const extRockMat=new THREE.MeshStandardMaterial({map:rockTex,roughness:1});
+// ---------- Movable route: the ENTIRE map rebuilds to the true distance ----------
+const BASE_SOLIDS=solids.length;                 // only the Cove & shop are static
 function setHarmonyPos(zNew){
   HARMONY.set(0,0,zNew);
   harmonyG.position.set(0,0,zNew);
   TRIP=COVE.distanceTo(HARMONY);
   BOUND.zMin=zNew-300;
-  // rebuild dynamic collision boxes: the town's buildings at their new home
-  solids.length=BASE_SOLIDS;
+  solids.length=BASE_SOLIDS;                     // town buildings at their new home
   for(const b of harmonyBoxes) addSolid(b.x, b.h/2+2, zNew+b.z, b.w, b.h, b.d);
-  // long routes: scatter rocks through the extra stretch of sea so it isn't empty
-  for(const m of extRocks) scene.remove(m);
-  extRocks.length=0;
-  if(zNew<-1200){
-    const n=Math.floor((-1200-zNew)/110);
-    for(let i=0;i<n;i++){
-      const z=(zNew+220)+Math.random()*(-1250-(zNew+220));
-      const x=(Math.random()*2-1)*420;
-      const r=12+Math.random()*24, h=8+Math.random()*24;
-      const rock=new THREE.Mesh(new THREE.SphereGeometry(r,10,8), extRockMat);
-      rock.scale.y=h/r; rock.position.set(x,1,z);
-      rock.castShadow=true; rock.receiveShadow=true;
-      scene.add(rock); extRocks.push(rock);
-      addSolid(x,h/2,z,r*1.3,h,r*1.3);
-    }
-  }
+  buildRouteTerrain();                           // fresh landmasses, hills, forests & rocks for the whole span
 }
-setHarmonyPos(HARMONY.z);                        // register the default town collisions
+setHarmonyPos(HARMONY.z);                        // build the default world
 
 // ---------- Birds: flocks circling the route — hit one and you'll know ----------
 const flocks=[];
@@ -649,9 +656,9 @@ const ownedDrones={sparrow:true}; let curDrone='sparrow';
 // COIN STORE — paste your Stripe Payment Link URLs into `url` to sell packs for real money.
 // After a buyer pays, give them a coin code (generate codes at /api/gencode — see README).
 const STORE_PACKS=[
-  {coins:500,  price:'$0.99', url:'https://buy.stripe.com/7sYdR90YAe6A7n8eF963K01'},
-  {coins:1500, price:'$1.99', url:'https://buy.stripe.com/8x25kD4aMgeIcHsbsX63K02'},
-  {coins:5000, price:'$4.99', url:'https://buy.stripe.com/dRmbJ136I6E8fTE68D63K03'}
+  {coins:500,  price:'$0.99', url:'https://buy.stripe.com/14AbJ06aacus99v9xO0x200'},
+  {coins:1500, price:'$1.99', url:'https://buy.stripe.com/8x2cN4aqqgKIgBX7pG0x201'},
+  {coins:5000, price:'$4.99', url:'https://buy.stripe.com/eVq5kC6aa3XWclHaBS0x202'}
 ];
 let routeInfo=null, addrMap=null, routePending=null;
 const HARMONY_GEO={lat:37.89431, lon:-122.49288};  // Harmony Montessori, 376 Greenwood Beach Rd, Tiburon
@@ -1218,6 +1225,12 @@ const mz=z=>((z-(HARMONY.z-180))/((COVE.z+180)-(HARMONY.z-180)))*MH;   // stretc
 function drawMap(){
   mapX.clearRect(0,0,MW,MH);
   mapX.fillStyle='rgba(120,100,180,0.3)';
+  mapX.fillStyle='rgba(90,150,95,0.4)';
+  for(const d of landDiscs){
+    const rx=Math.max(5,d.r/1400*MW*2), rz=Math.max(5,(d.r/((COVE.z+180)-(HARMONY.z-180)))*MH);
+    mapX.beginPath(); mapX.ellipse(mx(d.x),mz(d.z),rx,rz,0,0,Math.PI*2); mapX.fill();
+  }
+  mapX.fillStyle='rgba(120,100,180,0.35)';
   for(const is of islands) mapX.fillRect(mx(is.x)-1.5,mz(is.z)-1.5,3,3);
   mapX.fillStyle='#5cb8ff'; mapX.fillRect(mx(COVE.x)-4,mz(COVE.z)-4,8,8);
   mapX.fillStyle='#7bffb8'; mapX.fillRect(mx(HARMONY.x)-4,mz(HARMONY.z)-4,8,8);
