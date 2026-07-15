@@ -1466,6 +1466,14 @@ function loop(){
   // flocks circle and flap
   for(const f of flocks){
     f.a+=f.spd*dt;
+    // birds ride at YOUR altitude — no flying over or ducking under, you have to weave through
+    if(P.alive){
+      const fd=Math.hypot(P.pos.x-f.cx, P.pos.z-f.cz);
+      if(fd<560){
+        const want=Math.max(5,Math.min(80,P.pos.y));
+        f.cy+=Math.max(-5*dt, Math.min(5*dt, want-f.cy));
+      }
+    }
     const dir=Math.sign(f.spd);
     const lx=f.cx+Math.cos(f.a)*f.r, lz=f.cz+Math.sin(f.a)*f.r;
     const ly=f.cy+Math.sin(t*0.7+f.a*3)*2;
