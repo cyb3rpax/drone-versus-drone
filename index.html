@@ -380,16 +380,16 @@ const rockTex =speckTex('#4a4258',['#3a3448','#5a5268','#423a52'],6000,4);
 const COVE=new THREE.Vector3(0,0,700);
 const HARMONY=new THREE.Vector3(0,0,-1000);   // movable — real-route editions relocate the whole town
 let TRIP=COVE.distanceTo(HARMONY);            // 1700 units by default
-let MILE=137;                               // units per mile — a mile is ALWAYS the same length
+let MILE=411;                               // units per mile — a mile is LONG now (3x the old scale)
 const BOUND={x:900, zMin:-1250, zMax:950};    // zMin follows Harmony when it moves
 let DRAINF=1;                                 // battery pacing: one charge ≈ 60% one-way on any route length
 
 // sea with real moving waves and sunset glint
-const seaGeo=new THREE.PlaneGeometry(4200,11000,72,96);   // long enough for routes up to ~58 real miles
+const seaGeo=new THREE.PlaneGeometry(4200,17500,72,150);  // ocean long enough for ~36 real miles at the new scale
 const sea=new THREE.Mesh(seaGeo, new THREE.MeshPhongMaterial({
   color:0x0d2a44, shininess:130, specular:0xaa6644, transparent:true, opacity:0.97
 }));
-sea.rotation.x=-Math.PI/2; sea.position.z=-3300; scene.add(sea);
+sea.rotation.x=-Math.PI/2; sea.position.z=-7550; scene.add(sea);
 
 // collision boxes
 const solids=[];
@@ -921,7 +921,7 @@ document.querySelectorAll('.splashPlay').forEach(b=>b.addEventListener('click',(
 function showAddr(){ $('addr').style.display='flex'; }
 function afterAuth(){ if(routeInfo) openHome(); else showAddr(); }
 function setRouteWorld(miles){
-  const units=Math.max(250, Math.min(8000, miles*MILE));   // the WORLD stretches: ~0.1 to ~58 real miles
+  const units=Math.max(400, Math.min(15000, miles*MILE));   // the WORLD stretches: ~0.1 to ~58 real miles
   setHarmonyPos(COVE.z-units);
   DRAINF=1700/units;                                        // one charge still covers ~60% of one leg
   spawnAllFlocks();
@@ -1335,7 +1335,7 @@ player.group.traverse(o=>{ if(o.isMesh&&!(o.material&&o.material.transparent)) o
 const clock=new THREE.Clock();
 let curSpd=0;
 const tmpV=new THREE.Vector3(), fwd=new THREE.Vector3();
-const DRAIN=1.5;   // full-throttle one-way ≈ 60% battery: reaches Harmony with reserve, can't do the round trip (speed/thrust/capacity come from upgrades & drone)
+const DRAIN=1.1;   // better battery: one-way ≈ 49%, a real reserve — but the round trip still needs the Harmony recharge
 function loop(){
   requestAnimationFrame(loop);
   const dt=Math.min(clock.getDelta(),0.05);
