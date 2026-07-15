@@ -446,8 +446,8 @@ let shopBeacon=null;
 const harmonyG=new THREE.Group();
 const harmonyBoxes=[];
 (function buildHarmony(){
-  const base=new THREE.Mesh(new THREE.CylinderGeometry(110,120,4,30), new THREE.MeshLambertMaterial({color:0x3a3348}));
-  base.position.set(0,1,0); harmonyG.add(base);
+  const base=new THREE.Mesh(new THREE.CylinderGeometry(110,120,4.6,30), new THREE.MeshLambertMaterial({color:0x3a3348}));
+  base.position.set(0,1.35,0); harmonyG.add(base);   // sits proud of terrain & waves — no coplanar flicker
   const cols=[0x8a6a4a,0x9a7a5a,0x7a5a6a,0x6a6a8a];
   for(let i=0;i<22;i++){
     const a=Math.random()*Math.PI*2, r=25+Math.random()*75;
@@ -490,9 +490,11 @@ function buildRouteTerrain(){
   // grassy landmasses spread evenly across the whole crossing
   const nLand=Math.max(1, Math.round(span/900));
   for(let li=0; li<nLand; li++){
-    const cz=z0-span*(li+0.5)/nLand;
+    let cz=z0-span*(li+0.5)/nLand;
     const cx=(Math.random()*2-1)*170;
     const r=Math.max(240, Math.min(600, span/nLand*0.42));
+    if(COVE.z-cz<r+200) cz=COVE.z-(r+200);           // never overlap the Cove…
+    if(cz-HARMONY.z<r+200) cz=HARMONY.z+r+200;       // …or Harmony (stops the flickering)
     landDiscs.push({x:cx,z:cz,r:r});
     const land=addT(new THREE.Mesh(new THREE.CylinderGeometry(r,r+20,4,40), new THREE.MeshStandardMaterial({map:grassTex,roughness:1})));
     land.position.set(cx,1,cz);
