@@ -127,6 +127,65 @@
   #screwPrompt{font-size:44px;margin-top:10px;color:#ffd66b;animation:pulse 0.8s infinite;display:none}
   @keyframes pulse{50%{transform:scale(1.15);opacity:.65}}
   #screwInfo{font-size:13px;color:#c8b8e8;margin-top:6px;letter-spacing:1px}
+
+  /* ---------- polish pass: cleaner, calmer everything ---------- */
+  body,button,input{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif}
+  #mission{background:rgba(14,10,30,.72);border:1px solid rgba(185,138,255,.22);backdrop-filter:blur(10px);border-radius:12px;font-size:15px;font-weight:600;letter-spacing:.3px;padding:9px 20px}
+  #stats{background:rgba(14,10,30,.72);border:1px solid rgba(185,138,255,.22);backdrop-filter:blur(10px);border-radius:12px}
+  #controls{background:rgba(14,10,30,.6);border:1px solid rgba(185,138,255,.15);backdrop-filter:blur(10px);border-radius:10px;font-size:11px;letter-spacing:.3px}
+  #map{background:rgba(14,10,30,.72);border:1px solid rgba(185,138,255,.22);border-radius:12px}
+  #mapkey{background:rgba(14,10,30,.55);border-radius:8px;letter-spacing:.3px}
+  #miles{font-size:20px;font-weight:600;letter-spacing:.5px;text-shadow:0 1px 6px rgba(0,0,0,.7)}
+  #banner{font-size:25px;font-weight:700;letter-spacing:1px;text-shadow:0 0 14px rgba(190,110,255,.5)}
+  #warn,#charge{border-radius:10px;font-size:12.5px;letter-spacing:.3px;backdrop-filter:blur(8px)}
+  #battwrap{height:8px;border-radius:5px}
+  #battlabel{letter-spacing:1.5px;opacity:.85}
+  #est{opacity:.85}
+  #homeBox,#signupBox{border-radius:20px;box-shadow:0 12px 60px rgba(0,0,0,.5),0 0 40px rgba(140,80,255,.18)}
+  #homeBox{padding:26px 34px}
+  #homeBox::-webkit-scrollbar{width:8px}
+  #homeBox::-webkit-scrollbar-thumb{background:rgba(185,138,255,.3);border-radius:4px}
+  #homeBox::-webkit-scrollbar-track{background:transparent}
+  .hSect h2{font-size:11px;letter-spacing:3px;opacity:.9;margin:16px 0 10px;padding-top:16px}
+  .upRow{background:rgba(255,255,255,.035);border-radius:10px;padding:8px 12px;margin-bottom:6px}
+  .upName{font-size:11px;letter-spacing:1px}
+  .upDesc{opacity:.9}
+  .skinBtn,.droneCard,.packCard,.upBuy{border-radius:10px;transition:background .15s,transform .12s}
+  .skinBtn:hover:enabled,.droneCard:hover:enabled,.packCard:hover{transform:translateY(-1px)}
+  #overlay p{line-height:1.65}
+  #storeNote,#homeTrips,#sgErr{letter-spacing:.2px}
+  #logoutBtn{opacity:.85}
+  #logoutBtn:hover{opacity:1}
+
+  /* ---------- EVEN cleaner: minimal, premium ---------- */
+  #banner{font-size:15px;font-weight:700;letter-spacing:1.5px;color:#eee2ff;text-shadow:none;
+    background:rgba(14,10,30,.88);border:1px solid rgba(185,138,255,.35);padding:12px 28px;border-radius:999px;
+    backdrop-filter:blur(12px);top:22%;white-space:nowrap;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+  #warn,#charge{border:1px solid rgba(255,120,120,.35);border-radius:999px;padding:8px 20px;font-size:12px;background:rgba(30,8,14,.8)}
+  #charge{border-color:rgba(123,255,184,.35);background:rgba(8,26,18,.8)}
+  #controls{transition:opacity 1.4s ease;border:none;background:rgba(14,10,30,.5)}
+  #mapkey{background:transparent;border:none}
+  #mission{text-transform:uppercase;font-size:13px;letter-spacing:1.2px}
+  #dist,#miles{font-variant-numeric:tabular-nums}
+  #homeBox,#signupBox{background:rgba(17,12,32,.98);border:1px solid rgba(185,138,255,.2)}
+  #homeBox h1,#signupBox h1{letter-spacing:5px;font-size:26px}
+  #homeSub,.sgSub{opacity:.75}
+  .upRow{border:none}
+  .upBuy{background:rgba(185,138,255,.12);border:1px solid rgba(185,138,255,.3)}
+  .upBuy:hover:enabled{background:rgba(185,138,255,.25)}
+  .skinBtn,.droneCard,.packCard{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
+  .skinBtn:hover:enabled,.droneCard:hover,.packCard:hover{background:rgba(255,255,255,.08)}
+  .skinBtn.equipped,.droneCard.equipped{border-color:rgba(123,255,184,.6);box-shadow:none;background:rgba(123,255,184,.07)}
+  .packCard{border-color:rgba(255,214,107,.25);background:rgba(255,214,107,.05)}
+  #flyBtn{animation:none;background:linear-gradient(180deg,#34d488,#23a866);border:none;font-size:19px;letter-spacing:2.5px;
+    box-shadow:0 6px 26px rgba(52,212,136,.4);transition:transform .12s,box-shadow .15s}
+  #flyBtn:hover{transform:translateY(-2px);box-shadow:0 10px 34px rgba(52,212,136,.55)}
+  #redeemBtn,#addrBtn,#addrConfirm,#sgBtn,#overlayBtn,#departBtn{border:none}
+  #splash .card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07)}
+  #splash h1{letter-spacing:6px}
+  #splash .rules li{border:none;background:rgba(255,255,255,.04)}
+  #splash .strip{border:none}
+  #hpwrap,#battwrap{box-shadow:inset 0 1px 3px rgba(0,0,0,.4)}
 </style>
 <style>
 #addr{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:linear-gradient(rgba(8,5,18,.96),rgba(8,5,18,.99));z-index:45;color:#f3ecff;font-family:'Segoe UI',Arial,sans-serif}
@@ -985,9 +1044,13 @@ $('addrConfirm').addEventListener('click',()=>{
   openHome();
 });
 function openHome(){ renderHome(); $('home').style.display='flex'; claimPending(); }
+let ctrlT=null;
 function closeHome(){
   if(!account){ initAccount(); return; }            // no account, no flying
   $('home').style.display='none';
+  $('controls').style.opacity='1';                  // show the controls hint briefly, then get out of the way
+  clearTimeout(ctrlT);
+  ctrlT=setTimeout(()=>{ $('controls').style.opacity='0'; },12000);
   if(document.activeElement&&document.activeElement.blur) document.activeElement.blur();
   for(const k in keys) keys[k]=false;
   banner('MISSION: FLY TO HARMONY AND BACK');
