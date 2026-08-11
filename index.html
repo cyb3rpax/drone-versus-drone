@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Marin to Harmony</title>
 <style>
-  html,body{margin:0;padding:0;overflow:hidden;background:#140f24;font-family:'Segoe UI',Arial,sans-serif;user-select:none}
+  html,body{margin:0;padding:0;overflow:hidden;background:#0b1d1a;font-family:'Segoe UI',Arial,sans-serif;user-select:none}
   #hud{position:fixed;inset:0;pointer-events:none;color:#f3ecff}
   #topbar{position:absolute;top:14px;left:50%;transform:translateX(-50%);text-align:center}
   #mission{font-size:18px;font-weight:600;text-shadow:0 0 8px #000;background:rgba(20,14,40,.6);padding:8px 24px;border-radius:10px;border:1px solid rgba(200,160,255,.35)}
@@ -86,8 +86,8 @@
   #sgBtn:hover{background:rgba(40,160,105,.7)}
   .sgNote{font-size:10px;color:#6a5f88;margin-top:14px}
   /* built-in marketing splash — always the first thing you see */
-  #splash{position:fixed;inset:0;z-index:55;overflow-y:auto;background:#120d24;color:#e8def8;display:block}
-  #splash .hero{padding:70px 24px 50px;text-align:center;background:linear-gradient(180deg,#0d0a1e 0%,#241640 45%,#5a2c48 78%,#c2603a 100%)}
+  #splash{position:fixed;inset:0;z-index:55;overflow-y:auto;background:#0b1d1a;color:#e4f6ef;display:block}
+  #splash .hero{padding:70px 24px 50px;text-align:center;background:linear-gradient(180deg,#0f6e64 0%,#2aa896 55%,#8fe0d0 100%)}
   #splash h1{font-size:46px;margin:0;letter-spacing:4px;color:#fff;text-shadow:0 0 30px rgba(190,110,255,.6)}
   #splash .tag{font-size:17px;color:#f3e2ff;margin:14px auto 6px;max-width:620px;line-height:1.55}
   #splash .subtag{font-size:12px;color:#d8b8c8;margin-bottom:24px}
@@ -186,17 +186,59 @@
   #splash .rules li{border:none;background:rgba(255,255,255,.04)}
   #splash .strip{border:none}
   #hpwrap,#battwrap{box-shadow:inset 0 1px 3px rgba(0,0,0,.4)}
+
+  /* ---------- palette v3: tropic teal & coral ---------- */
+  #mission,#stats,#map,#controls,#warn,#charge{border-color:rgba(90,220,190,.28);background:rgba(6,24,20,.74)}
+  #banner{border-color:rgba(90,220,190,.45);background:rgba(6,24,20,.9);color:#e4fff6}
+  #charge{border-color:rgba(123,255,184,.4)}
+  #mapkey,#battlabel{color:#9fe6cf}
+  #homeBox,#signupBox{background:rgba(6,20,17,.98);border-color:rgba(90,220,190,.32);box-shadow:0 12px 60px rgba(0,0,0,.5),0 0 40px rgba(60,200,160,.18)}
+  #homeBox h1,#signupBox h1{color:#8ff2d4}
+  #homeSub,.sgSub,#homeTrips{color:#7fa89e}
+  .hSect h2,#sgSwap b{color:#4fd6ae}
+  .upName{color:#dcfff4}
+  .upDesc,#est,#storeNote{color:#7fa89e}
+  .pip.on{background:#35cfa2;box-shadow:none}
+  .upBuy{background:rgba(64,214,168,.14);border:1px solid rgba(64,214,168,.42);color:#e4fff6}
+  .upBuy:hover:enabled{background:rgba(64,214,168,.28)}
+  .skinBtn,.droneCard{color:#d4f2e8}
+  .skinBtn.equipped,.droneCard.equipped{border-color:rgba(64,214,168,.65);background:rgba(64,214,168,.08)}
+  #signupBox label{color:#4fd6ae}
+  #signupBox input,#codeIn{border-color:rgba(90,220,190,.4);background:rgba(3,14,12,.92);color:#e4fff6}
+  #signupBox input:focus{border-color:#8ff2d4;box-shadow:0 0 8px rgba(90,220,190,.35)}
+  #sgErr{color:#ff9a8a}
+  .sgNote{color:#54786e}
+  #logoutBtn{border-color:rgba(90,220,190,.35);background:rgba(64,214,168,.1);color:#b8e2d4}
+  #overlayBtn{border:none;background:rgba(28,150,116,.6);color:#eafff6}
+  #flyBtn{background:linear-gradient(180deg,#ff8a5c,#ef6338);box-shadow:0 6px 26px rgba(255,122,80,.45)}
+  #flyBtn:hover{box-shadow:0 10px 34px rgba(255,122,80,.6)}
+  .splashPlay{background:#ff8a5c;color:#3a1408;box-shadow:0 8px 30px rgba(255,122,80,.4)}
+  #splash h1{text-shadow:0 2px 18px rgba(6,60,50,.6)}
+  #splash h2{color:#4fd6ae}
+  #splash .tag{color:#f0fffa}
+  #splash .subtag,#splash .free{color:#d8f6ec}
+  #splash .lead,#splash .card p,#splash .stat span{color:#7fa89e}
+  #splash .card h3{color:#fff}
+  #splash .rules li{color:#d4f2e8}
+  #splash footer{color:#54786e;border-color:rgba(90,220,190,.15)}
+  #screwInfo{color:#9fe6cf}
+  #trayLabel{color:#7fa89e}
+  #part{background:linear-gradient(#153630,#0b211c);border-color:#3f7a6a}
+  .hole{border-color:#3a6a5c;background:#061410;color:#d4f2e8}
+  #screwPiece{border-color:#ffd66b}
+  #sgBtn{background:#fff;color:#0b1d1a;border:none;box-shadow:0 6px 22px rgba(255,255,255,.25)}
+  #sgBtn:hover{background:#e8f6f0;box-shadow:0 8px 28px rgba(255,255,255,.35)}
 </style>
 <style>
-#addr{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:linear-gradient(rgba(8,5,18,.96),rgba(8,5,18,.99));z-index:45;color:#f3ecff;font-family:'Segoe UI',Arial,sans-serif}
-#addrBox{width:470px;max-height:92vh;overflow-y:auto;background:rgba(22,16,42,.98);border:1px solid #b98aff;border-radius:18px;padding:26px 30px;text-align:center;box-shadow:0 0 60px rgba(140,80,255,.35)}
-#addrBox h1{margin:0;font-size:22px;color:#d9b8ff;letter-spacing:2px}
-#addrBox .note{font-size:12px;color:#9a8ab8;margin:6px 0 14px;line-height:1.55}
+#addr{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:linear-gradient(rgba(4,14,12,.96),rgba(4,14,12,.99));z-index:45;color:#f3ecff;font-family:'Segoe UI',Arial,sans-serif}
+#addrBox{width:470px;max-height:92vh;overflow-y:auto;background:rgba(6,20,17,.98);border:1px solid rgba(90,220,190,.4);border-radius:18px;padding:26px 30px;text-align:center;box-shadow:0 0 60px rgba(60,200,160,.25)}
+#addrBox h1{margin:0;font-size:22px;color:#8ff2d4;letter-spacing:2px}
+#addrBox .note{font-size:12px;color:#7fa89e;margin:6px 0 14px;line-height:1.55}
 #addrBox .note b{color:#ffd66b}
-#addrIn{width:100%;box-sizing:border-box;padding:11px 12px;border-radius:9px;border:1px solid rgba(180,140,255,.45);background:rgba(12,8,26,.9);color:#f3ecff;font-size:14px;outline:none}
-#addrIn:focus{border-color:#d9b8ff}
-#addrBtn{margin-top:10px;width:100%;padding:12px;border-radius:10px;border:1px solid #8fd4ff;background:rgba(40,80,140,.5);color:#e8f4ff;font-size:14px;font-weight:700;letter-spacing:1px;cursor:pointer}
-#addrBtn:hover{background:rgba(60,110,180,.7)}
+#addrIn{width:100%;box-sizing:border-box;padding:11px 12px;border-radius:9px;border:1px solid rgba(90,220,190,.4);background:rgba(3,14,12,.92);color:#e4fff6;font-size:14px;outline:none}
+#addrIn:focus{border-color:#8ff2d4}
+#addrBtn{margin-top:10px;width:100%;padding:12px;border-radius:10px;border:1px solid #4fd6ae;background:rgba(28,120,96,.55);color:#e4fff6;font-size:14px;font-weight:700;letter-spacing:1px;cursor:pointer}
+#addrBtn:hover{background:rgba(38,160,128,.75)}
 #addrErr{color:#ff8a8a;font-size:12px;margin-top:10px;min-height:15px}
 #addrMapEl{width:100%;height:250px;border-radius:12px;margin-top:8px;border:1px solid rgba(180,140,255,.45)}
 #addrDist{font-size:13px;color:#ffd66b;font-weight:600;margin:10px 0;line-height:1.5}
@@ -289,11 +331,6 @@
   <input id="addrIn" placeholder="e.g. 123 Main St, San Rafael, CA" autocomplete="off">
   <button id="addrBtn">📍 FIND MY ROUTE</button>
   <div id="addrErr"></div>
-  <div id="addrMapWrap" style="display:none">
-    <div id="addrMapEl"></div>
-    <div id="addrDist"></div>
-    <button id="addrConfirm">BUILD MY ROUTE ▲</button>
-  </div>
 </div></div>
 <div id="signup"><div id="signupBox">
   <h1>MARIN ⇄ HARMONY</h1>
@@ -341,16 +378,14 @@
   </div>
   <button id="overlayBtn">FLY AGAIN</button>
 </div>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 (function(){
 'use strict';
 // ---------- Scene: dusk over open water ----------
 const scene=new THREE.Scene();
-scene.background=new THREE.Color(0x2a1838);
-scene.fog=new THREE.Fog(0x54324a,220,850);
+scene.background=new THREE.Color(0x8fd0c8);
+scene.fog=new THREE.Fog(0x9fd4cc,260,920);
 const camera=new THREE.PerspectiveCamera(62,innerWidth/innerHeight,0.1,1300);
 const renderer=new THREE.WebGLRenderer({antialias:true});
 renderer.setSize(innerWidth,innerHeight);
@@ -362,8 +397,8 @@ renderer.toneMapping=THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure=1.15;
 document.body.appendChild(renderer.domElement);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
-scene.add(new THREE.HemisphereLight(0xb08cff,0x1a1425,0.55));
-const sun=new THREE.DirectionalLight(0xffa068,1.35);
+scene.add(new THREE.HemisphereLight(0xe0fff4,0x3f5c50,0.85));
+const sun=new THREE.DirectionalLight(0xfff5e2,1.2);
 sun.position.set(-160,180,240);
 sun.castShadow=true;
 sun.shadow.mapSize.set(2048,2048);
@@ -378,7 +413,7 @@ const dome=new THREE.Mesh(new THREE.SphereGeometry(1080,24,16), new THREE.Shader
   side:THREE.BackSide, depthWrite:false, fog:false,
   vertexShader:'varying vec3 vP; void main(){ vP=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }',
   fragmentShader:'varying vec3 vP; void main(){ float h=normalize(vP).y;'
-    +'vec3 top=vec3(0.06,0.045,0.17); vec3 mid=vec3(0.28,0.14,0.26); vec3 hor=vec3(0.82,0.42,0.24);'
+    +'vec3 top=vec3(0.05,0.38,0.45); vec3 mid=vec3(0.25,0.62,0.66); vec3 hor=vec3(0.72,0.92,0.88);'
     +'vec3 c = h>0.12 ? mix(mid,top,smoothstep(0.12,0.65,h)) : mix(hor,mid,smoothstep(-0.04,0.12,h));'
     +'gl_FragColor=vec4(c,1.0); }'
 }));
@@ -393,8 +428,8 @@ function glowTex(r,g,b){
   x.fillStyle=gr; x.fillRect(0,0,128,128);
   return new THREE.CanvasTexture(c);
 }
-const sunSprite=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex(255,190,120),fog:false,transparent:true,opacity:0.95,depthWrite:false}));
-sunSprite.scale.set(320,320,1); scene.add(sunSprite);
+const sunSprite=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex(255,250,230),fog:false,transparent:true,opacity:0.85,depthWrite:false}));
+sunSprite.scale.set(230,230,1); scene.add(sunSprite);
 let starField=null;
 (function stars(){
   const g=new THREE.BufferGeometry(), v=[];
@@ -403,10 +438,10 @@ let starField=null;
     v.push(Math.cos(a)*Math.cos(e)*r, Math.sin(e)*r, Math.sin(a)*Math.cos(e)*r);
   }
   g.setAttribute('position',new THREE.Float32BufferAttribute(v,3));
-  starField=new THREE.Points(g,new THREE.PointsMaterial({color:0xfff4e0,size:2.4,fog:false,transparent:true,opacity:0.75,sizeAttenuation:false}));
+  starField=new THREE.Points(g,new THREE.PointsMaterial({color:0xfff4e0,size:2.4,fog:false,transparent:true,opacity:0,sizeAttenuation:false}));
   starField.renderOrder=-1; scene.add(starField);
 })();
-const cloudTex=glowTex(215,190,225);
+const cloudTex=glowTex(255,255,255);
 const clouds=[];
 for(let i=0;i<12;i++){
   const s=new THREE.Sprite(new THREE.SpriteMaterial({map:cloudTex,transparent:true,opacity:0.22+Math.random()*0.16,fog:false,depthWrite:false}));
@@ -446,7 +481,7 @@ let DRAINF=1;                                 // battery pacing: one charge ≈ 
 // sea with real moving waves and sunset glint
 const seaGeo=new THREE.PlaneGeometry(4200,17500,72,150);  // ocean long enough for ~36 real miles at the new scale
 const sea=new THREE.Mesh(seaGeo, new THREE.MeshPhongMaterial({
-  color:0x0d2a44, shininess:130, specular:0xaa6644, transparent:true, opacity:0.97
+  color:0x0e6e62, shininess:110, specular:0xbfeee0, transparent:true, opacity:0.97
 }));
 sea.rotation.x=-Math.PI/2; sea.position.z=-7550; scene.add(sea);
 
@@ -721,7 +756,7 @@ const STORE_PACKS=[
   {coins:1500, price:'$1.99', url:'https://buy.stripe.com/8x2cN4aqqgKIgBX7pG0x201'},
   {coins:5000, price:'$4.99', url:'https://buy.stripe.com/eVq5kC6aa3XWclHaBS0x202'}
 ];
-let routeInfo=null, addrMap=null, routePending=null;
+let routeInfo=null, routePending=null;
 const HARMONY_GEO={lat:37.89431, lon:-122.49288};  // Harmony Montessori, 376 Greenwood Beach Rd, Tiburon
 const hex=c=>'#'+c.toString(16).padStart(6,'0');
 const maxSpdF =()=>38+3*up.motor+DRONES[curDrone].spd;
@@ -1006,43 +1041,23 @@ async function geocodeAddr(){
     const inMarin=(((hit.address&&hit.address.county)||'').indexOf('Marin')>=0)||((hit.display_name||'').indexOf('Marin County')>=0);
     if(!inMarin){
       $('addrErr').textContent='That address isn’t in Marin County, California — your hangar has to be in Marin.';
-      $('addrMapWrap').style.display='none';
       return;
     }
     const lat=+hit.lat, lon=+hit.lon;
     const miles=Math.max(0.1, +haversineMi(lat,lon,HARMONY_GEO.lat,HARMONY_GEO.lon).toFixed(1));   // true distance, even under a mile
-    routePending={addr:(hit.display_name||q).split(',').slice(0,2).join(','), lat, lon, miles};
-    $('addrErr').textContent='';
-    $('addrMapWrap').style.display='block';
-    $('addrDist').textContent='📍 '+routePending.addr+' → Harmony Montessori, Tiburon: '+miles+' real miles as the drone flies';
-    setTimeout(renderAddrMap,60);
+    routeInfo={addr:(hit.display_name||q).split(',').slice(0,2).join(','), lat, lon, miles};
+    setRouteWorld(routeInfo.miles);
+    saveGame();
+    $('addr').style.display='none';
+    banner('ROUTE SET — '+miles+' REAL MILES TO HARMONY MONTESSORI');
+    openHome();
   }catch(e){
     $('addrErr').textContent='Lookup failed — check your internet connection and try again.';
   }
 }
-function renderAddrMap(){
-  if(!window.L||!routePending) return;
-  if(addrMap){ addrMap.remove(); addrMap=null; }
-  addrMap=L.map('addrMapEl');
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(addrMap);
-  const a=[routePending.lat,routePending.lon], b=[HARMONY_GEO.lat,HARMONY_GEO.lon];
-  L.marker(a).addTo(addrMap).bindPopup('🏠 Home base');
-  L.marker(b).addTo(addrMap).bindPopup('✨ Harmony Montessori');
-  L.polyline([a,b],{color:'#b98aff',weight:3,dashArray:'8 6'}).addTo(addrMap);
-  addrMap.fitBounds([a,b],{padding:[30,30]});
-  setTimeout(()=>{ if(addrMap) addrMap.invalidateSize(); },80);
-}
 $('addrBtn').addEventListener('click',geocodeAddr);
 $('addrIn').addEventListener('keydown',e=>{ if(e.key==='Enter') geocodeAddr(); });
-$('addrConfirm').addEventListener('click',()=>{
-  if(!routePending) return;
-  routeInfo=routePending;
-  setRouteWorld(routeInfo.miles);                  // Harmony physically moves to your true distance
-  saveGame();
-  $('addr').style.display='none';
-  banner('ROUTE SET — '+routeInfo.miles+' REAL MILES TO HARMONY MONTESSORI');
-  openHome();
-});
+
 function openHome(){ renderHome(); $('home').style.display='flex'; claimPending(); }
 let ctrlT=null;
 function closeHome(){
@@ -1557,8 +1572,8 @@ function loop(){
   // sky, sun & stars follow you; clouds drift
   dome.position.copy(P.pos);
   if(starField) starField.position.copy(P.pos);
-  sunSprite.position.set(P.pos.x-420,215,P.pos.z+640);
-  sun.position.set(P.pos.x-160,180,P.pos.z+240);
+  sunSprite.position.set(P.pos.x-360,480,P.pos.z+460);
+  sun.position.set(P.pos.x-180,330,P.pos.z+170);
   sun.target.position.set(P.pos.x,0,P.pos.z);
   for(const c of clouds){ c.position.x+=dt*1.4; if(c.position.x>1000) c.position.x=-1000; }
 
