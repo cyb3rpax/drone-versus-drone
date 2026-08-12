@@ -298,6 +298,8 @@
   #screwInfo{color:#4a6b76}
   #tray{background:rgba(20,110,100,.06);border-color:rgba(30,80,90,.12)}
   #trayLabel{color:#5b7a84}
+  #droneRow{flex-wrap:wrap}
+  .droneCard{flex:1 1 30%;min-width:150px}
 </style>
 <style>
 #addr{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:linear-gradient(rgba(4,14,12,.96),rgba(4,14,12,.99));z-index:45;color:#f3ecff;font-family:'Segoe UI',Arial,sans-serif}
@@ -362,8 +364,8 @@
     <div class="stat"><b>60%</b><span>BATTERY PER LEG</span></div>
     <div class="stat"><b>🪙100</b><span>PER MISSION</span></div>
     <div class="stat"><b>6</b><span>PAINT JOBS</span></div>
-    <div class="stat"><b>3</b><span>AIRFRAMES</span></div>
-    <div class="stat"><b>15</b><span>UPGRADE LEVELS</span></div>
+    <div class="stat"><b>5</b><span>DRONES</span></div>
+    <div class="stat"><b>30s</b><span>PER MILE FLOWN</span></div>
   </div>
   <section>
     <h2>THE RULES OF THE SKY</h2>
@@ -376,7 +378,7 @@
       <li><b>Terrain wins every argument.</b> Hard hits past your airframe's tolerance break a part.</li>
       <li><b>Broken drones limp.</b> A fraction of your speed, treetop height — just enough to reach the parts shop.</li>
       <li><b>You fix it yourself.</b> Buy the part (credit if you're broke), drag each screw to its mount, torque it with the arrows.</li>
-      <li><b>Spend wisely.</b> Upgrades, skins and airframes are permanent on your account.</li>
+      <li><b>Spend wisely.</b> New drones and paint jobs are permanent on your account — earn your way up to the TITAN.</li>
     </ol>
   </section>
   <section>
@@ -385,7 +387,9 @@
     <div class="grid">
       <div class="card"><div class="ico">🚁</div><h3>SPARROW — FREE</h3><p>The trusty starter. Every pilot's first drone.</p></div>
       <div class="card"><div class="ico">⚡</div><h3>SWIFT — 🪙600</h3><p>Better in every way: faster, bigger battery, tougher frame.</p></div>
-      <div class="card"><div class="ico">🛡</div><h3>MULE — 🪙900</h3><p>The flagship: fastest, longest range, and the toughest hull in the sky.</p></div>
+      <div class="card"><div class="ico">🛡</div><h3>MULE — 🪙900</h3><p>Rugged and long-legged — the dependable workhorse.</p></div>
+      <div class="card"><div class="ico">🦅</div><h3>FALCON — 🪙1500</h3><p>Fast AND far: built for the long crossings.</p></div>
+      <div class="card"><div class="ico">👑</div><h3>TITAN — 🪙2500</h3><p>The ultimate machine: fastest, toughest, biggest battery in the sky.</p></div>
     </div>
   </section>
   <section style="text-align:center;padding-top:10px">
@@ -425,7 +429,6 @@
   <div id="coinBig">🪙 0 DRONE COINS</div>
   <div id="homeTrips"></div>
   <button id="flyBtn">🚁 ▲ FLY THE MISSION ▲</button>
-  <div class="hSect"><h2>UPGRADES</h2><div id="homeUps"></div></div>
   <div class="hSect"><h2>SKINS</h2><div id="skinRow"></div></div>
   <div class="hSect"><h2>DRONES</h2><div id="droneRow"></div></div>
   <div class="hSect"><h2>COIN STORE 💳</h2>
@@ -545,16 +548,16 @@ const rockTex =speckTex('#4a4258',['#3a3448','#5a5268','#423a52'],6000,4);
 const COVE=new THREE.Vector3(0,0,700);
 const HARMONY=new THREE.Vector3(0,0,-1000);   // movable — real-route editions relocate the whole town
 let TRIP=COVE.distanceTo(HARMONY);            // 1700 units by default
-let MILE=650;                               // units per mile — a mile is a serious flight now
+let MILE=1140;                              // 1 mile = 30 seconds of flying at base speed (38 u/s)
 const BOUND={x:900, zMin:-1250, zMax:950};    // zMin follows Harmony when it moves
 let DRAINF=1;                                 // battery pacing: one charge ≈ 60% one-way on any route length
 
 // sea with real moving waves and sunset glint
-const seaGeo=new THREE.PlaneGeometry(4200,24000,64,130);  // ocean long enough for ~36 real miles at the new scale
+const seaGeo=new THREE.PlaneGeometry(4200,30000,64,150);  // ocean long enough for ~36 real miles at the new scale
 const sea=new THREE.Mesh(seaGeo, new THREE.MeshPhongMaterial({
   color:0x155e78, shininess:120, specular:0xbcd8e2, transparent:true, opacity:0.97
 }));
-sea.rotation.x=-Math.PI/2; sea.position.z=-10600; scene.add(sea);
+sea.rotation.x=-Math.PI/2; sea.position.z=-13800; scene.add(sea);
 
 // collision boxes
 const solids=[];
@@ -647,6 +650,21 @@ function farFromPads(x,z,m){
   return Math.hypot(x-COVE.x,z-COVE.z)>m && Math.hypot(x-HARMONY.x,z-HARMONY.z)>m && Math.hypot(x-SHOP.x,z-SHOP.z)>Math.min(m,70);
 }
 function addT(m){ m.castShadow=true; m.receiveShadow=true; scene.add(m); terrainMeshes.push(m); return m; }
+const wallMats=[0xd9cfbf,0xcbb9a3,0xb7c3cb,0xd6c3b1].map(c=>new THREE.MeshStandardMaterial({color:c,roughness:0.9}));
+const roofMats=[0x8a4a3a,0x5f4a5e,0x49606e].map(c=>new THREE.MeshStandardMaterial({color:c,roughness:0.85}));
+function spotFree(x,z,m){
+  for(const b of solids){ if(x>b.min.x-m&&x<b.max.x+m&&z>b.min.z-m&&z<b.max.z+m) return false; }
+  return true;
+}
+function buildHouse(x,z){
+  const w=7+Math.random()*4, d=6+Math.random()*3, h=4.5+Math.random()*3+(Math.random()<0.25?3.5:0);
+  const rot=Math.random()*Math.PI;
+  const body=addT(new THREE.Mesh(new THREE.BoxGeometry(w,h,d), wallMats[Math.floor(Math.random()*wallMats.length)]));
+  body.position.set(x,3+h/2,z); body.rotation.y=rot;
+  const roof=addT(new THREE.Mesh(new THREE.ConeGeometry(Math.max(w,d)*0.72,2.6+Math.random()*1.4,4), roofMats[Math.floor(Math.random()*roofMats.length)]));
+  roof.position.set(x,3+h+1.3,z); roof.rotation.y=rot+Math.PI/4;
+  addSolid(x,3+h/2,z,Math.max(w,d)+1,h+3.5,Math.max(w,d)+1);
+}
 function buildRouteTerrain(){
   for(const m of terrainMeshes) scene.remove(m);
   terrainMeshes.length=0; landDiscs.length=0; islands.length=0;
@@ -676,6 +694,12 @@ function buildRouteTerrain(){
           cone.position.set(x+lean*cy,cy+2.6,z); cy+=4.2;
         }
         addSolid(x,(cy+2)/2,z,8,cy+2,8);
+      }
+      // a cottage or two by the grove
+      for(let i=0;i<2;i++){
+        const hx=cx+(Math.random()*2-1)*r*0.55, hz=cz+(Math.random()*2-1)*r*0.55;
+        if(!onLand(hx,hz)||!spotFree(hx,hz,6)) continue;
+        buildHouse(hx,hz);
       }
       // and a couple of rocks in the remaining water
       for(let i=0;i<3;i++){
@@ -728,6 +752,13 @@ function buildRouteTerrain(){
         cone.position.set(x+lean*cy,cy+3.5,z); cy+=5.6;
       }
       addSolid(x,(cy+2)/2,z,11,cy+2,11);
+    }
+    // little homes tucked around the island
+    const nHouse=Math.max(2, Math.round(r/130));
+    for(let i=0;i<nHouse;i++){
+      const hx=cx+(Math.random()*2-1)*r*0.62, hz=cz+(Math.random()*2-1)*r*0.62;
+      if(!onLand(hx,hz)||!farFromPads(hx,hz,90)||!spotFree(hx,hz,7)) continue;
+      buildHouse(hx,hz);
     }
   }
   // sea rocks along the whole way
@@ -854,9 +885,11 @@ const SKINS={
 };
 const ownedSkins={stock:true}; let curSkin='stock';
 const DRONES={
-  sparrow:{name:'SPARROW', cost:0,   desc:'The trusty starter — every pilot begins here',                     spd:0,  acc:0,  batt:0,  tough:0, scale:[1,1,1]},
-  swift:  {name:'SWIFT',   cost:600, desc:'Better everywhere: +6 speed, +20 battery, +2 crash tolerance',     spd:6,  acc:10, batt:20, tough:2, scale:[0.9,0.9,1.12]},
-  mule:   {name:'MULE',    cost:900, desc:'The flagship: +10 speed, +50 battery, +5 crash tolerance',         spd:10, acc:18, batt:50, tough:5, scale:[1.25,1.12,1.2]}
+  sparrow:{name:'SPARROW', cost:0,    desc:'The trusty starter — every pilot begins here',                        spd:0,  acc:0,  batt:0,   tough:0,  scale:[1,1,1]},
+  swift:  {name:'SWIFT',   cost:600,  desc:'+6 speed · +20 battery · +2 toughness',                              spd:6,  acc:10, batt:20,  tough:2,  scale:[0.9,0.9,1.12]},
+  mule:   {name:'MULE',    cost:900,  desc:'+10 speed · +50 battery · +5 toughness',                             spd:10, acc:18, batt:50,  tough:5,  scale:[1.25,1.12,1.2]},
+  falcon: {name:'FALCON',  cost:1500, desc:'+16 speed · +70 battery · +7 toughness — built for long hauls',      spd:16, acc:30, batt:70,  tough:7,  scale:[1.05,0.95,1.35]},
+  titan:  {name:'TITAN',   cost:2500, desc:'+22 speed · +120 battery · +12 toughness — the ultimate machine',    spd:22, acc:42, batt:120, tough:12, scale:[1.45,1.25,1.42]}
 };
 const ownedDrones={sparrow:true}; let curDrone='sparrow';
 // COIN STORE — paste your Stripe Payment Link URLs into `url` to sell packs for real money.
@@ -1127,7 +1160,7 @@ document.querySelectorAll('.splashPlay').forEach(b=>b.addEventListener('click',(
 function showAddr(){ $('addr').style.display='flex'; }
 function afterAuth(){ if(routeInfo) openHome(); else showAddr(); }
 function setRouteWorld(miles){
-  const units=Math.max(400, Math.min(20000, miles*MILE));   // the WORLD stretches: ~0.1 to ~58 real miles
+  const units=Math.max(400, Math.min(28000, miles*MILE));   // the WORLD stretches: ~0.1 to ~58 real miles
   setHarmonyPos(COVE.z-units);
   DRAINF=1700/units;                                        // one charge still covers ~60% of one leg
   spawnAllFlocks();
@@ -1186,24 +1219,6 @@ function renderHome(){
   $('coinBig').textContent='🪙 '+money+' DRONE COINS'+(money<0?' (IN DEBT)':'');
   $('coinBig').style.color=money<0?'#ff8a8a':'#ffd66b';
   $('homeTrips').textContent='Round trips completed: '+trips+' · 🪙100 per round trip';
-  // upgrades
-  const ur=$('homeUps'); ur.innerHTML='';
-  UPS.forEach(u=>{
-    const lvl=up[u.k], maxed=lvl>=5, cost=maxed?0:u.costs[lvl];
-    const row=document.createElement('div'); row.className='upRow';
-    let pips='<div class="pips">'; for(let i=1;i<=5;i++) pips+='<div class="pip'+(i<=lvl?' on':'')+'"></div>'; pips+='</div>';
-    row.innerHTML='<div class="upName">'+u.name+'</div><div class="upDesc">'+u.desc+'</div>'+pips;
-    const btn=document.createElement('button'); btn.className='upBuy';
-    btn.textContent=maxed?'MAX':'🪙 '+cost;
-    btn.disabled=maxed||money<cost;
-    btn.addEventListener('click',()=>{
-      if(up[u.k]>=5||money<u.costs[up[u.k]]) return;
-      money-=u.costs[up[u.k]]; up[u.k]++;
-      if(u.k==='batt') P.batt=maxBattF();
-      saveGame(); moneyHUD(); renderHome();
-    });
-    row.appendChild(btn); ur.appendChild(row);
-  });
   // skins
   const sr=$('skinRow'); sr.innerHTML='';
   Object.keys(SKINS).forEach(id=>{
