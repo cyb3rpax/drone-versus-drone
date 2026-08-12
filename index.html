@@ -656,14 +656,76 @@ function spotFree(x,z,m){
   for(const b of solids){ if(x>b.min.x-m&&x<b.max.x+m&&z>b.min.z-m&&z<b.max.z+m) return false; }
   return true;
 }
-function buildHouse(x,z){
-  const w=7+Math.random()*4, d=6+Math.random()*3, h=4.5+Math.random()*3+(Math.random()<0.25?3.5:0);
-  const rot=Math.random()*Math.PI;
+const roadMat=new THREE.MeshStandardMaterial({color:0x59544f,roughness:1});
+const fieldMats=[0xc9b26a,0x9ab35e,0xb5c47a].map(c=>new THREE.MeshStandardMaterial({color:c,roughness:1}));
+const barnWall=new THREE.MeshStandardMaterial({color:0x9e3d32,roughness:0.9});
+const barnRoofM=new THREE.MeshStandardMaterial({color:0x6e2a22,roughness:0.9});
+const animalMats=[0xece8de,0x8a6248,0x4a4a48].map(c=>new THREE.MeshStandardMaterial({color:c,roughness:1}));
+function buildBarn(x,z,rot){
+  const w=44,d=30,h=20;
+  const body=addT(new THREE.Mesh(new THREE.BoxGeometry(w,h,d), barnWall));
+  body.position.set(x,3+h/2,z); body.rotation.y=rot;
+  const roof=addT(new THREE.Mesh(new THREE.CylinderGeometry(17,17,w+1.5,3,1), barnRoofM));
+  roof.rotation.z=Math.PI/2; roof.rotation.y=rot;
+  roof.position.set(x,3+h+6,z);
+  addSolid(x,3+h/2,z,Math.max(w,d)+3,h+18,Math.max(w,d)+3);
+}
+function addAnimal(x,z){
+  if(!onLand(x,z)) return;
+  const m=animalMats[Math.floor(Math.random()*animalMats.length)];
+  const a=Math.random()*Math.PI*2;
+  const body=addT(new THREE.Mesh(new THREE.SphereGeometry(2.6,8,6), m));
+  body.scale.set(1.5,1.0,0.9); body.position.set(x,5.6,z); body.rotation.y=a;
+  const head=addT(new THREE.Mesh(new THREE.SphereGeometry(1.3,6,6), m));
+  head.position.set(x+Math.cos(a)*4.4, 5.2, z-Math.sin(a)*4.4);
+}
+function buildSettlement(cx,cz,r){
+  const a=Math.random()*Math.PI;
+  const dx=Math.cos(a), dz=Math.sin(a), px=-dz, pz=dx;
+  // the main road through town
+  const len=r*1.55;
+  const road=addT(new THREE.Mesh(new THREE.BoxGeometry(len,0.25,16), roadMat));
+  road.position.set(cx,3.12,cz); road.rotation.y=-a;
+  // rows of homes along both sides, facing the street (with gaps, like real streets)
+  for(let t=-len/2+42; t<len/2-38; t+=72+Math.random()*22){
+    for(const side of [-1,1]){
+      if(Math.random()<0.22) continue;
+      const hx=cx+dx*t+px*side*(36+Math.random()*8);
+      const hz=cz+dz*t+pz*side*(36+Math.random()*8);
+      if(!onLand(hx,hz)||!farFromPads(hx,hz,110)||!spotFree(hx,hz,14)) continue;
+      buildHouse(hx,hz,-a+(side>0?0:Math.PI));
+    }
+  }
+  // farmland off to one side: fields, a barn, and sometimes grazing animals
+  if(r>230){
+    const fs=Math.random()<0.5?1:-1;
+    const fx=cx+px*r*0.52*fs, fz=cz+pz*r*0.52*fs;
+    if(onLand(fx,fz)&&farFromPads(fx,fz,90)){
+      const nF=1+Math.floor(Math.random()*2);
+      for(let f=0;f<nF;f++){
+        const gx=fx+(Math.random()*2-1)*60, gz=fz+(Math.random()*2-1)*60;
+        if(!onLand(gx,gz)) continue;
+        const field=addT(new THREE.Mesh(new THREE.BoxGeometry(90+Math.random()*50,0.16,60+Math.random()*36), fieldMats[Math.floor(Math.random()*3)]));
+        field.position.set(gx,3.08,gz); field.rotation.y=-a+(Math.random()-0.5)*0.25;
+        if(Math.random()<0.55){
+          const n=3+Math.floor(Math.random()*5);
+          for(let k=0;k<n;k++) addAnimal(gx+(Math.random()*2-1)*38, gz+(Math.random()*2-1)*26);
+        }
+      }
+      const bx=fx+dx*65, bz=fz+dz*65;
+      if(onLand(bx,bz)&&spotFree(bx,bz,20)) buildBarn(bx,bz,-a);
+    }
+  }
+}
+function buildHouse(x,z,rotIn){
+  const w=26+Math.random()*14, d=22+Math.random()*10, h=14+Math.random()*7+(Math.random()<0.3?10:0);
+  const rot=(rotIn===undefined)?Math.random()*Math.PI:rotIn;
   const body=addT(new THREE.Mesh(new THREE.BoxGeometry(w,h,d), wallMats[Math.floor(Math.random()*wallMats.length)]));
   body.position.set(x,3+h/2,z); body.rotation.y=rot;
-  const roof=addT(new THREE.Mesh(new THREE.ConeGeometry(Math.max(w,d)*0.72,2.6+Math.random()*1.4,4), roofMats[Math.floor(Math.random()*roofMats.length)]));
-  roof.position.set(x,3+h+1.3,z); roof.rotation.y=rot+Math.PI/4;
-  addSolid(x,3+h/2,z,Math.max(w,d)+1,h+3.5,Math.max(w,d)+1);
+  const rh=8+Math.random()*4;
+  const roof=addT(new THREE.Mesh(new THREE.ConeGeometry(Math.max(w,d)*0.78,rh,4), roofMats[Math.floor(Math.random()*roofMats.length)]));
+  roof.position.set(x,3+h+rh/2-0.5,z); roof.rotation.y=rot+Math.PI/4;
+  addSolid(x,3+h/2,z,Math.max(w,d)+2,h+10,Math.max(w,d)+2);
 }
 function buildRouteTerrain(){
   for(const m of terrainMeshes) scene.remove(m);
@@ -698,7 +760,7 @@ function buildRouteTerrain(){
       // a cottage or two by the grove
       for(let i=0;i<2;i++){
         const hx=cx+(Math.random()*2-1)*r*0.55, hz=cz+(Math.random()*2-1)*r*0.55;
-        if(!onLand(hx,hz)||!spotFree(hx,hz,6)) continue;
+        if(!onLand(hx,hz)||!spotFree(hx,hz,14)) continue;
         buildHouse(hx,hz);
       }
       // and a couple of rocks in the remaining water
@@ -753,13 +815,8 @@ function buildRouteTerrain(){
       }
       addSolid(x,(cy+2)/2,z,11,cy+2,11);
     }
-    // little homes tucked around the island
-    const nHouse=Math.max(2, Math.round(r/130));
-    for(let i=0;i<nHouse;i++){
-      const hx=cx+(Math.random()*2-1)*r*0.62, hz=cz+(Math.random()*2-1)*r*0.62;
-      if(!onLand(hx,hz)||!farFromPads(hx,hz,90)||!spotFree(hx,hz,7)) continue;
-      buildHouse(hx,hz);
-    }
+    // a real settlement: street, rows of homes, farmland with barns & animals
+    buildSettlement(cx,cz,r);
   }
   // sea rocks along the whole way
   const nR=Math.max(12, Math.round(span/60));
