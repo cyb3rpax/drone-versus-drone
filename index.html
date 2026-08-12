@@ -545,16 +545,16 @@ const rockTex =speckTex('#4a4258',['#3a3448','#5a5268','#423a52'],6000,4);
 const COVE=new THREE.Vector3(0,0,700);
 const HARMONY=new THREE.Vector3(0,0,-1000);   // movable — real-route editions relocate the whole town
 let TRIP=COVE.distanceTo(HARMONY);            // 1700 units by default
-let MILE=411;                               // units per mile — a mile is LONG now (3x the old scale)
+let MILE=650;                               // units per mile — a mile is a serious flight now
 const BOUND={x:900, zMin:-1250, zMax:950};    // zMin follows Harmony when it moves
 let DRAINF=1;                                 // battery pacing: one charge ≈ 60% one-way on any route length
 
 // sea with real moving waves and sunset glint
-const seaGeo=new THREE.PlaneGeometry(4200,17500,64,116);  // ocean long enough for ~36 real miles at the new scale
+const seaGeo=new THREE.PlaneGeometry(4200,24000,64,130);  // ocean long enough for ~36 real miles at the new scale
 const sea=new THREE.Mesh(seaGeo, new THREE.MeshPhongMaterial({
   color:0x155e78, shininess:120, specular:0xbcd8e2, transparent:true, opacity:0.97
 }));
-sea.rotation.x=-Math.PI/2; sea.position.z=-7550; scene.add(sea);
+sea.rotation.x=-Math.PI/2; sea.position.z=-10600; scene.add(sea);
 
 // collision boxes
 const solids=[];
@@ -652,7 +652,44 @@ function buildRouteTerrain(){
   terrainMeshes.length=0; landDiscs.length=0; islands.length=0;
   const z0=COVE.z-280, z1=HARMONY.z+280;
   const span=z0-z1;                                   // tiny (or negative) on very short routes
-  if(span<260) return;                                // short hop: open water, no terrain to cram in
+  if(span<260){
+    // short hop: ONE small island, sized to the water that actually fits between the settlements
+    const gap=(COVE.z-160)-(HARMONY.z+160);
+    if(gap>140){
+      const r=Math.min(150, gap*0.35);
+      const cz=((COVE.z-160)+(HARMONY.z+160))/2;
+      const cx=(Math.random()*2-1)*120;
+      landDiscs.push({x:cx,z:cz,r:r});
+      const isle=addT(new THREE.Mesh(new THREE.CylinderGeometry(r,r+12,4,32), new THREE.MeshStandardMaterial({map:grassTex,roughness:1})));
+      isle.position.set(cx,1,cz);
+      const nMini=3+Math.floor(Math.random()*3);         // a little grove, no hills
+      for(let i=0;i<nMini;i++){
+        const x=cx+(Math.random()*2-1)*r*0.6, z=cz+(Math.random()*2-1)*r*0.6;
+        const th=10+Math.random()*8, lean=(Math.random()-0.5)*0.05;
+        const shade=new THREE.Color(0x2a5e3a); shade.offsetHSL((Math.random()-0.5)*0.03,0,(Math.random()-0.5)*0.05);
+        const pm=new THREE.MeshStandardMaterial({color:shade,roughness:1});
+        const trunk=addT(new THREE.Mesh(new THREE.CylinderGeometry(0.7,1.2,th,8), trunkMat));
+        trunk.position.set(x,th/2+2,z); trunk.rotation.z=lean;
+        let cy=th+2;
+        for(let c=0;c<3;c++){
+          const cone=addT(new THREE.Mesh(new THREE.ConeGeometry(6.5-c*1.8,6.5,9), pm));
+          cone.position.set(x+lean*cy,cy+2.6,z); cy+=4.2;
+        }
+        addSolid(x,(cy+2)/2,z,8,cy+2,8);
+      }
+      // and a couple of rocks in the remaining water
+      for(let i=0;i<3;i++){
+        const z=cz+(Math.random()*2-1)*gap*0.45, x=(Math.random()*2-1)*300;
+        if(onLand(x,z)||!farFromPads(x,z,110)) continue;
+        const rr=10+Math.random()*14, h=5+Math.random()*10;
+        const rock=addT(new THREE.Mesh(new THREE.SphereGeometry(rr,10,8), rockMatT));
+        rock.scale.y=h/rr; rock.position.set(x,1,z);
+        addSolid(x,h/2,z,rr*1.3,h,rr*1.3);
+        islands.push({x,z});
+      }
+    }
+    return;
+  }
   // grassy landmasses spread evenly across the whole crossing
   const nLand=Math.max(1, Math.round(span/900));
   for(let li=0; li<nLand; li++){
@@ -1090,7 +1127,7 @@ document.querySelectorAll('.splashPlay').forEach(b=>b.addEventListener('click',(
 function showAddr(){ $('addr').style.display='flex'; }
 function afterAuth(){ if(routeInfo) openHome(); else showAddr(); }
 function setRouteWorld(miles){
-  const units=Math.max(400, Math.min(15000, miles*MILE));   // the WORLD stretches: ~0.1 to ~58 real miles
+  const units=Math.max(400, Math.min(20000, miles*MILE));   // the WORLD stretches: ~0.1 to ~58 real miles
   setHarmonyPos(COVE.z-units);
   DRAINF=1700/units;                                        // one charge still covers ~60% of one leg
   spawnAllFlocks();
