@@ -651,15 +651,17 @@ function buildRouteTerrain(){
   for(const m of terrainMeshes) scene.remove(m);
   terrainMeshes.length=0; landDiscs.length=0; islands.length=0;
   const z0=COVE.z-280, z1=HARMONY.z+280;
-  const span=Math.max(300, z0-z1);
+  const span=z0-z1;                                   // tiny (or negative) on very short routes
+  if(span<260) return;                                // short hop: open water, no terrain to cram in
   // grassy landmasses spread evenly across the whole crossing
   const nLand=Math.max(1, Math.round(span/900));
   for(let li=0; li<nLand; li++){
     let cz=z0-span*(li+0.5)/nLand;
     const cx=(Math.random()*2-1)*170;
-    const r=Math.max(240, Math.min(600, span/nLand*0.42));
+    const r=Math.min(600, Math.max(90, span/nLand*0.42));
     if(COVE.z-cz<r+200) cz=COVE.z-(r+200);           // never overlap the Cove…
-    if(cz-HARMONY.z<r+200) cz=HARMONY.z+r+200;       // …or Harmony (stops the flickering)
+    if(cz-HARMONY.z<r+200) cz=HARMONY.z+r+200;       // …or Harmony
+    if(COVE.z-cz<r+180 || cz-HARMONY.z<r+180) continue;   // no room at all? skip this island
     landDiscs.push({x:cx,z:cz,r:r});
     const land=addT(new THREE.Mesh(new THREE.CylinderGeometry(r,r+20,4,40), new THREE.MeshStandardMaterial({map:grassTex,roughness:1})));
     land.position.set(cx,1,cz);
