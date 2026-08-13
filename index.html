@@ -349,7 +349,7 @@
   </div>
   <section>
     <h2>ONE TRIP. EVERY SYSTEM MATTERS.</h2>
-    <div class="lead">It sounds simple: fly from The Cove to Harmony and back. But your battery only covers 60% of the round trip, the hills and pines don't move for anyone, and a bad crash means real repairs.</div>
+    <div class="lead">It sounds simple: fly from YOUR house to Harmony Montessori and back. But your battery only covers 60% of the round trip, the hills and pines don't move for anyone, and a bad crash means real repairs.</div>
     <div class="grid">
       <div class="card"><div class="ico">🔋</div><h3>BATTERY STRATEGY</h3><p>Live range estimates against distance-to-target. Misjudge it and you ditch at sea.</p></div>
       <div class="card"><div class="ico">🪙</div><h3>DRONE COINS</h3><p>Every round trip pays 100 DC — spend it on upgrades, paint jobs and new airframes.</p></div>
@@ -374,7 +374,7 @@
       <li><b>Pilot account required.</b> Register or log in every session — your coins, fleet and record belong to your account.</li>
       <li><b>One battery per leg.</b> It drains the whole flight, and one charge covers only ~60% of the round trip. Watch the range estimate.</li>
       <li><b>Recharge on pads only.</b> Run dry over open water and you ditch at sea — mission failed.</li>
-      <li><b>The round trip pays, not the halfway point.</b> Harmony, top up, home to The Cove — then bank your <b>🪙100</b>.</li>
+      <li><b>The round trip pays, not the halfway point.</b> Reach Harmony, top up, fly home — then bank your <b>🪙100</b>.</li>
       <li><b>Terrain wins every argument.</b> Hard hits past your airframe's tolerance break a part.</li>
       <li><b>Broken drones limp.</b> A fraction of your speed, treetop height — just enough to reach the parts shop.</li>
       <li><b>You fix it yourself.</b> Buy the part (credit if you're broke), drag each screw to its mount, torque it with the arrows.</li>
@@ -1395,13 +1395,10 @@ function pickBrokenPart(cause){
   if(cause==='bird')  return Math.random()<0.5?part('PROP GUARDS'):part('ROTOR ASSEMBLY');   // through the props
   if(cause==='ground'||(-vy>fwdSpd*0.8)) return Math.random()<0.65?part('LANDING GEAR'):part('BATTERY CELL'); // pancaked in
   if(Math.random()<0.4) return part('CAMERA GIMBAL');                                        // nose-first
-  return Math.random()<0.55?part('FRAME PLATES'):part('ROTOR ASSEMBLY');                     // side-swiped
+  return Math.random()<0.7?part('ROTOR ASSEMBLY'):part('PROP GUARDS');                      // side-swiped: the spinning rotors clip first
 }
 function badCrash(cause){
   broken=pickBrokenPart(cause)||PARTS[0];
-  const how=cause==='bird'?'A bird went straight through your rotors'
-          :cause==='ground'?'You slammed into the ground'
-          :'You flew straight into something solid';
   resetBattPickup();
   spawnAllFlocks();
   P.pos.set(COVE.x,10,COVE.z); P.vel.set(0,0,0); P.yaw=Math.PI; P.batt=maxBattF();
@@ -1409,7 +1406,7 @@ function badCrash(cause){
   $('mission').textContent='GO TO THE PARTS SHOP — follow the orange beacon';
   if(shopBeacon) shopBeacon.visible=true;
   showOverlay('crash','CRASHED!','#ff7b7b',
-    how+' — and exactly the part you\u2019d expect broke: your '+broken.name+'. You were hauled back to the hangar. Limp over to the PARTS SHOP (orange beacon next to the hangar) and buy a new one for 🪙'+broken.cost+'.','OK — HEAD TO THE SHOP');
+    'Your '+broken.name+' is wrecked — you were hauled back to the hangar. Limp over to the PARTS SHOP (orange beacon next to the hangar) and buy a new one for 🪙'+broken.cost+'.','OK — HEAD TO THE SHOP');
 }
 function complete(){
   trips++; money+=100; saveGame(); moneyHUD();
