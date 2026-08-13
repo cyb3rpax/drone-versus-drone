@@ -1389,8 +1389,19 @@ function fail(){
   showOverlay('fail','DITCHED AT SEA','#ff7b7b',
     'The battery ran dry. One charge can’t make the round trip — top up at Harmony before turning back.','FLY AGAIN');
 }
-function badCrash(){
-  broken=PARTS[Math.floor(Math.random()*PARTS.length)];
+function pickBrokenPart(cause){
+  const part=n=>PARTS.find(p=>p.name===n);
+  const vy=P.vel.y, fwdSpd=Math.hypot(P.vel.x,P.vel.z);
+  if(cause==='bird')  return Math.random()<0.5?part('PROP GUARDS'):part('ROTOR ASSEMBLY');   // through the props
+  if(cause==='ground'||(-vy>fwdSpd*0.8)) return Math.random()<0.65?part('LANDING GEAR'):part('BATTERY CELL'); // pancaked in
+  if(Math.random()<0.4) return part('CAMERA GIMBAL');                                        // nose-first
+  return Math.random()<0.55?part('FRAME PLATES'):part('ROTOR ASSEMBLY');                     // side-swiped
+}
+function badCrash(cause){
+  broken=pickBrokenPart(cause)||PARTS[0];
+  const how=cause==='bird'?'A bird went straight through your rotors'
+          :cause==='ground'?'You slammed into the ground'
+          :'You flew straight into something solid';
   resetBattPickup();
   spawnAllFlocks();
   P.pos.set(COVE.x,10,COVE.z); P.vel.set(0,0,0); P.yaw=Math.PI; P.batt=maxBattF();
@@ -1398,7 +1409,7 @@ function badCrash(){
   $('mission').textContent='GO TO THE PARTS SHOP — follow the orange beacon';
   if(shopBeacon) shopBeacon.visible=true;
   showOverlay('crash','CRASHED!','#ff7b7b',
-    'That was a bad one — you were hauled back to the hangar and your '+broken.name+' is wrecked. Limp over to the PARTS SHOP (orange beacon next to the hangar) and buy a new one for 🪙'+broken.cost+'.','OK — HEAD TO THE SHOP');
+    how+' — and exactly the part you\u2019d expect broke: your '+broken.name+'. You were hauled back to the hangar. Limp over to the PARTS SHOP (orange beacon next to the hangar) and buy a new one for 🪙'+broken.cost+'.','OK — HEAD TO THE SHOP');
 }
 function complete(){
   trips++; money+=100; saveGame(); moneyHUD();
@@ -1634,7 +1645,7 @@ function loop(){
     if(limp && P.pos.y>14) P.pos.y=14;                // can't climb while broken
     const hit=collide(P.pos);
     if(hit){
-      if(spd>crashTol()){ badCrash(); }  // hard impact: wrecked, hauled back to the hangar
+      if(spd>crashTol()){ badCrash(hit==='ground'?'ground':'solid'); }  // what breaks depends on what you hit
       else P.vel.multiplyScalar(0.4);
     }
 
@@ -1645,7 +1656,7 @@ function loop(){
       for(const f of flocks) for(const b of f.birds){
         if(P.pos.distanceTo(b.g.position)<2.6){
           birdCd=1.5;
-          if(spd>crashTol()*0.85){ badCrash(); }               // fast bird strike wrecks a part (luck may save you)
+          if(spd>crashTol()*0.85){ badCrash('bird'); }         // bird through the props — rotor damage
           else { P.vel.multiplyScalar(0.45); P.batt=Math.max(0,P.batt-4); banner('🐦 BIRD STRIKE!'); }
           break outer;
         }
