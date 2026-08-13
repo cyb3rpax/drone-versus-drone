@@ -651,24 +651,35 @@ function farFromPads(x,z,m){
 }
 function addT(m){ m.castShadow=true; m.receiveShadow=true; scene.add(m); terrainMeshes.push(m); return m; }
 const wallMats=[0xd9cfbf,0xcbb9a3,0xb7c3cb,0xd6c3b1].map(c=>new THREE.MeshStandardMaterial({color:c,roughness:0.9}));
-const roofMats=[0x8a4a3a,0x5f4a5e,0x49606e].map(c=>new THREE.MeshStandardMaterial({color:c,roughness:0.85}));
+const roofMats=[0x707a82,0x5f4a5e,0x49606e].map(c=>new THREE.MeshStandardMaterial({color:c,roughness:0.85}));
 function spotFree(x,z,m){
   for(const b of solids){ if(x>b.min.x-m&&x<b.max.x+m&&z>b.min.z-m&&z<b.max.z+m) return false; }
   return true;
 }
 const roadMat=new THREE.MeshStandardMaterial({color:0x59544f,roughness:1});
 const fieldMats=[0xc9b26a,0x9ab35e,0xb5c47a].map(c=>new THREE.MeshStandardMaterial({color:c,roughness:1}));
-const barnWall=new THREE.MeshStandardMaterial({color:0x9e3d32,roughness:0.9});
-const barnRoofM=new THREE.MeshStandardMaterial({color:0x6e2a22,roughness:0.9});
 const animalMats=[0xece8de,0x8a6248,0x4a4a48].map(c=>new THREE.MeshStandardMaterial({color:c,roughness:1}));
-function buildBarn(x,z,rot){
-  const w=44,d=30,h=20;
-  const body=addT(new THREE.Mesh(new THREE.BoxGeometry(w,h,d), barnWall));
+function windowTex(){
+  const c=document.createElement('canvas'); c.width=128; c.height=256;
+  const x=c.getContext('2d');
+  x.fillStyle='#9aa0a6'; x.fillRect(0,0,128,256);
+  for(let ry=10;ry<246;ry+=22){
+    for(let rx=8;rx<120;rx+=20){
+      x.fillStyle=Math.random()<0.25?'#dfe6ea':'#2e3a42';
+      x.fillRect(rx,ry,12,14);
+    }
+  }
+  return new THREE.CanvasTexture(c);
+}
+function buildBarn(x,z,rot){                        // grey apartment block
+  const w=28+Math.random()*10, d=22+Math.random()*8, h=42+Math.random()*22;
+  const win=new THREE.MeshStandardMaterial({map:windowTex(),roughness:0.85});
+  const cap=new THREE.MeshStandardMaterial({color:0x7d858c,roughness:0.95});
+  const body=addT(new THREE.Mesh(new THREE.BoxGeometry(w,h,d), [win,win,cap,cap,win,win]));
   body.position.set(x,3+h/2,z); body.rotation.y=rot;
-  const roof=addT(new THREE.Mesh(new THREE.CylinderGeometry(17,17,w+1.5,3,1), barnRoofM));
-  roof.rotation.z=Math.PI/2; roof.rotation.y=rot;
-  roof.position.set(x,3+h+6,z);
-  addSolid(x,3+h/2,z,Math.max(w,d)+3,h+18,Math.max(w,d)+3);
+  const lip=addT(new THREE.Mesh(new THREE.BoxGeometry(w+2,1.6,d+2), new THREE.MeshStandardMaterial({color:0x5d656c,roughness:1})));
+  lip.position.set(x,3+h+0.8,z); lip.rotation.y=rot;
+  addSolid(x,3+h/2,z,Math.max(w,d)+3,h+4,Math.max(w,d)+3);
 }
 function addAnimal(x,z){
   if(!onLand(x,z)) return;
@@ -696,7 +707,7 @@ function buildSettlement(cx,cz,r){
       buildHouse(hx,hz,-a+(side>0?0:Math.PI));
     }
   }
-  // farmland off to one side: fields, a barn, and sometimes grazing animals
+  // farmland off to one side: fields, an apartment block, and sometimes grazing animals
   if(r>230){
     const fs=Math.random()<0.5?1:-1;
     const fx=cx+px*r*0.52*fs, fz=cz+pz*r*0.52*fs;
