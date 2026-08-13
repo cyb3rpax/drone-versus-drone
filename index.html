@@ -694,16 +694,16 @@ function buildSettlement(cx,cz,r){
   const a=Math.random()*Math.PI;
   const dx=Math.cos(a), dz=Math.sin(a), px=-dz, pz=dx;
   // the main road through town
-  const len=r*1.55;
+  const len=r*1.7;
   const road=addT(new THREE.Mesh(new THREE.BoxGeometry(len,0.3,32), roadMat));
   road.position.set(cx,3.12,cz); road.rotation.y=-a;
   // rows of homes along both sides, facing the street (with gaps, like real streets)
-  for(let t=-len/2+84; t<len/2-76; t+=144+Math.random()*44){
+  for(let t=-len/2+80; t<len/2-70; t+=120+Math.random()*40){
     for(const side of [-1,1]){
       if(Math.random()<0.22) continue;
       const hx=cx+dx*t+px*side*(72+Math.random()*16);
       const hz=cz+dz*t+pz*side*(72+Math.random()*16);
-      if(!onLand(hx,hz)||!farFromPads(hx,hz,150)||!spotFree(hx,hz,28)) continue;
+      if(!onLand(hx,hz)||!farFromPads(hx,hz,140)||!spotFree(hx,hz,10)) continue;
       buildHouse(hx,hz,-a+(side>0?0:Math.PI));
     }
   }
@@ -753,9 +753,16 @@ function buildRouteTerrain(){
       landDiscs.push({x:cx,z:cz,r:r});
       const isle=addT(new THREE.Mesh(new THREE.CylinderGeometry(r,r+12,4,32), new THREE.MeshStandardMaterial({map:grassTex,roughness:1})));
       isle.position.set(cx,1,cz);
+      // a cottage or two first
+      for(let i=0;i<2;i++){
+        const hx0=cx+(Math.random()*2-1)*r*0.5, hz0=cz+(Math.random()*2-1)*r*0.5;
+        if(!onLand(hx0,hz0)||!spotFree(hx0,hz0,10)) continue;
+        buildHouse(hx0,hz0);
+      }
       const nMini=3+Math.floor(Math.random()*3);         // a little grove, no hills
       for(let i=0;i<nMini;i++){
         const x=cx+(Math.random()*2-1)*r*0.6, z=cz+(Math.random()*2-1)*r*0.6;
+        if(!spotFree(x,z,22)) continue;
         const th=20+Math.random()*16, lean=(Math.random()-0.5)*0.05;
         const shade=new THREE.Color(0x2a5e3a); shade.offsetHSL((Math.random()-0.5)*0.03,0,(Math.random()-0.5)*0.05);
         const pm=new THREE.MeshStandardMaterial({color:shade,roughness:1});
@@ -767,12 +774,6 @@ function buildRouteTerrain(){
           cone.position.set(x+lean*cy,cy+5.2,z); cy+=8.4;
         }
         addSolid(x,(cy+2)/2,z,16,cy+2,16);
-      }
-      // a cottage or two by the grove
-      for(let i=0;i<2;i++){
-        const hx=cx+(Math.random()*2-1)*r*0.55, hz=cz+(Math.random()*2-1)*r*0.55;
-        if(!onLand(hx,hz)||!spotFree(hx,hz,14)) continue;
-        buildHouse(hx,hz);
       }
       // and a couple of rocks in the remaining water
       for(let i=0;i<3;i++){
@@ -802,18 +803,21 @@ function buildRouteTerrain(){
     // rolling hills
     const nH=Math.max(4, Math.round(r/40));
     for(let i=0;i<nH;i++){
-      const x=cx+(Math.random()*2-1)*r*0.78, z=cz+(Math.random()*2-1)*r*0.78;
-      if(!onLand(x,z)||!farFromPads(x,z,90)) continue;
+      const ang=Math.random()*Math.PI*2, rad=r*(0.62+Math.random()*0.3);
+      const x=cx+Math.cos(ang)*rad, z=cz+Math.sin(ang)*rad;
+      if(!onLand(x,z)||!farFromPads(x,z,90)||!spotFree(x,z,40)) continue;
       const hr=70+Math.random()*100, h=52+Math.random()*92;
       const hill=addT(new THREE.Mesh(new THREE.SphereGeometry(hr,16,12), new THREE.MeshStandardMaterial({map:grassTex,color:0xc2d6ba,roughness:1})));
       hill.scale.y=h/hr; hill.position.set(x,2,z); hill.rotation.y=Math.random()*3;
       addSolid(x,h/2,z,hr*1.1,h,hr*1.1);
     }
-    // tall pines
+    // town first, so the big buildings always get their space
+    buildSettlement(cx,cz,r);
+    // tall pines fill in around it
     const nT=Math.max(10, Math.round(r/9));
     for(let i=0;i<nT;i++){
       const x=cx+(Math.random()*2-1)*r*0.85, z=cz+(Math.random()*2-1)*r*0.85;
-      if(!onLand(x,z)||!farFromPads(x,z,70)) continue;
+      if(!onLand(x,z)||!farFromPads(x,z,70)||!spotFree(x,z,26)) continue;
       const th=48+Math.random()*48, lean=(Math.random()-0.5)*0.06;
       const shade=new THREE.Color(0x2a5e3a); shade.offsetHSL((Math.random()-0.5)*0.03,(Math.random()-0.5)*0.1,(Math.random()-0.5)*0.06);
       const pineMat=new THREE.MeshStandardMaterial({color:shade,roughness:1});
@@ -826,8 +830,6 @@ function buildRouteTerrain(){
       }
       addSolid(x,(cy+2)/2,z,22,cy+2,22);
     }
-    // a real settlement: street, rows of homes, farmland with barns & animals
-    buildSettlement(cx,cz,r);
   }
   // sea rocks along the whole way
   const nR=Math.max(12, Math.round(span/60));
