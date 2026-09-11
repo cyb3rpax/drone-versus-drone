@@ -117,12 +117,12 @@
   #logoutBtn{float:right;margin-top:4px;padding:5px 12px;border-radius:7px;border:1px solid rgba(180,140,255,.4);background:rgba(50,35,90,.45);color:#c8bce0;font-size:10px;cursor:pointer;letter-spacing:1px}
   #logoutBtn:hover{background:rgba(80,55,140,.6)}
   #benchRow{display:flex;align-items:center;justify-content:center;gap:16px}
-  .hole{position:absolute;width:15px;height:15px;line-height:15px;border-radius:50%;background:#191423;border:1.5px dashed #55496a;font-size:9px;color:#e8dcf8;text-align:center;transition:transform .12s}
-  .hole.target{border-color:#ffd66b;box-shadow:0 0 10px rgba(255,214,107,.9);animation:pulse 0.9s infinite}
+  .hole{position:absolute;width:9px;height:9px;line-height:9px;border-radius:50%;background:#191423;border:1px dashed #55496a;font-size:6px;color:#e8dcf8;text-align:center;transition:transform .12s}
+  .hole.target{border-color:#ffd66b;box-shadow:0 0 8px rgba(255,214,107,.95);animation:pulse 0.9s infinite}
   .hole.filled{border-style:solid;border-color:#9a8ab8;background:#332c48}
   #tray{width:70px;text-align:center;background:rgba(20,15,35,.6);border:1px solid rgba(138,122,168,.4);border-radius:10px;padding:10px 6px}
   #trayLabel{font-size:10px;color:#b8a8d8;margin-top:6px;line-height:1.4}
-  #screwPiece{display:inline-block;width:16px;height:16px;line-height:16px;border-radius:50%;background:radial-gradient(circle,#5a5270,#332c48);border:1.5px solid #ffd66b;font-size:10px;color:#f4ecd8;cursor:grab;user-select:none;touch-action:none;text-align:center;box-shadow:0 0 8px rgba(255,214,107,.5)}
+  #screwPiece{display:inline-block;width:10px;height:10px;line-height:10px;border-radius:50%;background:radial-gradient(circle,#5a5270,#332c48);border:1px solid #ffd66b;font-size:6px;color:#f4ecd8;cursor:grab;user-select:none;touch-action:none;text-align:center;box-shadow:0 0 7px rgba(255,214,107,.6)}
   #screwPiece.drag{position:fixed;z-index:60;cursor:grabbing;pointer-events:none;margin:0}
   #screwPrompt{font-size:44px;margin-top:10px;color:#ffd66b;animation:pulse 0.8s infinite;display:none}
   @keyframes pulse{50%{transform:scale(1.15);opacity:.65}}
@@ -1033,6 +1033,11 @@ let phase=1, charging=false, broken=null, ovMode='';
 let money=0, trips=0;
 // shared gradients for realistic part rendering
 const PART_DEFS='<defs>'
+ +'<pattern id="weave" width="8" height="8" patternUnits="userSpaceOnUse">'
+ +'<rect width="8" height="8" fill="#24202e"/><rect width="4" height="4" fill="#2f2a3c"/><rect x="4" y="4" width="4" height="4" fill="#2f2a3c"/></pattern>'
+ +'<linearGradient id="bell" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b9b2c8"/><stop offset="0.45" stop-color="#6b6480"/><stop offset="1" stop-color="#3a3448"/></linearGradient>'
+ +'<linearGradient id="blade" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4a4458"/><stop offset="0.5" stop-color="#7d7590"/><stop offset="1" stop-color="#3a3448"/></linearGradient>'
+ +'<linearGradient id="pcb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1f6b4a"/><stop offset="1" stop-color="#12452f"/></linearGradient>'
  +'<linearGradient id="met" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6a6284"/><stop offset="0.5" stop-color="#3a3450"/><stop offset="1" stop-color="#262038"/></linearGradient>'
  +'<linearGradient id="met2" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8a82a4"/><stop offset="1" stop-color="#4a4260"/></linearGradient>'
  +'<linearGradient id="carbon" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3a3448"/><stop offset="0.5" stop-color="#211d2e"/><stop offset="1" stop-color="#3a3448"/></linearGradient>'
@@ -1041,25 +1046,62 @@ const PART_DEFS='<defs>'
  +'</defs>';
 // top-down view of YOUR drone — the broken part gets screwed on right where it lives
 const DRONE_SVG=
-  '<g stroke-linecap="round">'
- +'<line x1="122" y1="72" x2="60" y2="40" stroke="#4a4260" stroke-width="9"/>'
- +'<line x1="148" y1="72" x2="210" y2="40" stroke="#4a4260" stroke-width="9"/>'
- +'<line x1="122" y1="104" x2="60" y2="130" stroke="#4a4260" stroke-width="9"/>'
- +'<line x1="148" y1="104" x2="210" y2="130" stroke="#4a4260" stroke-width="9"/>'
+  // carbon X-frame arms (tapered, weave texture)
+  '<g stroke="url(#weave)" stroke-linecap="round">'
+ +'<line x1="126" y1="76" x2="60" y2="40" stroke-width="11"/>'
+ +'<line x1="144" y1="76" x2="210" y2="40" stroke-width="11"/>'
+ +'<line x1="126" y1="100" x2="60" y2="130" stroke-width="11"/>'
+ +'<line x1="144" y1="100" x2="210" y2="130" stroke-width="11"/>'
  +'</g>'
- // four rotors (guard ring + blades + motor)
- +[[60,40],[210,40],[60,130],[210,130]].map(p=>
-    '<circle cx="'+p[0]+'" cy="'+p[1]+'" r="24" fill="none" stroke="#55496a" stroke-width="4"/>'
-   +'<line x1="'+(p[0]-20)+'" y1="'+p[1]+'" x2="'+(p[0]+20)+'" y2="'+p[1]+'" stroke="#8a82a4" stroke-width="3"/>'
-   +'<line x1="'+p[0]+'" y1="'+(p[1]-20)+'" x2="'+p[0]+'" y2="'+(p[1]+20)+'" stroke="#8a82a4" stroke-width="3"/>'
-   +'<circle cx="'+p[0]+'" cy="'+p[1]+'" r="5.5" fill="url(#motor)" stroke="#1c1826"/>'
-  ).join('')
- // central body: hull plate, canopy, battery bay, nose gimbal
- +'<rect x="113" y="60" width="44" height="58" rx="10" fill="url(#met)" stroke="#9a8ab8" stroke-width="1.5"/>'
- +'<rect x="121" y="66" width="28" height="17" rx="5" fill="#35d0ff" opacity="0.7"/>'
- +'<rect x="121" y="88" width="28" height="24" rx="4" fill="url(#carbon)" stroke="#1c1826"/>'
- +'<circle cx="135" cy="54" r="8" fill="url(#lens)" stroke="#8a82a4" stroke-width="1.5"/>'
- +'<circle cx="118" cy="64" r="2.5" fill="#ff3333"/><circle cx="152" cy="64" r="2.5" fill="#33ff55"/>';
+  // arm bolt heads where each arm meets the plate
+ +'<g fill="#8f8aa0">'
+ +'<circle cx="118" cy="72" r="2"/><circle cx="152" cy="72" r="2"/><circle cx="118" cy="104" r="2"/><circle cx="152" cy="104" r="2"/></g>'
+  // four motor + prop assemblies
+ +[[60,40],[210,40],[60,130],[210,130]].map((p,i)=>{
+    const cw=(i===0||i===3);
+    const b1=cw?-28:28, b2=cw?28:-28;
+    return ''
+     // prop guard ring with mount tabs
+     +'<circle cx="'+p[0]+'" cy="'+p[1]+'" r="27" fill="none" stroke="#3f3a4e" stroke-width="3.5"/>'
+     +'<circle cx="'+p[0]+'" cy="'+p[1]+'" r="27" fill="none" stroke="#57506a" stroke-width="1"/>'
+     // two tapered blades
+     +'<path d="M'+p[0]+' '+p[1]+' q'+b1+' -13 '+(b1*0.82)+' 4 q'+(-b1*0.5)+' 7 '+(-b1*0.82)+' -4 Z" fill="url(#blade)" stroke="#252030" stroke-width="0.6"/>'
+     +'<path d="M'+p[0]+' '+p[1]+' q'+b2+' 13 '+(b2*0.82)+' -4 q'+(-b2*0.5)+' -7 '+(-b2*0.82)+' 4 Z" fill="url(#blade)" stroke="#252030" stroke-width="0.6"/>'
+     // motor bell: stator windings, vents, shaft nut
+     +'<circle cx="'+p[0]+'" cy="'+p[1]+'" r="9.5" fill="url(#bell)" stroke="#241f30" stroke-width="1"/>'
+     +'<g stroke="#241f30" stroke-width="0.9" opacity="0.85">'
+     +'<line x1="'+(p[0]-6.7)+'" y1="'+(p[1]-6.7)+'" x2="'+(p[0]-3.4)+'" y2="'+(p[1]-3.4)+'"/>'
+     +'<line x1="'+(p[0]+6.7)+'" y1="'+(p[1]-6.7)+'" x2="'+(p[0]+3.4)+'" y2="'+(p[1]-3.4)+'"/>'
+     +'<line x1="'+(p[0]-6.7)+'" y1="'+(p[1]+6.7)+'" x2="'+(p[0]-3.4)+'" y2="'+(p[1]+3.4)+'"/>'
+     +'<line x1="'+(p[0]+6.7)+'" y1="'+(p[1]+6.7)+'" x2="'+(p[0]+3.4)+'" y2="'+(p[1]+3.4)+'"/></g>'
+     +'<circle cx="'+p[0]+'" cy="'+p[1]+'" r="3" fill="#cfc8dc" stroke="#453f56" stroke-width="0.8"/>'
+     // three ESC wires running down the arm
+     +'<g stroke-width="1" fill="none" opacity="0.9">'
+     +'<path d="M'+p[0]+' '+p[1]+' Q'+((p[0]+135)/2)+' '+((p[1]+88)/2+4)+' 135 88" stroke="#c0392b"/>'
+     +'<path d="M'+p[0]+' '+p[1]+' Q'+((p[0]+135)/2)+' '+((p[1]+88)/2)+' 135 88" stroke="#1c1826"/>'
+     +'<path d="M'+p[0]+' '+p[1]+' Q'+((p[0]+135)/2)+' '+((p[1]+88)/2-4)+' 135 88" stroke="#d9b64a"/></g>';
+   }).join('')
+  // top carbon plate with lightening slots
+ +'<rect x="112" y="58" width="46" height="62" rx="7" fill="url(#weave)" stroke="#6f6884" stroke-width="1.5"/>'
+ +'<g fill="none" stroke="#453f56" stroke-width="1">'
+ +'<rect x="117" y="63" width="12" height="18" rx="3"/><rect x="141" y="63" width="12" height="18" rx="3"/>'
+ +'<rect x="117" y="97" width="12" height="18" rx="3"/><rect x="141" y="97" width="12" height="18" rx="3"/></g>'
+  // flight stack (FC board) visible through the middle
+ +'<rect x="122" y="74" width="26" height="24" rx="3" fill="url(#pcb)" stroke="#0d3323" stroke-width="1"/>'
+ +'<rect x="128" y="80" width="14" height="12" rx="1.5" fill="#2a2a30"/>'
+ +'<g fill="#d9b64a"><circle cx="125" cy="77" r="1.2"/><circle cx="145" cy="77" r="1.2"/><circle cx="125" cy="95" r="1.2"/><circle cx="145" cy="95" r="1.2"/></g>'
+ +'<circle cx="140" cy="95" r="1.6" fill="#4ce08a"/>'
+  // GPS puck at the tail
+ +'<rect x="126" y="120" width="18" height="14" rx="3" fill="#2b2636" stroke="#6f6884" stroke-width="1"/>'
+ +'<circle cx="135" cy="127" r="4" fill="none" stroke="#8f8aa0" stroke-width="0.9"/>'
+  // camera + gimbal at the nose
+ +'<rect x="128" y="48" width="14" height="10" rx="2" fill="#2b2636" stroke="#6f6884" stroke-width="1"/>'
+ +'<circle cx="135" cy="52" r="6" fill="url(#lens)" stroke="#8f8aa0" stroke-width="1.2"/>'
+ +'<ellipse cx="133" cy="50" rx="2" ry="1.2" fill="rgba(200,220,255,0.55)"/>'
+  // nav lights
+ +'<circle cx="118" cy="64" r="2.6" fill="#ff3b3b"/><circle cx="152" cy="64" r="2.6" fill="#37e06a"/>'
+  // battery strap across the belly
+ +'<rect x="110" y="84" width="50" height="5" rx="2" fill="#3a3448" opacity="0.65"/>';
 // each part: where its screws go ON the drone + a glowing zone marking the install spot
 const PARTS=[
   {name:'ROTOR ASSEMBLY', cost:120,
@@ -1467,10 +1509,12 @@ function startBench(){
   $('ovTitle').style.color='#ffd66b';
   $('ovText').textContent='Screw the new '+broken.name.toLowerCase()+' onto your drone — the glowing zone shows where it goes. Drag each screw to the glowing hole, then turn it clockwise with your arrow keys.';
   const p=$('part');
-  p.innerHTML='<svg viewBox="0 0 270 170" style="position:absolute;inset:0;width:100%;height:100%">'+PART_DEFS+DRONE_SVG+broken.mark+'</svg>';
+  p.innerHTML='<svg viewBox="0 0 270 170" style="position:absolute;inset:0;width:100%;height:100%">'+PART_DEFS+DRONE_SVG+broken.mark
+    +'<text x="135" y="12" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="8" letter-spacing="1.5" fill="#ffd66b">'+broken.name+'</text>'
+    +'<text x="135" y="164" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="6" letter-spacing="1" fill="#7b8f98">QUADCOPTER · TOP VIEW · M3 HARDWARE</text></svg>';
   for(let i=0;i<4;i++){
     const h=document.createElement('div'); h.className='hole'; h.id='hole'+i;
-    h.style.left=(broken.holes[i][0]-8)+'px'; h.style.top=(broken.holes[i][1]-8)+'px';
+    h.style.left=(broken.holes[i][0]-5)+'px'; h.style.top=(broken.holes[i][1]-5)+'px';
     p.appendChild(h);
   }
   benchUI();
@@ -1483,7 +1527,7 @@ function benchUI(){
   $('screwInfo').textContent='SCREW '+(screwIdx+1)+' OF 4 · '+(benchStage==='drag'?'drag it to the glowing hole':'turn it with the arrow keys');
 }
 const piece=$('screwPiece');
-function movePiece(e){ piece.style.left=(e.clientX-9)+'px'; piece.style.top=(e.clientY-9)+'px'; }
+function movePiece(e){ piece.style.left=(e.clientX-5)+'px'; piece.style.top=(e.clientY-5)+'px'; }
 piece.addEventListener('pointerdown',e=>{
   if(!screwing||benchStage!=='drag') return;
   dragging=true; piece.classList.add('drag'); movePiece(e);
