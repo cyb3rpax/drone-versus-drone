@@ -1079,7 +1079,22 @@ const PARTS=[
    mark:'<rect x="115" y="82" width="40" height="36" rx="6" fill="none" stroke="#ffd66b" stroke-width="2" stroke-dasharray="6 5"/>'},
   {name:'FRAME PLATES',   cost:100,
    holes:[[113,58],[157,58],[113,120],[157,120]],
-   mark:'<rect x="107" y="54" width="56" height="70" rx="12" fill="none" stroke="#ffd66b" stroke-width="2" stroke-dasharray="6 5"/>'}
+   mark:'<rect x="107" y="54" width="56" height="70" rx="12" fill="none" stroke="#ffd66b" stroke-width="2" stroke-dasharray="6 5"/>'},
+  {name:'MOTOR MOUNT',    cost:110,
+   holes:[[52,26],[68,26],[52,54],[68,54]],
+   mark:'<circle cx="60" cy="40" r="26" fill="none" stroke="#ffd66b" stroke-width="2" stroke-dasharray="6 5"/>'},
+  {name:'ARM STRUT',      cost:85,
+   holes:[[100,96],[116,104],[132,112],[148,120]],
+   mark:'<line x1="122" y1="104" x2="60" y2="130" stroke="#ffd66b" stroke-width="3" stroke-dasharray="6 5"/>'},
+  {name:'GPS ANTENNA',    cost:95,
+   holes:[[126,120],[144,120],[126,132],[144,132]],
+   mark:'<rect x="120" y="114" width="30" height="24" rx="6" fill="none" stroke="#ffd66b" stroke-width="2" stroke-dasharray="6 5"/>'},
+  {name:'FLIGHT COMPUTER',cost:180,
+   holes:[[122,72],[148,72],[122,92],[148,92]],
+   mark:'<rect x="116" y="66" width="38" height="32" rx="6" fill="none" stroke="#ffd66b" stroke-width="2" stroke-dasharray="6 5"/>'},
+  {name:'NAV LIGHTS',     cost:55,
+   holes:[[112,58],[158,58],[112,70],[158,70]],
+   mark:'<circle cx="118" cy="64" r="12" fill="none" stroke="#ffd66b" stroke-width="2" stroke-dasharray="5 4"/><circle cx="152" cy="64" r="12" fill="none" stroke="#ffd66b" stroke-width="2" stroke-dasharray="5 4"/>'}
 ];
 const $=id=>document.getElementById(id);
 // ---------- Account system ----------
@@ -1409,11 +1424,17 @@ function fail(){
 }
 function pickBrokenPart(cause){
   const part=n=>PARTS.find(p=>p.name===n);
+  const pickFrom=list=>part(list[Math.floor(Math.random()*list.length)]);
   const vy=P.vel.y, fwdSpd=Math.hypot(P.vel.x,P.vel.z);
-  if(cause==='bird')  return Math.random()<0.5?part('PROP GUARDS'):part('ROTOR ASSEMBLY');   // through the props
-  if(cause==='ground'||(-vy>fwdSpd*0.8)) return Math.random()<0.65?part('LANDING GEAR'):part('BATTERY CELL'); // pancaked in
-  if(Math.random()<0.4) return part('CAMERA GIMBAL');                                        // nose-first
-  return Math.random()<0.7?part('ROTOR ASSEMBLY'):part('PROP GUARDS');                      // side-swiped: the spinning rotors clip first
+  // a bird through the props: blades, guards, the motor mount it's bolted to
+  if(cause==='bird') return pickFrom(['ROTOR ASSEMBLY','PROP GUARDS','PROP GUARDS','MOTOR MOUNT','NAV LIGHTS']);
+  // belly-flop: everything underneath takes it
+  if(cause==='ground'||(-vy>fwdSpd*0.8))
+    return pickFrom(['LANDING GEAR','LANDING GEAR','BATTERY CELL','GPS ANTENNA','ARM STRUT']);
+  // nose-first into something solid
+  if(Math.random()<0.45) return pickFrom(['CAMERA GIMBAL','CAMERA GIMBAL','NAV LIGHTS','FLIGHT COMPUTER','FRAME PLATES']);
+  // side-swipe: the spinning rotors and the arm they ride on
+  return pickFrom(['ROTOR ASSEMBLY','ROTOR ASSEMBLY','ARM STRUT','MOTOR MOUNT','PROP GUARDS']);
 }
 function badCrash(cause){
   broken=pickBrokenPart(cause)||PARTS[0];
