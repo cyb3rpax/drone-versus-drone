@@ -296,6 +296,18 @@
   .hole{background:#fff;border-color:#9ab4ac;color:#31505a}
   #screwPiece{background:#fff;border-color:#c78a00;color:#7a5c14;box-shadow:0 0 8px rgba(199,138,0,.35)}
   #screwInfo{color:#4a6b76}
+  #newsBox{display:none;margin:12px 0 2px;padding:11px 14px;border-radius:12px;text-align:left;font-size:12.5px;line-height:1.55;
+    background:rgba(255,214,107,.12);border:1px solid rgba(199,138,0,.35);color:#6d5210}
+  #newsBox b{display:block;font-size:10px;letter-spacing:2px;color:#c78a00;margin-bottom:3px}
+  #crashFlash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .5s}
+  #skinTabs{display:flex;gap:6px;margin-bottom:10px}
+  .skinTab{flex:1;padding:7px 4px;border-radius:9px;border:1px solid rgba(30,80,90,.15);background:rgba(20,110,100,.05);
+    color:#5b7a84;font-size:10px;font-weight:700;letter-spacing:1.5px;cursor:pointer;transition:background .15s}
+  .skinTab:hover{background:rgba(20,110,100,.1)}
+  .skinTab.on{background:rgba(18,180,142,.15);border-color:rgba(18,180,142,.45);color:#0c6e58}
+  .skinBtn .sw{position:relative;height:26px}
+  .skinBtn .sw .ch{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:15px;
+    text-shadow:0 1px 3px rgba(0,0,0,.45)}
   #tray{background:rgba(20,110,100,.06);border-color:rgba(30,80,90,.12)}
   #trayLabel{color:#5b7a84}
   #droneRow{flex-wrap:wrap}
@@ -333,6 +345,7 @@
     <div id="est">One charge is NOT enough for the round trip — recharge at Harmony before heading home.</div>
   </div>
   <div id="warn"></div>
+  <div id="crashFlash"></div>
   <div id="charge"></div>
   <div id="banner"></div>
   <canvas id="map" width="150" height="220"></canvas>
@@ -410,7 +423,7 @@
 
   <section style="text-align:center;padding-top:10px">
     <h2>READY TO FLY?</h2>
-    <div class="lead">Create your pilot account, enter your address, and make your first delivery in under a minute.</div>
+    <div class="lead">Create your pilot account, enter your address, and make your first delivery now.</div>
     <button class="splashPlay">▲ CREATE ACCOUNT &amp; FLY</button>
   </section>
   <footer>Drone Courier: Marin · fly the real distance from your Marin County home</footer>
@@ -440,12 +453,22 @@
 </div></div>
 <div id="home"><div id="homeBox">
   <button id="logoutBtn">LOG OUT</button>
+  <a href="index.html" style="float:right;margin:4px 8px 0 0;padding:5px 12px;border-radius:7px;border:1px solid rgba(18,180,142,.35);background:rgba(18,180,142,.1);color:#0c6e58;font-size:10px;letter-spacing:1px;text-decoration:none">◀ SITE</a>
   <h1>DRONE COURIER: MARIN</h1>
   <div id="homeSub">Drone courier of the archipelago · fly the round trip, earn Drone Coins, build your fleet</div>
   <div id="coinBig">🪙 0 DRONE COINS</div>
   <div id="homeTrips"></div>
+  <div id="newsBox"></div>
   <button id="flyBtn">🚁 ▲ FLY THE MISSION ▲</button>
-  <div class="hSect"><h2>SKINS</h2><div id="skinRow"></div></div>
+  <div class="hSect"><h2>PAINT SHOP</h2>
+    <div id="skinTabs">
+      <button class="skinTab on" data-cat="color">COLORS</button>
+      <button class="skinTab" data-cat="pattern">PATTERNS</button>
+      <button class="skinTab" data-cat="char">CHARACTERS</button>
+      <button class="skinTab" data-cat="fx">CRASH FX</button>
+    </div>
+    <div id="skinRow"></div>
+  </div>
   <div class="hSect"><h2>DRONES</h2><div id="droneRow"></div></div>
   <div class="hSect"><h2>COIN STORE 💳</h2>
     <div id="packRow"></div>
@@ -672,6 +695,8 @@ function spotFree(x,z,m){
   for(const b of solids){ if(x>b.min.x-m&&x<b.max.x+m&&z>b.min.z-m&&z<b.max.z+m) return false; }
   return true;
 }
+// reserve the footprint an object will occupy, so nothing can be built inside it
+function fits(x,z,halfW){ return spotFree(x,z,halfW+6); }
 const roadMat=new THREE.MeshStandardMaterial({color:0x59544f,roughness:1});
 const fieldMats=[0xc9b26a,0x9ab35e,0xb5c47a].map(c=>new THREE.MeshStandardMaterial({color:c,roughness:1}));
 const animalMats=[0xece8de,0x8a6248,0x4a4a48].map(c=>new THREE.MeshStandardMaterial({color:c,roughness:1}));
@@ -695,7 +720,7 @@ function buildBarn(x,z,rot){                        // grey apartment block
   body.position.set(x,3+h/2,z); body.rotation.y=rot;
   const lip=addT(new THREE.Mesh(new THREE.BoxGeometry(w+4,3.2,d+4), new THREE.MeshStandardMaterial({color:0x5d656c,roughness:1})));
   lip.position.set(x,3+h+1.6,z); lip.rotation.y=rot;
-  addSolid(x,3+h/2,z,Math.max(w,d)+3,h+4,Math.max(w,d)+3);
+  addSolid(x,3+h/2,z,w,h+3.2,d);
 }
 function addAnimal(x,z){
   if(!onLand(x,z)) return;
@@ -719,7 +744,7 @@ function buildSettlement(cx,cz,r){
       if(Math.random()<0.22) continue;
       const hx=cx+dx*t+px*side*(72+Math.random()*16);
       const hz=cz+dz*t+pz*side*(72+Math.random()*16);
-      if(!onLand(hx,hz)||!farFromPads(hx,hz,140)||!spotFree(hx,hz,10)) continue;
+      if(!onLand(hx,hz)||!farFromPads(hx,hz,140)||!fits(hx,hz,34)) continue;
       buildHouse(hx,hz,-a+(side>0?0:Math.PI));
     }
   }
@@ -740,7 +765,7 @@ function buildSettlement(cx,cz,r){
         }
       }
       const bx=fx+dx*130, bz=fz+dz*130;
-      if(onLand(bx,bz)&&spotFree(bx,bz,40)) buildBarn(bx,bz,-a);
+      if(onLand(bx,bz)&&fits(bx,bz,38)) buildBarn(bx,bz,-a);
     }
   }
 }
@@ -752,7 +777,7 @@ function buildHouse(x,z,rotIn){
   const rh=16+Math.random()*8;
   const roof=addT(new THREE.Mesh(new THREE.ConeGeometry(Math.max(w,d)*0.78,rh,4), roofMats[Math.floor(Math.random()*roofMats.length)]));
   roof.position.set(x,3+h+rh/2-0.5,z); roof.rotation.y=rot+Math.PI/4;
-  addSolid(x,3+h/2,z,Math.max(w,d)+2,h+10,Math.max(w,d)+2);
+  addSolid(x,3+h/2+rh/4,z,w,h+rh*0.7,d);         // exactly the walls + pitched roof
 }
 function buildRouteTerrain(){
   for(const m of terrainMeshes) scene.remove(m);
@@ -772,13 +797,13 @@ function buildRouteTerrain(){
       // a cottage or two first
       for(let i=0;i<2;i++){
         const hx0=cx+(Math.random()*2-1)*r*0.5, hz0=cz+(Math.random()*2-1)*r*0.5;
-        if(!onLand(hx0,hz0)||!spotFree(hx0,hz0,10)) continue;
+        if(!onLand(hx0,hz0)||!fits(hx0,hz0,34)) continue;
         buildHouse(hx0,hz0);
       }
       const nMini=3+Math.floor(Math.random()*3);         // a little grove, no hills
       for(let i=0;i<nMini;i++){
         const x=cx+(Math.random()*2-1)*r*0.6, z=cz+(Math.random()*2-1)*r*0.6;
-        if(!spotFree(x,z,22)) continue;
+        if(!fits(x,z,7)) continue;
         const th=20+Math.random()*16, lean=(Math.random()-0.5)*0.05;
         const shade=new THREE.Color(0x2a5e3a); shade.offsetHSL((Math.random()-0.5)*0.03,0,(Math.random()-0.5)*0.05);
         const pm=new THREE.MeshStandardMaterial({color:shade,roughness:1});
@@ -789,7 +814,7 @@ function buildRouteTerrain(){
           const cone=addT(new THREE.Mesh(new THREE.ConeGeometry(13-c*3.6,13,9), pm));
           cone.position.set(x+lean*cy,cy+5.2,z); cy+=8.4;
         }
-        addSolid(x,(cy+2)/2,z,16,cy+2,16);
+        addSolid(x,(cy+2)/2,z,10,cy+2,10);
       }
       // and a couple of rocks in the remaining water
       for(let i=0;i<3;i++){
@@ -798,7 +823,7 @@ function buildRouteTerrain(){
         const rr=20+Math.random()*28, h=10+Math.random()*20;
         const rock=addT(new THREE.Mesh(new THREE.SphereGeometry(rr,10,8), rockMatT));
         rock.scale.y=h/rr; rock.position.set(x,1,z);
-        addSolid(x,h/2,z,rr*1.3,h,rr*1.3);
+        addSolid(x,h/2,z,rr*1.6,h,rr*1.6);
         islands.push({x,z});
       }
     }
@@ -819,13 +844,13 @@ function buildRouteTerrain(){
     // rolling hills
     const nH=Math.max(4, Math.round(r/40));
     for(let i=0;i<nH;i++){
+      const hr=70+Math.random()*100, h=52+Math.random()*92;
       const ang=Math.random()*Math.PI*2, rad=r*(0.62+Math.random()*0.3);
       const x=cx+Math.cos(ang)*rad, z=cz+Math.sin(ang)*rad;
-      if(!onLand(x,z)||!farFromPads(x,z,90)||!spotFree(x,z,40)) continue;
-      const hr=70+Math.random()*100, h=52+Math.random()*92;
+      if(!onLand(x,z)||!farFromPads(x,z,90)||!fits(x,z,hr*0.8)) continue;
       const hill=addT(new THREE.Mesh(new THREE.SphereGeometry(hr,16,12), new THREE.MeshStandardMaterial({map:grassTex,color:0xc2d6ba,roughness:1})));
       hill.scale.y=h/hr; hill.position.set(x,2,z); hill.rotation.y=Math.random()*3;
-      addSolid(x,h/2,z,hr*1.1,h,hr*1.1);
+      addSolid(x,h/2,z,hr*1.5,h,hr*1.5);          // dome footprint, matched to what you can see
     }
     // town first, so the big buildings always get their space
     buildSettlement(cx,cz,r);
@@ -833,7 +858,7 @@ function buildRouteTerrain(){
     const nT=Math.max(10, Math.round(r/9));
     for(let i=0;i<nT;i++){
       const x=cx+(Math.random()*2-1)*r*0.85, z=cz+(Math.random()*2-1)*r*0.85;
-      if(!onLand(x,z)||!farFromPads(x,z,70)||!spotFree(x,z,26)) continue;
+      if(!onLand(x,z)||!farFromPads(x,z,70)||!fits(x,z,9)) continue;
       const th=48+Math.random()*48, lean=(Math.random()-0.5)*0.06;
       const shade=new THREE.Color(0x2a5e3a); shade.offsetHSL((Math.random()-0.5)*0.03,(Math.random()-0.5)*0.1,(Math.random()-0.5)*0.06);
       const pineMat=new THREE.MeshStandardMaterial({color:shade,roughness:1});
@@ -844,7 +869,7 @@ function buildRouteTerrain(){
         const cone=addT(new THREE.Mesh(new THREE.ConeGeometry(23-c*4.0,18,9), pineMat));
         cone.position.set(x+lean*cy,cy+7,z); cy+=11.2;
       }
-      addSolid(x,(cy+2)/2,z,22,cy+2,22);
+      addSolid(x,(cy+2)/2,z,13,cy+2,13);          // matches trunk+inner canopy, not the widest needle tips
     }
   }
   // sea rocks along the whole way
@@ -854,11 +879,11 @@ function buildRouteTerrain(){
     const x=(Math.random()*2-1)*400;
     if(onLand(x,z)) continue;
     if(Math.abs(x)<40 && Math.random()<0.5) continue;       // keep a rough corridor
-    if(!farFromPads(x,z,120)) continue;
+    if(!farFromPads(x,z,120)||!fits(x,z,r)) continue;
     const r=28+Math.random()*52, h=12+Math.random()*40;
     const rock=addT(new THREE.Mesh(new THREE.SphereGeometry(r,10,8), rockMatT));
     rock.scale.y=h/r; rock.position.set(x,1,z);
-    addSolid(x,h/2,z,r*1.4,h,r*1.4);
+    addSolid(x,h/2,z,r*1.7,h,r*1.7);
     islands.push({x,z});
     if(Math.random()<0.5){
       const tree=addT(new THREE.Mesh(new THREE.ConeGeometry(4,10,7), coneMatT));
@@ -962,14 +987,48 @@ const UPS=[
   {k:'frame',name:'AIRFRAME',desc:'+2 crash tolerance per level — survive harder hits',costs:[130,240,400,620,920]}
 ];
 const SKINS={
-  stock:  {name:'STOCK',      body:0x9fb8d8, accent:0x35d0ff, cost:0},
-  ember:  {name:'EMBER',      body:0x9a3a1f, accent:0xffa040, cost:150},
-  emerald:{name:'EMERALD',    body:0x1f7a4f, accent:0x5cffb0, cost:200},
-  stealth:{name:'STEALTH',    body:0x23272f, accent:0x9fb0c8, cost:250},
-  night:  {name:'NIGHTSHADE', body:0x5a2d8a, accent:0xd06bff, cost:300},
-  midas:  {name:'MIDAS',      body:0xc9a227, accent:0xfff0a8, cost:450}
+  // ---- plain colours ----
+  stock:   {cat:'color', name:'STOCK',      body:0x9fb8d8, accent:0x35d0ff, cost:0},
+  ember:   {cat:'color', name:'EMBER',      body:0x9a3a1f, accent:0xffa040, cost:150},
+  emerald: {cat:'color', name:'EMERALD',    body:0x1f7a4f, accent:0x5cffb0, cost:200},
+  cobalt:  {cat:'color', name:'COBALT',     body:0x1d4ed8, accent:0x93c5fd, cost:200},
+  crimson: {cat:'color', name:'CRIMSON',    body:0xa01028, accent:0xff6b81, cost:220},
+  stealth: {cat:'color', name:'STEALTH',    body:0x23272f, accent:0x9fb0c8, cost:250},
+  arctic:  {cat:'color', name:'ARCTIC',     body:0xe8f2f8, accent:0x7fd8ff, cost:260},
+  night:   {cat:'color', name:'NIGHTSHADE', body:0x5a2d8a, accent:0xd06bff, cost:300},
+  bubble:  {cat:'color', name:'BUBBLEGUM',  body:0xff6fae, accent:0xffd1e6, cost:300},
+  midas:   {cat:'color', name:'MIDAS',      body:0xc9a227, accent:0xfff0a8, cost:450},
+  // ---- patterns ----
+  racer:   {cat:'pattern', name:'RACER',    body:0xf2f2f4, accent:0xff3b30, cost:350, pat:'racer'},
+  camo:    {cat:'pattern', name:'FIELD CAMO',body:0x5c6b45, accent:0x9db373, cost:380, pat:'camo'},
+  hazard:  {cat:'pattern', name:'HAZARD',   body:0xffc300, accent:0x1c1c1c, cost:380, pat:'hazard'},
+  carbon:  {cat:'pattern', name:'CARBON',   body:0x2a2a32, accent:0x8a8a9a, cost:400, pat:'carbon'},
+  checker: {cat:'pattern', name:'CHECKER',  body:0xffffff, accent:0x1c1c1c, cost:400, pat:'checker'},
+  circuit: {cat:'pattern', name:'CIRCUIT',  body:0x0d2b22, accent:0x35ffa0, cost:450, pat:'circuit'},
+  splash:  {cat:'pattern', name:'PAINT SPLASH',body:0xf0f0f2, accent:0xff2d95, cost:450, pat:'splat'},
+  tiger:   {cat:'pattern', name:'TIGER',    body:0xf0871e, accent:0x201a14, cost:480, pat:'stripe'},
+  // ---- character skins (original designs) ----
+  moth:    {cat:'char', name:'TIGER MOTH',  body:0xd97a1e, accent:0x2a1d12, cost:700, pat:'stripe', char:'🦋'},
+  fox:     {cat:'char', name:'GHOST FOX',   body:0xf4f1fa, accent:0xa855f7, cost:750, pat:'splat', char:'🦊'},
+  koi:     {cat:'char', name:'KOI',         body:0xfff6ec, accent:0xff6a2b, cost:800, pat:'splat', char:'🐟'},
+  bee:     {cat:'char', name:'ROBO-BEE',    body:0xffd21e, accent:0x241f16, cost:850, pat:'hazard', char:'🐝'},
+  witch:   {cat:'char', name:'CIRCUIT WITCH',body:0x3b1060, accent:0x4affc0, cost:950, pat:'circuit', char:'🔮'},
+  comet:   {cat:'char', name:'COMET',       body:0x0a1230, accent:0x7fd0ff, cost:1100, pat:'star', char:'☄️'}
 };
 const ownedSkins={stock:true}; let curSkin='stock';
+// buyable crash effects — how your wreck goes out
+const FX={
+  basic:    {name:'BASIC',     icon:'💨', cost:0,    desc:'No effect — you simply vanish', c1:0xcfd8de, c2:0x9aa3ad, none:true},
+  sparks:   {name:'SPARKS',    icon:'✨', cost:250,  desc:'Standard issue debris',   c1:0xffd66b, c2:0xff9a3c},
+  fire:     {name:'FIREBALL',  icon:'🔥', cost:400,  desc:'Go up in flames',         c1:0xff6a1e, c2:0xffd21e},
+  lightning:{name:'LIGHTNING', icon:'⚡', cost:550,  desc:'Arcs of electricity',     c1:0x9fd8ff, c2:0x4a7bff},
+  ice:      {name:'DEEP FREEZE',icon:'❄️',cost:500,  desc:'Shatter into frost',      c1:0xbfeeff, c2:0x6fc8f0},
+  toxic:    {name:'TOXIC',     icon:'☢️', cost:550,  desc:'Radioactive green goo',   c1:0x8dff3c, c2:0x2bbf4a},
+  confetti: {name:'CONFETTI',  icon:'🎉', cost:600,  desc:'Celebrate your failure',  c1:0xff4fa3, c2:0x4fd0ff},
+  void:     {name:'VOID',      icon:'🌌', cost:750,  desc:'Collapse into purple dark',c1:0xb46bff, c2:0x3a1060},
+  gold:     {name:'GOLD RUSH', icon:'💰', cost:900,  desc:'Explode in gold coins',   c1:0xffd24d, c2:0xc78a00}
+};
+const ownedFX={basic:true}; let curFX='basic';
 const DRONES={
   sparrow:{name:'SPARROW', cost:0,    desc:'The trusty starter — every pilot begins here',                        spd:0,  acc:0,  batt:0,   tough:0,  scale:[1,1,1]},
   swift:  {name:'SWIFT',   cost:600,  desc:'+6 speed · +20 battery · +2 toughness',                              spd:6,  acc:10, batt:20,  tough:2,  scale:[0.9,0.9,1.12]},
@@ -992,12 +1051,102 @@ const maxSpdF =()=>38+3*up.motor+DRONES[curDrone].spd;
 const accF    =()=>64+6*up.motor+DRONES[curDrone].acc;
 const maxBattF=()=>100+15*up.batt+DRONES[curDrone].batt;
 const crashTol=()=>26+2*up.frame+DRONES[curDrone].tough;
+const patCache={};
+function makePattern(kind, bodyHex, accHex){
+  const key=kind+'_'+bodyHex+'_'+accHex;
+  if(patCache[key]) return patCache[key];
+  const c=document.createElement('canvas'); c.width=c.height=128;
+  const x=c.getContext('2d');
+  const B=hex(bodyHex), A=hex(accHex);
+  x.fillStyle=B; x.fillRect(0,0,128,128);
+  x.fillStyle=A; x.strokeStyle=A;
+  if(kind==='racer'){ x.fillRect(48,0,12,128); x.fillRect(68,0,12,128); }
+  else if(kind==='stripe'){
+    for(let i=-40;i<170;i+=26){
+      x.save(); x.translate(i,0); x.rotate(0.22);
+      x.beginPath(); x.moveTo(0,0); x.quadraticCurveTo(6,64,0,128); x.lineTo(11,128); x.quadraticCurveTo(17,64,11,0); x.closePath(); x.fill(); x.restore();
+    }
+  }
+  else if(kind==='camo'){
+    const tones=[A,'#3f4a2e','#6e7a52','#2b3320'];
+    for(let i=0;i<26;i++){
+      x.fillStyle=tones[i%tones.length]; x.globalAlpha=0.85;
+      x.beginPath(); x.ellipse(Math.random()*128,Math.random()*128,10+Math.random()*18,8+Math.random()*14,Math.random()*3,0,6.3); x.fill();
+    }
+    x.globalAlpha=1;
+  }
+  else if(kind==='hazard'){
+    x.lineWidth=13;
+    for(let i=-128;i<256;i+=30){ x.beginPath(); x.moveTo(i,0); x.lineTo(i+128,128); x.stroke(); }
+  }
+  else if(kind==='carbon'){
+    for(let y=0;y<128;y+=8) for(let xx=0;xx<128;xx+=8){
+      x.fillStyle=((xx+y)/8)%2?A:B; x.globalAlpha=0.35; x.fillRect(xx,y,8,8);
+    }
+    x.globalAlpha=1;
+  }
+  else if(kind==='checker'){
+    for(let y=0;y<128;y+=16) for(let xx=0;xx<128;xx+=16){
+      if(((xx+y)/16)%2){ x.fillStyle=A; x.fillRect(xx,y,16,16); }
+    }
+  }
+  else if(kind==='circuit'){
+    x.lineWidth=2.5;
+    for(let i=0;i<16;i++){
+      let px=Math.random()*128, py=Math.random()*128;
+      x.beginPath(); x.moveTo(px,py);
+      for(let k=0;k<3;k++){
+        if(Math.random()<0.5) px+=(Math.random()<0.5?-1:1)*(10+Math.random()*24);
+        else py+=(Math.random()<0.5?-1:1)*(10+Math.random()*24);
+        x.lineTo(px,py);
+      }
+      x.stroke();
+      x.beginPath(); x.arc(px,py,3,0,6.3); x.fill();
+    }
+  }
+  else if(kind==='splat'){
+    for(let i=0;i<22;i++){
+      const px=Math.random()*128, py=Math.random()*128, r=4+Math.random()*13;
+      x.beginPath(); x.arc(px,py,r,0,6.3); x.fill();
+      for(let d=0;d<3;d++){
+        x.beginPath(); x.arc(px+(Math.random()*2-1)*r*2.1, py+(Math.random()*2-1)*r*2.1, 1.5+Math.random()*3.5, 0, 6.3); x.fill();
+      }
+    }
+  }
+  else if(kind==='star'){
+    for(let i=0;i<70;i++){
+      const px=Math.random()*128, py=Math.random()*128, r=0.6+Math.random()*2.2;
+      x.globalAlpha=0.5+Math.random()*0.5;
+      x.beginPath(); x.arc(px,py,r,0,6.3); x.fill();
+    }
+    x.globalAlpha=1;
+  }
+  const t=new THREE.CanvasTexture(c);
+  t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(2,2);
+  patCache[key]=t; return t;
+}
 function applySkin(id){
   curSkin=id; const s=SKINS[id];
-  player.mats.body.color.set(s.body);
+  player.mats.body.color.set(s.pat?0xffffff:s.body);
+  player.mats.body.map=s.pat?makePattern(s.pat,s.body,s.accent):null;
+  player.mats.body.needsUpdate=true;
   player.mats.nose.color.set(s.accent);
   player.mats.rotor.color.set(s.accent);
   player.mats.light.color.set(s.accent);
+}
+function skinSwatch(s){
+  if(!s.pat) return 'linear-gradient(135deg,'+hex(s.body)+' 55%,'+hex(s.accent)+' 55%)';
+  const B=hex(s.body), A=hex(s.accent);
+  if(s.pat==='racer')   return 'linear-gradient(90deg,'+B+' 34%,'+A+' 34%,'+A+' 44%,'+B+' 44%,'+B+' 56%,'+A+' 56%,'+A+' 66%,'+B+' 66%)';
+  if(s.pat==='stripe')  return 'repeating-linear-gradient(70deg,'+B+' 0 6px,'+A+' 6px 11px)';
+  if(s.pat==='hazard')  return 'repeating-linear-gradient(45deg,'+B+' 0 7px,'+A+' 7px 14px)';
+  if(s.pat==='checker') return 'repeating-conic-gradient('+A+' 0 25%,'+B+' 0 50%) 0 0/14px 14px';
+  if(s.pat==='carbon')  return 'repeating-conic-gradient('+A+' 0 25%,'+B+' 0 50%) 0 0/7px 7px';
+  if(s.pat==='camo')    return 'radial-gradient(circle at 25% 35%,'+A+' 22%,transparent 23%),radial-gradient(circle at 70% 65%,'+A+' 26%,transparent 27%),radial-gradient(circle at 45% 80%,'+A+' 16%,transparent 17%),'+B;
+  if(s.pat==='circuit') return 'linear-gradient('+A+' 1.5px,transparent 1.5px) 0 0/100% 11px,linear-gradient(90deg,'+A+' 1.5px,transparent 1.5px) 0 0/11px 100%,'+B;
+  if(s.pat==='splat')   return 'radial-gradient(circle at 30% 30%,'+A+' 17%,transparent 18%),radial-gradient(circle at 70% 55%,'+A+' 13%,transparent 14%),radial-gradient(circle at 45% 78%,'+A+' 9%,transparent 10%),'+B;
+  if(s.pat==='star')    return 'radial-gradient(circle at 25% 30%,'+A+' 8%,transparent 9%),radial-gradient(circle at 65% 20%,'+A+' 5%,transparent 6%),radial-gradient(circle at 80% 70%,'+A+' 7%,transparent 8%),radial-gradient(circle at 35% 75%,'+A+' 5%,transparent 6%),'+B;
+  return B;
 }
 function applyDrone(id){
   curDrone=id; const d=DRONES[id];
@@ -1005,7 +1154,8 @@ function applyDrone(id){
   P.batt=Math.min(P.batt,maxBattF());
 }
 
-function resetPlayer(){ P.pos.set(COVE.x,10,COVE.z); P.vel.set(0,0,0); P.yaw=Math.PI; P.batt=maxBattF(); P.alive=true; player.group.visible=true; }
+function resetPlayer(){ P.pos.set(COVE.x,10,COVE.z); P.vel.set(0,0,0); P.yaw=Math.PI; P.batt=maxBattF(); P.alive=true;
+  player.group.visible=true; player.group.rotation.set(0,Math.PI,0); crashing=0; crashWater=false; sunk=false; }
 resetPlayer();
 
 // ---------- Input ----------
@@ -1169,7 +1319,7 @@ async function hashPass(p){
   }
 }
 function snapshotSave(){
-  return {money,trips,up:Object.assign({},up),ownedSkins:Object.assign({},ownedSkins),curSkin,ownedDrones:Object.assign({},ownedDrones),curDrone,route:routeInfo};
+  return {money,trips,up:Object.assign({},up),ownedSkins:Object.assign({},ownedSkins),curSkin,ownedDrones:Object.assign({},ownedDrones),curDrone,ownedFX:Object.assign({},ownedFX),curFX,route:routeInfo};
 }
 function applySave(s){
   s=s||{};
@@ -1183,6 +1333,9 @@ function applySave(s){
   curDrone=(s.curDrone&&DRONES[s.curDrone]&&ownedDrones[s.curDrone])?s.curDrone:'sparrow';
   routeInfo=s.route||null;
   if(routeInfo&&routeInfo.miles) setRouteWorld(routeInfo.miles);
+  for(const k in ownedFX) delete ownedFX[k];
+  Object.assign(ownedFX,{basic:true},s.ownedFX||{});
+  curFX=(s.curFX&&FX[s.curFX]&&ownedFX[s.curFX])?s.curFX:'basic';
   applySkin(curSkin); applyDrone(curDrone);
   P.batt=maxBattF();
   moneyHUD();
@@ -1296,6 +1449,8 @@ function moneyHUD(){
 }
 // ---------- Home page (hangar) ----------
 function uiBlocked(){ return $('splash').style.display!=='none'||$('overlay').style.display==='flex'||$('home').style.display==='flex'||$('signup').style.display==='flex'||$('addr').style.display==='flex'; }
+// arriving from the website? the marketing pitch was already made — go straight to signup
+if(location.search.indexOf('go')>=0){ $('splash').style.display='none'; }
 document.querySelectorAll('.splashPlay').forEach(b=>b.addEventListener('click',()=>{
   $('splash').style.display='none';                 // marketing seen — on to the account gate
 }));
@@ -1344,7 +1499,7 @@ async function geocodeAddr(){
 $('addrBtn').addEventListener('click',geocodeAddr);
 $('addrIn').addEventListener('keydown',e=>{ if(e.key==='Enter') geocodeAddr(); });
 
-function openHome(){ renderHome(); $('home').style.display='flex'; claimPending(); }
+function openHome(){ renderHome(); $('home').style.display='flex'; claimPending(); loadNews(); }
 let ctrlT=null;
 function closeHome(){
   if(!account){ initAccount(); return; }            // no account, no flying
@@ -1357,19 +1512,56 @@ function closeHome(){
   banner('MISSION: FLY TO HARMONY AND BACK');
 }
 $('flyBtn').addEventListener('click',closeHome);
+let skinCat='color';
+document.querySelectorAll('.skinTab').forEach(t=>t.addEventListener('click',()=>{ skinCat=t.dataset.cat; renderHome(); }));
+// ---------- game-wide announcements from the owner ----------
+async function loadNews(){
+  if(!REMOTE) return;
+  try{
+    const n=await (await fetch('/api/announce')).json();
+    const box=$('newsBox');
+    if(n&&n.text){
+      box.style.display='block';
+      box.innerHTML='<b>\u{1F4E2} ANNOUNCEMENT</b>'+n.text.replace(/[<>]/g,'');
+      let seen=null; try{ seen=localStorage.getItem('coveNewsSeen'); }catch(e){}
+      if(seen!==n.id){
+        try{ localStorage.setItem('coveNewsSeen',n.id); }catch(e){}
+        banner('\u{1F4E2} '+n.text.slice(0,90));
+      }
+    } else box.style.display='none';
+  }catch(e){}
+}
 function renderHome(){
   $('homeSub').textContent=(account?'Pilot '+account.user+' · ':'')+(routeInfo?('your real route: '+routeInfo.miles+' mi to Harmony \u00b7 '):'')+'earn Drone Coins, build your fleet'+(REMOTE?' · 🌐 server account':' · 💾 local save');
   $('coinBig').textContent='🪙 '+money+' DRONE COINS'+(money<0?' (IN DEBT)':'');
   $('coinBig').style.color=money<0?'#ff8a8a':'#ffd66b';
   $('homeTrips').textContent='Round trips completed: '+trips+' · 🪙100 per round trip';
-  // skins
+  // skins (filtered by the active tab)
   const sr=$('skinRow'); sr.innerHTML='';
-  Object.keys(SKINS).forEach(id=>{
+  document.querySelectorAll('.skinTab').forEach(t=>t.classList.toggle('on',t.dataset.cat===skinCat));
+  if(skinCat==='fx'){
+    Object.keys(FX).forEach(id=>{
+      const f=FX[id], owned=ownedFX[id];
+      const btn=document.createElement('button');
+      btn.className='skinBtn'+(curFX===id?' equipped':'');
+      btn.disabled=!owned&&money<f.cost;
+      btn.innerHTML='<div class="sw" style="background:linear-gradient(135deg,'+hex(f.c1)+','+hex(f.c2)+')"><span class="ch">'+f.icon+'</span></div>'
+        +f.name+(curFX===id?'<span class="own">EQUIPPED</span>':owned?'<span class="own">EQUIP</span>':'<span class="price">🪙 '+f.cost+'</span>');
+      btn.title=f.desc;
+      btn.addEventListener('click',()=>{
+        if(!ownedFX[id]){ if(money<f.cost) return; money-=f.cost; ownedFX[id]=true; }
+        curFX=id; saveGame(); moneyHUD(); renderHome();
+      });
+      sr.appendChild(btn);
+    });
+    return;
+  }
+  Object.keys(SKINS).filter(id=>(SKINS[id].cat||'color')===skinCat).forEach(id=>{
     const s=SKINS[id], owned=ownedSkins[id];
     const btn=document.createElement('button');
     btn.className='skinBtn'+(curSkin===id?' equipped':'');
     btn.disabled=!owned&&money<s.cost;
-    btn.innerHTML='<div class="sw" style="background:linear-gradient(135deg,'+hex(s.body)+' 55%,'+hex(s.accent)+' 55%)"></div>'
+    btn.innerHTML='<div class="sw" style="background:'+skinSwatch(s)+'">'+(s.char?'<span class="ch">'+s.char+'</span>':'')+'</div>'
       +s.name+(curSkin===id?'<span class="own">EQUIPPED</span>':owned?'<span class="own">EQUIP</span>':'<span class="price">🪙 '+s.cost+'</span>');
     btn.addEventListener('click',()=>{
       if(!ownedSkins[id]){ if(money<s.cost) return; money-=s.cost; ownedSkins[id]=true; }
@@ -1460,6 +1652,17 @@ function showOverlay(mode,title,color,text,btn){
   $('overlay').style.display='flex';
 }
 function fail(){
+  if(!onLand(P.pos.x,P.pos.z)){                 // going down at sea: arcs + sink first
+    crashWater=true; crashing=2.6; arcT=0; sunk=false;
+    crashSpin.set((Math.random()*2-1)*1.4,(Math.random()*2-1)*2,(Math.random()*2-1)*1.4);
+    for(let i=0;i<4;i++) spawnBolt(P.pos.clone(), i%2?0x9fd8ff:0x4a7bff);
+    blipCrash();
+    setTimeout(()=>{ P.alive=false; player.group.visible=false; crashing=0;
+      showOverlay('fail','DITCHED AT SEA','#ff7b7b',
+        'The battery ran dry and your drone went into the water. One charge can’t make the round trip — top up at Harmony before turning back.','FLY AGAIN');
+    },2600);
+    return;
+  }
   P.alive=false; player.group.visible=false;
   showOverlay('fail','DITCHED AT SEA','#ff7b7b',
     'The battery ran dry. One charge can’t make the round trip — top up at Harmony before turning back.','FLY AGAIN');
@@ -1479,15 +1682,23 @@ function pickBrokenPart(cause){
   return pickFrom(['ROTOR ASSEMBLY','ROTOR ASSEMBLY','ARM STRUT','MOTOR MOUNT','PROP GUARDS']);
 }
 function badCrash(cause){
+  if(crashing>0) return;                    // one crash sequence at a time
+  crashing=onLand(P.pos.x,P.pos.z)?2.2:3.0;  // seconds of wreckage before recovery
+  crashEffects();
   broken=pickBrokenPart(cause)||PARTS[0];
   resetBattPickup();
   spawnAllFlocks();
-  P.pos.set(COVE.x,10,COVE.z); P.vel.set(0,0,0); P.yaw=Math.PI; P.batt=maxBattF();
-  phase=1;
-  $('mission').textContent='GO TO THE PARTS SHOP — follow the orange beacon';
-  if(shopBeacon) shopBeacon.visible=true;
-  showOverlay('crash','CRASHED!','#ff7b7b',
-    'Your '+broken.name+' is wrecked — you were hauled back to the hangar. Limp over to the PARTS SHOP (orange beacon next to the hangar) and buy a new one for 🪙'+broken.cost+'.','OK — HEAD TO THE SHOP');
+  setTimeout(()=>{                           // let the wreck tumble and smoke first
+    P.pos.set(COVE.x,10,COVE.z); P.vel.set(0,0,0); P.yaw=Math.PI; P.batt=maxBattF();
+    player.group.rotation.set(0,Math.PI,0);
+    player.group.visible=true;
+    crashWater=false; sunk=false;
+    phase=1;
+    $('mission').textContent='GO TO THE PARTS SHOP — follow the orange beacon';
+    if(shopBeacon) shopBeacon.visible=true;
+    showOverlay('crash','CRASHED!','#ff7b7b',
+      'Your '+broken.name+' is wrecked — you were hauled back to the hangar. Limp over to the PARTS SHOP (orange beacon next to the hangar) and buy a new one for 🪙'+broken.cost+'.','OK — HEAD TO THE SHOP');
+  },crashing*1000);
 }
 function complete(){
   trips++; money+=100; saveGame(); moneyHUD();
@@ -1611,8 +1822,9 @@ function drawMap(){
 }
 
 // ---------- Physics ----------
+function groundY(x,z){ return onLand(x,z)?3.6:1.9; }   // landing gear rests ON the surface, never in it
 function collide(pos){
-  const floor=onLand(pos.x,pos.z)?3:1.2;
+  const floor=groundY(pos.x,pos.z);
   if(pos.y<floor){ pos.y=floor; return 'ground'; }
   if(pos.y>140) pos.y=140;
   pos.x=Math.max(-BOUND.x,Math.min(BOUND.x,pos.x));
@@ -1661,6 +1873,140 @@ function spawnBattPickup(){
   battPickup={g, t:Math.random()*6};
 }
 
+// ---------- Crash effects: debris, smoke and a tumbling wreck ----------
+const debris=[], smoke=[];
+const debrisGeo=new THREE.BoxGeometry(0.5,0.5,0.5);
+const smokeGeo=new THREE.SphereGeometry(1,7,6);
+let crashing=0, crashSpin=new THREE.Vector3(), crashWater=false, arcT=0, sunk=false;
+const boltGeo=new THREE.BoxGeometry(0.3,0.3,0.3);
+function spawnBolt(p,col){
+  // a jagged arc of little cubes
+  const n=9, dir=new THREE.Vector3((Math.random()*2-1),0.55+Math.random()*0.7,(Math.random()*2-1)).normalize();
+  let pos=p.clone();
+  for(let i=0;i<n;i++){
+    pos=pos.clone().addScaledVector(dir,2.4).add(new THREE.Vector3((Math.random()*2-1)*1.6,(Math.random()*2-1)*1.6,(Math.random()*2-1)*1.6));
+    const m=new THREE.Mesh(boltGeo,new THREE.MeshBasicMaterial({color:col,transparent:true}));
+    m.position.copy(pos); m.scale.setScalar(1.4+Math.random()*2.2); scene.add(m);
+    debris.push({m, v:new THREE.Vector3(0,0,0), spin:new THREE.Vector3(0,0,0), life:0.32+Math.random()*0.25, noGrav:true});
+  }
+}
+function crashEffects(){
+  const p=P.pos.clone();
+  const fx=FX[curFX]||FX.basic;
+  crashWater=!onLand(p.x,p.z);
+  if(crashWater){                    // ditching: white splash ring, then the sinking sequence
+    for(let i=0;i<22;i++){
+      const m=new THREE.Mesh(smokeGeo,new THREE.MeshBasicMaterial({color:0xeaf6ff,transparent:true,opacity:0.8,depthWrite:false}));
+      m.position.set(p.x+(Math.random()*2-1)*4, 2.2, p.z+(Math.random()*2-1)*4);
+      m.scale.setScalar(0.9+Math.random()*1.8); scene.add(m);
+      smoke.push({m, v:new THREE.Vector3((Math.random()*2-1)*11,5+Math.random()*9,(Math.random()*2-1)*11), life:1.5, grow:1.2, fade:0.8});
+    }
+    for(let i=0;i<4;i++) spawnBolt(p,i%2?0x9fd8ff:0x4a7bff);   // shorting out in the salt water
+    arcT=0; sunk=false;
+    crashSpin.set((Math.random()*2-1)*1.6,(Math.random()*2-1)*2.2,(Math.random()*2-1)*1.6);
+    P.vel.set(P.vel.x*0.15,0,P.vel.z*0.15);
+    const f=$('crashFlash');
+    f.style.background='#9fd8ff';
+    f.style.transition='opacity 0s'; f.style.opacity='0.5';
+    setTimeout(()=>{ f.style.transition='opacity .6s'; f.style.opacity='0'; },40);
+    blipCrash();
+    return;
+  }
+  if(fx.none){                       // BASIC: the drone just blinks out, no wreckage
+    player.group.visible=false;
+    crashSpin.set(0,0,0);
+    P.vel.set(0,0,0);
+    return;
+  }
+  const isFire=curFX==='fire', isIce=curFX==='ice', isVoid=curFX==='void',
+        isConf=curFX==='confetti', isGold=curFX==='gold', isBolt=curFX==='lightning', isToxic=curFX==='toxic';
+  // shards — tinted by the chosen effect
+  const n=isConf?52:isGold?40:26;
+  for(let i=0;i<n;i++){
+    const col=(curFX==='sparks')?[0x9fb8d8,0x35d0ff,0x1c222e,0x6b6480][i%4]
+             :(isConf)?[fx.c1,fx.c2,0xffe14f,0x6fff9a][i%4]
+             :(i%2?fx.c1:fx.c2);
+    const mat=(isFire||isBolt||isToxic||isConf||isGold)
+      ? new THREE.MeshBasicMaterial({color:col,transparent:true})
+      : new THREE.MeshStandardMaterial({color:col,metalness:isGold?0.9:0.5,roughness:isIce?0.15:0.5,transparent:true,opacity:isVoid?0.85:1});
+    const m=new THREE.Mesh(debrisGeo,mat);
+    m.position.copy(p);
+    m.scale.setScalar((isConf?0.45:0.5)+Math.random()*(isConf?1.0:1.6));
+    scene.add(m);
+    const up=isFire?10:isVoid?2:isConf?16:4;
+    debris.push({m, v:new THREE.Vector3((Math.random()*2-1)*26,up+Math.random()*22,(Math.random()*2-1)*26),
+                 spin:new THREE.Vector3(Math.random()*9,Math.random()*9,Math.random()*9),
+                 life:(isConf?3.4:2.6), float:isVoid||isConf});
+  }
+  // fireball core / frost bloom / void sphere
+  if(isFire||isIce||isVoid||isToxic){
+    for(let i=0;i<8;i++){
+      const m=new THREE.Mesh(smokeGeo,new THREE.MeshBasicMaterial({color:i%2?fx.c1:fx.c2,transparent:true,opacity:0.8,depthWrite:false}));
+      m.position.copy(p).add(new THREE.Vector3((Math.random()*2-1)*2,(Math.random()*2-1)*2,(Math.random()*2-1)*2));
+      m.scale.setScalar(1.2+Math.random()*2); scene.add(m);
+      smoke.push({m, v:new THREE.Vector3((Math.random()*2-1)*5,(isFire?7:2)+Math.random()*5,(Math.random()*2-1)*5),
+                  life:1.4, grow:isFire?3.4:2.2, fade:0.8});
+    }
+  }
+  // lightning arcs
+  if(isBolt){ for(let i=0;i<5;i++) spawnBolt(p,i%2?fx.c1:fx.c2); }
+  // smoke (fire makes black smoke; most others a light haze; confetti/gold skip it)
+  if(!isConf&&!isGold){
+    const smokeCol=isFire?0x2e2a28:isVoid?0x3a1060:isToxic?0x4a7a3a:0x9aa3ad;
+    for(let i=0;i<14;i++){
+      const m=new THREE.Mesh(smokeGeo,new THREE.MeshBasicMaterial({color:smokeCol,transparent:true,opacity:0.55,depthWrite:false}));
+      m.position.copy(p).add(new THREE.Vector3((Math.random()*2-1)*3,(Math.random()*2-1)*2,(Math.random()*2-1)*3));
+      m.scale.setScalar(1.6+Math.random()*2.4); scene.add(m);
+      smoke.push({m, v:new THREE.Vector3((Math.random()*2-1)*4,3+Math.random()*5,(Math.random()*2-1)*4), life:2.2, grow:1.7+Math.random()*1.6, fade:0.55});
+    }
+  }
+  // flash tinted to the effect + tumble
+  const f=$('crashFlash');
+  f.style.background=(curFX==='sparks')?'#fff':hex(fx.c1);
+  f.style.transition='opacity 0s'; f.style.opacity=(isVoid?'0.7':'0.85');
+  setTimeout(()=>{ f.style.transition='opacity .6s'; f.style.opacity='0'; },40);
+  crashSpin.set((Math.random()*2-1)*7,(Math.random()*2-1)*7,(Math.random()*2-1)*7);
+  P.vel.multiplyScalar(-0.35); P.vel.y=Math.max(P.vel.y,6);
+  blipCrash();
+}
+function blipCrash(){
+  if(!AC) return;
+  try{
+    const n=AC.createBufferSource(), len=AC.sampleRate*0.7, buf=AC.createBuffer(1,len,AC.sampleRate), d=buf.getChannelData(0);
+    for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.2);
+    n.buffer=buf;
+    const lp=AC.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=900;
+    const g=AC.createGain(); g.gain.value=0.28;
+    n.connect(lp); lp.connect(g); g.connect(AC.destination); n.start();
+    const o=AC.createOscillator(), og=AC.createGain();
+    o.type='sawtooth'; o.frequency.setValueAtTime(120,AC.currentTime);
+    o.frequency.exponentialRampToValueAtTime(35,AC.currentTime+0.6);
+    og.gain.setValueAtTime(0.22,AC.currentTime);
+    og.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+0.7);
+    o.connect(og); og.connect(AC.destination); o.start(); o.stop(AC.currentTime+0.7);
+  }catch(e){}
+}
+function stepCrashFx(dt){
+  for(let i=debris.length-1;i>=0;i--){
+    const d=debris[i]; d.life-=dt;
+    if(!d.noGrav) d.v.y-=(d.float?9:30)*dt;
+    d.m.position.addScaledVector(d.v,dt);
+    if(d.m.position.y<1.2){ d.m.position.y=1.2; d.v.y*=-0.35; d.v.x*=0.7; d.v.z*=0.7; }
+    d.m.rotation.x+=d.spin.x*dt; d.m.rotation.y+=d.spin.y*dt; d.m.rotation.z+=d.spin.z*dt;
+    if(d.noGrav){ d.m.material.opacity=Math.max(0,d.life/0.45); }
+    else if(d.life<0.9){ d.m.material.transparent=true; d.m.material.opacity=Math.max(0,d.life/0.9); }
+    if(d.life<=0){ scene.remove(d.m); debris.splice(i,1); }
+  }
+  for(let i=smoke.length-1;i>=0;i--){
+    const p=smoke[i]; p.life-=dt;
+    p.m.position.addScaledVector(p.v,dt);
+    p.v.multiplyScalar(1-1.2*dt);
+    p.m.scale.multiplyScalar(1+p.grow*dt*0.5);
+    p.m.material.opacity=Math.max(0,p.life/2.2*(p.fade||0.55));
+    if(p.life<=0){ scene.remove(p.m); smoke.splice(i,1); }
+  }
+}
+
 // ---------- Engine & wind audio ----------
 let AC=null, rotorOsc=null, rotorOsc2=null, rGain=null, wGain=null;
 function initAudio(){
@@ -1705,7 +2051,45 @@ function loop(){
   const dt=Math.min(clock.getDelta(),0.05);
   const t=clock.elapsedTime;
 
-  if(P.alive && !uiBlocked()){
+  stepCrashFx(dt);
+  if(crashing>0){
+    crashing-=dt;
+    if(crashWater){
+      // electricity keeps arcing over the hull while it goes under
+      arcT-=dt;
+      if(arcT<=0 && P.pos.y>-4){
+        arcT=0.13;
+        spawnBolt(P.pos.clone(), Math.random()<0.5?0x9fd8ff:0x4a7bff);
+      }
+      if(P.pos.y>1.9){                       // still falling to the surface
+        P.vel.y-=26*dt; P.pos.addScaledVector(P.vel,dt);
+      } else {
+        if(!sunk){                           // hit the water — bubbles, then down she goes
+          sunk=true;
+          for(let i=0;i<10;i++){
+            const m=new THREE.Mesh(smokeGeo,new THREE.MeshBasicMaterial({color:0xdff2ff,transparent:true,opacity:0.6,depthWrite:false}));
+            m.position.set(P.pos.x+(Math.random()*2-1)*3,2,P.pos.z+(Math.random()*2-1)*3);
+            m.scale.setScalar(0.6+Math.random()*1.2); scene.add(m);
+            smoke.push({m, v:new THREE.Vector3((Math.random()*2-1)*2,2+Math.random()*3,(Math.random()*2-1)*2), life:1.6, grow:0.9, fade:0.55});
+          }
+        }
+        P.pos.y-=5.5*dt;                     // sinking
+        P.pos.x+=P.vel.x*dt*0.3; P.pos.z+=P.vel.z*dt*0.3;
+      }
+      player.group.rotation.x+=crashSpin.x*dt;
+      player.group.rotation.z+=crashSpin.z*dt;
+      player.group.rotation.y+=crashSpin.y*dt*0.5;
+    } else {
+      P.vel.y-=26*dt;
+      P.pos.addScaledVector(P.vel,dt);
+      const gY=groundY(P.pos.x,P.pos.z);
+      if(P.pos.y<gY){ P.pos.y=gY; P.vel.multiplyScalar(0.4); P.vel.y*=-0.3; }   // bounces, never sinks
+      player.group.rotation.x+=crashSpin.x*dt;
+      player.group.rotation.y+=crashSpin.y*dt;
+      player.group.rotation.z+=crashSpin.z*dt;
+    }
+  }
+  if(P.alive && crashing<=0 && !uiBlocked()){
     const limp=!!broken;                              // broken part: barely flyable, just enough to reach the shop
     const acc=accF()*(limp?0.3:1), cap=maxSpdF()*(limp?0.35:1);   // speed never changes — the WORLD does
     const turn=(keys['ArrowLeft']||keys['KeyQ']?1:0)-(keys['ArrowRight']||keys['KeyE']?1:0);
@@ -1723,6 +2107,8 @@ function loop(){
     if(spd>cap) P.vel.multiplyScalar(cap/spd);
     P.pos.addScaledVector(P.vel,dt);
     if(limp && P.pos.y>14) P.pos.y=14;                // can't climb while broken
+    const gY=groundY(P.pos.x,P.pos.z);
+    if(P.pos.y<gY){ P.pos.y=gY; if(P.vel.y<0) P.vel.y=0; }   // hard floor: no sinking, ever
     const hit=collide(P.pos);
     if(hit){
       if(spd>crashTol()){ badCrash(hit==='ground'?'ground':'solid'); }  // what breaks depends on what you hit

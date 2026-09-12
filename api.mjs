@@ -55,6 +55,29 @@ export default async (req)=>{
       await accounts.setJSON(a.email,a);
       return json(200,{ok:true});
     }
+    // --- game-wide announcement: owner posts once, every pilot sees it ---
+    if(route==='announce'&&req.method==='GET'){
+      const msgs=getStore('broadcast');
+      const cur=await msgs.get('current',{type:'json'});
+      return json(200,cur||{});
+    }
+    if(route==='setannounce'&&req.method==='GET'){
+      const secret=url.searchParams.get('secret')||'';
+      if(!process.env.ADMIN_SECRET||secret!==process.env.ADMIN_SECRET){
+        return json(403,{error:'Owner only. Call /api/setannounce?secret=YOURSECRET&msg=Your+message (add &clear=1 to remove).'});
+      }
+      const msgs=getStore('broadcast');
+      if(url.searchParams.get('clear')){
+        await msgs.setJSON('current',{});
+        return json(200,{ok:true,cleared:true});
+      }
+      const text=(url.searchParams.get('msg')||'').slice(0,240);
+      if(!text) return json(400,{error:'Add &msg=Your+message'});
+      const payload={id:'b'+Date.now(), text, at:Date.now()};
+      await msgs.setJSON('current',payload);
+      return json(200,{ok:true,posted:payload});
+    }
+
     // --- Stripe webhook: coins credit themselves the moment someone pays ---
     if(route==='stripe-webhook'&&req.method==='POST'){
       const secret=process.env.STRIPE_WEBHOOK_SECRET||'';
