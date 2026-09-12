@@ -309,9 +309,93 @@
   .skinBtn .sw .ch{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:15px;
     text-shadow:0 1px 3px rgba(0,0,0,.45)}
   #tray{background:rgba(20,110,100,.06);border-color:rgba(30,80,90,.12)}
-  #trayLabel{color:#5b7a84}
-  #droneRow{flex-wrap:wrap}
-  .droneCard{flex:1 1 30%;min-width:150px}
+  /* ---------- NEON SKIN: black night, hot pink, cyan, lime ---------- */
+  html,body{background:#08060f}
+  #hud{color:#f2e9ff}
+  #mission,#stats,#map,#controls{background:rgba(12,8,24,.82);border:1px solid rgba(0,240,255,.32);border-radius:10px;
+    color:#e8dcff;box-shadow:0 0 20px rgba(0,240,255,.14),inset 0 0 16px rgba(0,240,255,.05);backdrop-filter:blur(8px)}
+  #mission{font-family:ui-monospace,'Courier New',monospace;letter-spacing:1.5px;color:#fff}
+  #miles,#dist{font-family:ui-monospace,'Courier New',monospace;color:#5cffe4;text-shadow:0 0 12px rgba(92,255,228,.7)}
+  #banner{background:rgba(12,8,24,.94);border:1px solid #ff2d95;border-radius:99px;color:#fff;
+    box-shadow:0 0 26px rgba(255,45,149,.6);font-family:ui-monospace,'Courier New',monospace;letter-spacing:2px}
+  #warn{background:rgba(40,4,20,.9);border:1px solid #ff2d95;border-radius:99px;color:#ff8ec6;box-shadow:0 0 18px rgba(255,45,149,.45)}
+  #charge{background:rgba(4,30,26,.9);border:1px solid #5cffe4;border-radius:99px;color:#5cffe4;box-shadow:0 0 18px rgba(92,255,228,.45)}
+  #battlabel,#mapkey{color:#00f0ff;font-family:ui-monospace,'Courier New',monospace}
+  #battwrap,#hpwrap{background:rgba(255,255,255,.1);border-radius:4px;box-shadow:none}
+  #battbar{background:linear-gradient(90deg,#00f0ff,#5cffe4)!important;box-shadow:0 0 12px rgba(0,240,255,.7)}
+  #money,#coinBig{color:#faff4d;font-family:ui-monospace,'Courier New',monospace;text-shadow:0 0 14px rgba(250,255,77,.6)}
+  #est,#storeNote,#homeSub,.sgSub,#homeTrips,.upDesc{color:#9a8ab8}
+  #homeBox,#signupBox,#addrBox{background:#120c1f;border:1px solid rgba(255,45,149,.45);border-radius:16px;
+    box-shadow:0 0 60px rgba(255,45,149,.28),inset 0 0 40px rgba(0,240,255,.04)}
+  #homeBox h1,#signupBox h1,#addrBox h1{color:#fff;font-family:ui-monospace,'Courier New',monospace;letter-spacing:4px;
+    text-shadow:0 0 14px #ff2d95,0 0 34px rgba(255,45,149,.7)}
+  .hSect h2,#sgSwap b{color:#00f0ff;font-family:ui-monospace,'Courier New',monospace;text-shadow:0 0 12px rgba(0,240,255,.6)}
+  .hSect h2{border-color:rgba(0,240,255,.2)}
+  .upRow{background:rgba(0,240,255,.05);border-radius:8px}
+  .upName{color:#fff;font-family:ui-monospace,'Courier New',monospace}
+  .pips .pip{background:rgba(255,255,255,.14)}
+  .pip.on{background:#ff2d95;box-shadow:0 0 10px rgba(255,45,149,.8)}
+  .skinTab{background:rgba(0,240,255,.06);border:1px solid rgba(0,240,255,.3);border-radius:8px;color:#9a8ab8;
+    font-family:ui-monospace,'Courier New',monospace}
+  .skinTab:hover{background:rgba(0,240,255,.14);color:#bff8ff}
+  .skinTab.on{background:rgba(255,45,149,.22);border-color:#ff2d95;color:#fff;box-shadow:0 0 16px rgba(255,45,149,.5)}
+  .skinBtn,.droneCard,.packCard{background:rgba(255,255,255,.04);border:1px solid rgba(0,240,255,.25);border-radius:10px;color:#e8dcff}
+  .skinBtn:hover:enabled,.droneCard:hover,.packCard:hover{background:rgba(0,240,255,.1);border-color:rgba(0,240,255,.6);
+    box-shadow:0 0 18px rgba(0,240,255,.3);transform:translateY(-1px)}
+  .skinBtn.equipped,.droneCard.equipped{border-color:#5cffe4;background:rgba(92,255,228,.1);box-shadow:0 0 18px rgba(92,255,228,.45)}
+  .skinBtn .own,.droneCard .own{color:#5cffe4}
+  .skinBtn .price,.droneCard .price,.packCard b{color:#faff4d}
+  .packCard{border-color:rgba(250,255,77,.35);background:rgba(250,255,77,.06)}
+  .upBuy{background:rgba(0,240,255,.14);border:1px solid #00f0ff;border-radius:8px;color:#bff8ff;
+    font-family:ui-monospace,'Courier New',monospace;box-shadow:0 0 12px rgba(0,240,255,.25)}
+  .upBuy:hover:enabled{background:rgba(0,240,255,.28);color:#fff}
+  #flyBtn{background:rgba(255,45,149,.2);border:2px solid #ff2d95;border-radius:12px;color:#fff;animation:none;
+    font-family:ui-monospace,'Courier New',monospace;letter-spacing:3px;
+    box-shadow:0 0 30px rgba(255,45,149,.6),inset 0 0 24px rgba(255,45,149,.18)}
+  #flyBtn:hover{background:rgba(255,45,149,.38);box-shadow:0 0 46px rgba(255,45,149,.9);transform:translateY(-2px)}
+  #sgBtn,#addrBtn,#redeemBtn,#overlayBtn{background:rgba(0,240,255,.16);border:1px solid #00f0ff;border-radius:9px;color:#bff8ff;
+    font-family:ui-monospace,'Courier New',monospace;box-shadow:0 0 18px rgba(0,240,255,.3)}
+  #sgBtn:hover,#addrBtn:hover,#redeemBtn:hover,#overlayBtn:hover{background:rgba(0,240,255,.3);color:#fff}
+  #signupBox label{color:#00f0ff;font-family:ui-monospace,'Courier New',monospace}
+  #signupBox input,#codeIn,#addrIn{background:rgba(4,2,10,.9);border:1px solid rgba(0,240,255,.35);border-radius:8px;color:#e8fbff}
+  #signupBox input:focus,#addrIn:focus{border-color:#ff2d95;box-shadow:0 0 16px rgba(255,45,149,.45)}
+  #sgErr,#addrErr{color:#ff5c8a}
+  .sgNote,#sgSwap,#addrBox .note{color:#7a6b95}
+  #logoutBtn{background:rgba(255,45,149,.12);border:1px solid rgba(255,45,149,.45);border-radius:8px;color:#ff8ec6}
+  #newsBox{background:rgba(250,255,77,.08);border:1px solid rgba(250,255,77,.4);border-radius:10px;color:#f0edb0}
+  #newsBox b{color:#faff4d}
+  #overlay,#addr{background:rgba(8,6,15,.93)}
+  #overlay h1{font-family:ui-monospace,'Courier New',monospace;text-shadow:0 0 20px currentColor}
+  #overlay p{color:#c8bce0}
+  #splash{background:#08060f;color:#c8bce0}
+  #splash .hero{background:radial-gradient(ellipse at 50% 120%,rgba(255,45,149,.45),transparent 62%),
+    linear-gradient(180deg,#0a0716 0%,#1a0a2e 55%,#08060f 100%);border-bottom:1px solid rgba(255,45,149,.3)}
+  #splash h1{color:#fff;font-family:ui-monospace,'Courier New',monospace;letter-spacing:5px;
+    text-shadow:0 0 14px #ff2d95,0 0 36px rgba(255,45,149,.8)}
+  #splash h2{color:#00f0ff;font-family:ui-monospace,'Courier New',monospace;text-shadow:0 0 12px rgba(0,240,255,.55)}
+  #splash .tag{color:#e8dcff}
+  #splash .subtag,#splash .free{color:#9a8ab8}
+  #splash .card{background:#120c1f;border:1px solid rgba(0,240,255,.28);border-radius:10px;box-shadow:0 0 20px rgba(0,240,255,.08)}
+  #splash .card h3{color:#fff}
+  #splash .card p,#splash .lead,#splash .stat span{color:#9a8ab8}
+  #splash .strip{background:rgba(255,45,149,.07);border-top:1px solid rgba(255,45,149,.28);border-bottom:1px solid rgba(255,45,149,.28)}
+  #splash .stat b{color:#faff4d;text-shadow:0 0 14px rgba(250,255,77,.6)}
+  #splash .rules li{background:#120c1f;border:1px solid rgba(0,240,255,.22);border-radius:10px;color:#c8bce0}
+  #splash .rules li b{color:#fff}
+  #splash .rules li:before{background:#ff2d95;box-shadow:0 0 14px rgba(255,45,149,.8)}
+  #splash footer{color:#6a5b85;border-color:rgba(255,45,149,.2)}
+  .splashPlay{background:rgba(255,45,149,.2);border:2px solid #ff2d95;border-radius:12px;color:#fff;
+    font-family:ui-monospace,'Courier New',monospace;letter-spacing:2px;box-shadow:0 0 30px rgba(255,45,149,.6)}
+  .splashPlay:hover{background:rgba(255,45,149,.38);box-shadow:0 0 46px rgba(255,45,149,.9);transform:translateY(-2px)}
+  #part{background:linear-gradient(#1a1230,#0d0918);border:1px solid rgba(0,240,255,.3);
+    box-shadow:inset 0 0 24px rgba(0,240,255,.08)}
+  .hole{background:#08060f;border-color:rgba(0,240,255,.4);color:#bff8ff}
+  .hole.target{border-color:#faff4d;box-shadow:0 0 14px rgba(250,255,77,.9)}
+  #screwPiece{background:radial-gradient(circle,#2a1f45,#120c1f);border-color:#faff4d;color:#faff4d;
+    box-shadow:0 0 12px rgba(250,255,77,.6)}
+  #screwInfo,#trayLabel{color:#9a8ab8;font-family:ui-monospace,'Courier New',monospace}
+  #tray{background:rgba(0,240,255,.05);border:1px solid rgba(0,240,255,.25);border-radius:10px}
+  #screwPrompt{color:#faff4d;text-shadow:0 0 18px rgba(250,255,77,.8)}
 </style>
 <style>
 #addr{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:linear-gradient(rgba(4,14,12,.96),rgba(4,14,12,.99));z-index:45;color:#f3ecff;font-family:'Segoe UI',Arial,sans-serif}
