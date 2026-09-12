@@ -55,6 +55,21 @@ export default async (req)=>{
       await accounts.setJSON(a.email,a);
       return json(200,{ok:true});
     }
+    // --- public leaderboard: top pilots by trips, then coins ---
+    if(route==='leaderboard'&&req.method==='GET'){
+      const out=[];
+      try{
+        const {blobs}=await accounts.list();
+        const keys=(blobs||[]).slice(0,300);
+        for(const bl of keys){
+          const acc=await accounts.get(bl.key,{type:'json'});
+          if(!acc||!acc.save) continue;
+          out.push({user:acc.user, trips:acc.save.trips||0, coins:Math.floor(acc.save.money||0), drone:acc.save.curDrone||'sparrow'});
+        }
+      }catch(e){}
+      out.sort((x,y)=>y.trips-x.trips||y.coins-x.coins);
+      return json(200,{pilots:out.slice(0,25), total:out.length});
+    }
     // --- game-wide announcement: owner posts once, every pilot sees it ---
     if(route==='announce'&&req.method==='GET'){
       const msgs=getStore('broadcast');

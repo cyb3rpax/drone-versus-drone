@@ -496,8 +496,8 @@
 'use strict';
 // ---------- Scene: dusk over open water ----------
 const scene=new THREE.Scene();
-scene.background=new THREE.Color(0xa9c6ce);
-scene.fog=new THREE.Fog(0xb9d2d8,300,1000);
+scene.background=new THREE.Color(0xa9bfc4);
+scene.fog=new THREE.Fog(0xb4c6c8,240,1000);
 const camera=new THREE.PerspectiveCamera(62,innerWidth/innerHeight,0.1,1300);
 const renderer=new THREE.WebGLRenderer({antialias:true});
 renderer.setSize(innerWidth,innerHeight);
@@ -526,7 +526,7 @@ const dome=new THREE.Mesh(new THREE.SphereGeometry(1080,24,16), new THREE.Shader
   side:THREE.BackSide, depthWrite:false, fog:false,
   vertexShader:'varying vec3 vP; void main(){ vP=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }',
   fragmentShader:'varying vec3 vP; void main(){ float h=normalize(vP).y;'
-    +'vec3 top=vec3(0.28,0.50,0.78); vec3 mid=vec3(0.50,0.68,0.84); vec3 hor=vec3(0.80,0.85,0.84);'
+    +'vec3 top=vec3(0.24,0.44,0.62); vec3 mid=vec3(0.48,0.62,0.72); vec3 hor=vec3(0.78,0.82,0.80);'
     +'vec3 c = h>0.12 ? mix(mid,top,smoothstep(0.12,0.65,h)) : mix(hor,mid,smoothstep(-0.04,0.12,h));'
     +'gl_FragColor=vec4(c,1.0); }'
 }));
@@ -579,9 +579,9 @@ function speckTex(base,specks,n,rep){
   t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(rep,rep);
   return t;
 }
-const grassTex=speckTex('#2e4a34',['#24402c','#3c5a40','#4e6a44','#1e3626'],9000,26);
-const sandTex =speckTex('#6a5a4a',['#7a6a55','#5a4c3e','#8a765c'],7000,8);
-const rockTex =speckTex('#4a4258',['#3a3448','#5a5268','#423a52'],6000,4);
+const grassTex=speckTex('#46503a',['#3a4431','#525c42','#5e6848','#333c2c','#6b7052'],14000,30);
+const sandTex =speckTex('#8a7c65',['#988a72','#7a6d59','#a3957c','#6e6252'],9000,9);
+const rockTex =speckTex('#6b6459',['#5a544b','#7a7368','#4e4941','#837c70'],9000,5);
 
 // ---------- Geography ----------
 const COVE=new THREE.Vector3(0,0,700);
@@ -594,7 +594,7 @@ let DRAINF=1;                                 // battery pacing: one charge ≈ 
 // sea with real moving waves and sunset glint
 const seaGeo=new THREE.PlaneGeometry(4200,30000,64,150);  // ocean long enough for ~36 real miles at the new scale
 const sea=new THREE.Mesh(seaGeo, new THREE.MeshPhongMaterial({
-  color:0x155e78, shininess:120, specular:0xbcd8e2, transparent:true, opacity:0.97
+  color:0x1b4b63, shininess:95, specular:0x9fc0cc, transparent:true, opacity:0.97
 }));
 sea.rotation.x=-Math.PI/2; sea.position.z=-13800; scene.add(sea);
 
@@ -681,7 +681,7 @@ const harmonyBoxes=[];
 const islands=[];                                 // rock positions for the minimap
 const landDiscs=[];                               // grassy islands: ground height + tree placement
 const terrainMeshes=[];
-const trunkMat=new THREE.MeshStandardMaterial({color:0x4e3a2a,roughness:1});
+const trunkMat=new THREE.MeshStandardMaterial({color:0x453427,roughness:1});
 const rockMatT=new THREE.MeshStandardMaterial({map:rockTex,roughness:1});
 const coneMatT=new THREE.MeshStandardMaterial({color:0x2e6a4a,roughness:1});
 function onLand(x,z){ for(const d of landDiscs){ if(Math.hypot(x-d.x,z-d.z)<d.r) return true; } return false; }
@@ -689,18 +689,34 @@ function farFromPads(x,z,m){
   return Math.hypot(x-COVE.x,z-COVE.z)>m && Math.hypot(x-HARMONY.x,z-HARMONY.z)>m && Math.hypot(x-SHOP.x,z-SHOP.z)>Math.min(m,70);
 }
 function addT(m){ m.castShadow=true; m.receiveShadow=true; scene.add(m); terrainMeshes.push(m); return m; }
-const wallMats=[0xd9cfbf,0xcbb9a3,0xb7c3cb,0xd6c3b1].map(c=>new THREE.MeshStandardMaterial({color:c,roughness:0.9}));
-const roofMats=[0x707a82,0x5f4a5e,0x49606e].map(c=>new THREE.MeshStandardMaterial({color:c,roughness:0.85}));
+const wallMats=[0xc9c0b0,0xb5a894,0xa8b2b8,0xc2b09c,0x9e9686].map(c=>new THREE.MeshStandardMaterial({color:c,roughness:0.9}));
+const roofMats=[0x5f6a72,0x4e4a52,0x3f5560,0x6b5f52].map(c=>new THREE.MeshStandardMaterial({color:c,roughness:0.85}));
+// every placed object claims a ground rectangle; nothing may intersect one
+const claims=[];
+function clearClaims(){ claims.length=0; }
+function claimFree(x,z,halfW,halfD,pad){
+  const p=(pad===undefined)?4:pad;
+  const x0=x-halfW-p, x1=x+halfW+p, z0=z-halfD-p, z1=z+halfD+p;
+  for(const c of claims){ if(x0<c.x1&&x1>c.x0&&z0<c.z1&&z1>c.z0) return false; }
+  return true;
+}
+function claim(x,z,halfW,halfD){ claims.push({x0:x-halfW,x1:x+halfW,z0:z-halfD,z1:z+halfD}); }
+function place(x,z,halfW,halfD,pad){
+  if(!claimFree(x,z,halfW,halfD,pad)) return false;
+  claim(x,z,halfW,halfD);
+  return true;
+}
 function spotFree(x,z,m){
   for(const b of solids){ if(x>b.min.x-m&&x<b.max.x+m&&z>b.min.z-m&&z<b.max.z+m) return false; }
   return true;
 }
-// reserve the footprint an object will occupy, so nothing can be built inside it
 function fits(x,z,halfW){ return spotFree(x,z,halfW+6); }
 const roadMat=new THREE.MeshStandardMaterial({color:0x59544f,roughness:1});
-const fieldMats=[0xc9b26a,0x9ab35e,0xb5c47a].map(c=>new THREE.MeshStandardMaterial({color:c,roughness:1}));
+const fieldMats=[0xa89a63,0x7f8c52,0x93995f,0x8c7f57].map(c=>new THREE.MeshStandardMaterial({color:c,roughness:1}));
 const animalMats=[0xece8de,0x8a6248,0x4a4a48].map(c=>new THREE.MeshStandardMaterial({color:c,roughness:1}));
+const winTexCache=[];
 function windowTex(){
+  if(winTexCache.length>=4) return winTexCache[Math.floor(Math.random()*winTexCache.length)];
   const c=document.createElement('canvas'); c.width=128; c.height=256;
   const x=c.getContext('2d');
   x.fillStyle='#9aa0a6'; x.fillRect(0,0,128,256);
@@ -710,7 +726,9 @@ function windowTex(){
       x.fillRect(rx,ry,12,14);
     }
   }
-  return new THREE.CanvasTexture(c);
+  const t=new THREE.CanvasTexture(c);
+  winTexCache.push(t);
+  return t;
 }
 function buildBarn(x,z,rot){                        // grey apartment block
   const w=56+Math.random()*20, d=44+Math.random()*16, h=84+Math.random()*44;
@@ -720,10 +738,12 @@ function buildBarn(x,z,rot){                        // grey apartment block
   body.position.set(x,3+h/2,z); body.rotation.y=rot;
   const lip=addT(new THREE.Mesh(new THREE.BoxGeometry(w+4,3.2,d+4), new THREE.MeshStandardMaterial({color:0x5d656c,roughness:1})));
   lip.position.set(x,3+h+1.6,z); lip.rotation.y=rot;
-  addSolid(x,3+h/2,z,w,h+3.2,d);
+  const cb=Math.abs(Math.cos(rot)), sb=Math.abs(Math.sin(rot));
+  addSolid(x,3+h/2,z, w*cb+d*sb, h+3.2, w*sb+d*cb);           // rotation-aware footprint
 }
 function addAnimal(x,z){
-  if(!onLand(x,z)) return;
+  if(!onLand(x,z)||!claimFree(x,z,6,6,2)) return;
+  claim(x,z,6,6);
   const m=animalMats[Math.floor(Math.random()*animalMats.length)];
   const a=Math.random()*Math.PI*2;
   const body=addT(new THREE.Mesh(new THREE.SphereGeometry(5.2,8,6), m));
@@ -736,7 +756,8 @@ function buildSettlement(cx,cz,r){
   const dx=Math.cos(a), dz=Math.sin(a), px=-dz, pz=dx;
   // the main road through town
   const len=r*1.7;
-  const road=addT(new THREE.Mesh(new THREE.BoxGeometry(len,0.3,32), roadMat));
+  for(let t=-len/2; t<len/2; t+=40) claim(cx+dx*t, cz+dz*t, 26, 26);
+  const road=addT(new THREE.Mesh(new THREE.BoxGeometry(len,0.3,32), roadMat), false);
   road.position.set(cx,3.12,cz); road.rotation.y=-a;
   // rows of homes along both sides, facing the street (with gaps, like real streets)
   for(let t=-len/2+80; t<len/2-70; t+=120+Math.random()*40){
@@ -744,7 +765,7 @@ function buildSettlement(cx,cz,r){
       if(Math.random()<0.22) continue;
       const hx=cx+dx*t+px*side*(72+Math.random()*16);
       const hz=cz+dz*t+pz*side*(72+Math.random()*16);
-      if(!onLand(hx,hz)||!farFromPads(hx,hz,140)||!fits(hx,hz,34)) continue;
+      if(!onLand(hx,hz)||!farFromPads(hx,hz,140)||!place(hx,hz,48,42,8)) continue;
       buildHouse(hx,hz,-a+(side>0?0:Math.PI));
     }
   }
@@ -756,8 +777,8 @@ function buildSettlement(cx,cz,r){
       const nF=1+Math.floor(Math.random()*2);
       for(let f=0;f<nF;f++){
         const gx=fx+(Math.random()*2-1)*120, gz=fz+(Math.random()*2-1)*120;
-        if(!onLand(gx,gz)) continue;
-        const field=addT(new THREE.Mesh(new THREE.BoxGeometry(180+Math.random()*100,0.2,120+Math.random()*72), fieldMats[Math.floor(Math.random()*3)]));
+        if(!onLand(gx,gz)||!place(gx,gz,120,80,2)) continue;
+        const field=addT(new THREE.Mesh(new THREE.BoxGeometry(180+Math.random()*100,0.2,120+Math.random()*72), fieldMats[Math.floor(Math.random()*3)]), false);
         field.position.set(gx,3.08,gz); field.rotation.y=-a+(Math.random()-0.5)*0.25;
         if(Math.random()<0.55){
           const n=3+Math.floor(Math.random()*5);
@@ -765,7 +786,7 @@ function buildSettlement(cx,cz,r){
         }
       }
       const bx=fx+dx*130, bz=fz+dz*130;
-      if(onLand(bx,bz)&&fits(bx,bz,38)) buildBarn(bx,bz,-a);
+      if(onLand(bx,bz)&&place(bx,bz,42,38,10)) buildBarn(bx,bz,-a);
     }
   }
 }
@@ -777,11 +798,20 @@ function buildHouse(x,z,rotIn){
   const rh=16+Math.random()*8;
   const roof=addT(new THREE.Mesh(new THREE.ConeGeometry(Math.max(w,d)*0.78,rh,4), roofMats[Math.floor(Math.random()*roofMats.length)]));
   roof.position.set(x,3+h+rh/2-0.5,z); roof.rotation.y=rot+Math.PI/4;
-  addSolid(x,3+h/2+rh/4,z,w,h+rh*0.7,d);         // exactly the walls + pitched roof
+  const ca=Math.abs(Math.cos(rot)), sa=Math.abs(Math.sin(rot));
+  addSolid(x,3+h/2+rh/4,z, w*ca+d*sa, h+rh*0.7, w*sa+d*ca);   // rotation-aware footprint
 }
 function buildRouteTerrain(){
-  for(const m of terrainMeshes) scene.remove(m);
+  for(const m of terrainMeshes){
+    scene.remove(m);
+    if(m.geometry) m.geometry.dispose();
+    const mm=m.material;
+    if(Array.isArray(mm)) mm.forEach(x=>x&&x.dispose&&x.dispose());
+    else if(mm&&mm.dispose) mm.dispose();
+  }
   terrainMeshes.length=0; landDiscs.length=0; islands.length=0;
+  clearClaims();
+  claim(COVE.x,COVE.z,130,130); claim(SHOP.x,SHOP.z,60,60); claim(HARMONY.x,HARMONY.z,140,140);
   const z0=COVE.z-280, z1=HARMONY.z+280;
   const span=z0-z1;                                   // tiny (or negative) on very short routes
   if(span<260){
@@ -797,15 +827,15 @@ function buildRouteTerrain(){
       // a cottage or two first
       for(let i=0;i<2;i++){
         const hx0=cx+(Math.random()*2-1)*r*0.5, hz0=cz+(Math.random()*2-1)*r*0.5;
-        if(!onLand(hx0,hz0)||!fits(hx0,hz0,34)) continue;
+        if(!onLand(hx0,hz0)||!place(hx0,hz0,48,42,8)) continue;
         buildHouse(hx0,hz0);
       }
       const nMini=3+Math.floor(Math.random()*3);         // a little grove, no hills
       for(let i=0;i<nMini;i++){
         const x=cx+(Math.random()*2-1)*r*0.6, z=cz+(Math.random()*2-1)*r*0.6;
-        if(!fits(x,z,7)) continue;
+        if(!place(x,z,11,11,3)) continue;
         const th=20+Math.random()*16, lean=(Math.random()-0.5)*0.05;
-        const shade=new THREE.Color(0x2a5e3a); shade.offsetHSL((Math.random()-0.5)*0.03,0,(Math.random()-0.5)*0.05);
+        const shade=new THREE.Color(0x2f4a32); shade.offsetHSL((Math.random()-0.5)*0.05,(Math.random()-0.5)*0.18,(Math.random()-0.5)*0.14);
         const pm=new THREE.MeshStandardMaterial({color:shade,roughness:1});
         const trunk=addT(new THREE.Mesh(new THREE.CylinderGeometry(1.4,2.4,th,8), trunkMat));
         trunk.position.set(x,th/2+2,z); trunk.rotation.z=lean;
@@ -839,7 +869,8 @@ function buildRouteTerrain(){
     if(cz-HARMONY.z<r+200) cz=HARMONY.z+r+200;       // …or Harmony
     if(COVE.z-cz<r+180 || cz-HARMONY.z<r+180) continue;   // no room at all? skip this island
     landDiscs.push({x:cx,z:cz,r:r});
-    const land=addT(new THREE.Mesh(new THREE.CylinderGeometry(r,r+20,4,40), new THREE.MeshStandardMaterial({map:grassTex,roughness:1})));
+    const tint=new THREE.Color(0xb9c4a6); tint.offsetHSL((Math.random()-0.5)*0.05,(Math.random()-0.5)*0.12,(Math.random()-0.5)*0.09);
+    const land=addT(new THREE.Mesh(new THREE.CylinderGeometry(r,r+20,4,40), new THREE.MeshStandardMaterial({map:grassTex,color:tint,roughness:1})));
     land.position.set(cx,1,cz);
     // rolling hills
     const nH=Math.max(4, Math.round(r/40));
@@ -847,8 +878,9 @@ function buildRouteTerrain(){
       const hr=70+Math.random()*100, h=52+Math.random()*92;
       const ang=Math.random()*Math.PI*2, rad=r*(0.62+Math.random()*0.3);
       const x=cx+Math.cos(ang)*rad, z=cz+Math.sin(ang)*rad;
-      if(!onLand(x,z)||!farFromPads(x,z,90)||!fits(x,z,hr*0.8)) continue;
-      const hill=addT(new THREE.Mesh(new THREE.SphereGeometry(hr,16,12), new THREE.MeshStandardMaterial({map:grassTex,color:0xc2d6ba,roughness:1})));
+      if(!onLand(x,z)||!farFromPads(x,z,90)||!place(x,z,hr*0.82,hr*0.82,10)) continue;
+      const hTint=new THREE.Color(0xaab493); hTint.offsetHSL((Math.random()-0.5)*0.04,(Math.random()-0.5)*0.1,(Math.random()-0.5)*0.1);
+      const hill=addT(new THREE.Mesh(new THREE.SphereGeometry(hr,18,14), new THREE.MeshStandardMaterial({map:grassTex,color:hTint,roughness:1})));
       hill.scale.y=h/hr; hill.position.set(x,2,z); hill.rotation.y=Math.random()*3;
       addSolid(x,h/2,z,hr*1.5,h,hr*1.5);          // dome footprint, matched to what you can see
     }
@@ -858,9 +890,9 @@ function buildRouteTerrain(){
     const nT=Math.max(10, Math.round(r/9));
     for(let i=0;i<nT;i++){
       const x=cx+(Math.random()*2-1)*r*0.85, z=cz+(Math.random()*2-1)*r*0.85;
-      if(!onLand(x,z)||!farFromPads(x,z,70)||!fits(x,z,9)) continue;
+      if(!onLand(x,z)||!farFromPads(x,z,70)||!place(x,z,13,13,3)) continue;
       const th=48+Math.random()*48, lean=(Math.random()-0.5)*0.06;
-      const shade=new THREE.Color(0x2a5e3a); shade.offsetHSL((Math.random()-0.5)*0.03,(Math.random()-0.5)*0.1,(Math.random()-0.5)*0.06);
+      const shade=new THREE.Color(0x2f4a32); shade.offsetHSL((Math.random()-0.5)*0.05,(Math.random()-0.5)*0.18,(Math.random()-0.5)*0.14);
       const pineMat=new THREE.MeshStandardMaterial({color:shade,roughness:1});
       const trunk=addT(new THREE.Mesh(new THREE.CylinderGeometry(2,3.8,th,8), trunkMat));
       trunk.position.set(x,th/2+2,z); trunk.rotation.z=lean;
@@ -879,7 +911,7 @@ function buildRouteTerrain(){
     const x=(Math.random()*2-1)*400;
     if(onLand(x,z)) continue;
     if(Math.abs(x)<40 && Math.random()<0.5) continue;       // keep a rough corridor
-    if(!farFromPads(x,z,120)||!fits(x,z,r)) continue;
+    if(!farFromPads(x,z,120)||!place(x,z,r*1.1,r*1.1,6)) continue;
     const r=28+Math.random()*52, h=12+Math.random()*40;
     const rock=addT(new THREE.Mesh(new THREE.SphereGeometry(r,10,8), rockMatT));
     rock.scale.y=h/r; rock.position.set(x,1,z);
@@ -1154,8 +1186,14 @@ function applyDrone(id){
   P.batt=Math.min(P.batt,maxBattF());
 }
 
+function clearWreckage(){
+  for(const d of debris) scene.remove(d.m);
+  for(const p of smoke) scene.remove(p.m);
+  debris.length=0; smoke.length=0;
+}
 function resetPlayer(){ P.pos.set(COVE.x,10,COVE.z); P.vel.set(0,0,0); P.yaw=Math.PI; P.batt=maxBattF(); P.alive=true;
-  player.group.visible=true; player.group.rotation.set(0,Math.PI,0); crashing=0; crashWater=false; sunk=false; }
+  player.group.visible=true; player.group.rotation.set(0,Math.PI,0); crashing=0; crashWater=false; sunk=false;
+  if(typeof clearWreckage==='function') clearWreckage(); }
 resetPlayer();
 
 // ---------- Input ----------
@@ -1653,7 +1691,7 @@ function showOverlay(mode,title,color,text,btn){
 }
 function fail(){
   if(!onLand(P.pos.x,P.pos.z)){                 // going down at sea: arcs + sink first
-    crashWater=true; crashing=2.6; arcT=0; sunk=false;
+    crashWater=true; crashing=3.2; arcT=0; sunk=false;   // outlasts the 2.6s recovery timer
     crashSpin.set((Math.random()*2-1)*1.4,(Math.random()*2-1)*2,(Math.random()*2-1)*1.4);
     for(let i=0;i<4;i++) spawnBolt(P.pos.clone(), i%2?0x9fd8ff:0x4a7bff);
     blipCrash();
@@ -1865,10 +1903,18 @@ function spawnBattPickup(){
   const bc=new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.5,55,8,1,true),
     new THREE.MeshBasicMaterial({color:0x4db8ff,transparent:true,opacity:0.14,side:THREE.DoubleSide,depthWrite:false,fog:false}));
   bc.position.y=27; g.add(bc);
-  const f=0.15+Math.random()*0.7;                    // anywhere along the route — different spot every time
-  const x=COVE.x+(HARMONY.x-COVE.x)*f+(Math.random()*2-1)*150;
-  const z=COVE.z+(HARMONY.z-COVE.z)*f+(Math.random()*2-1)*150;
-  g.position.set(x, 10+Math.random()*24, z);
+  let x=0,z=0,y=0,ok=false;
+  for(let t=0;t<40&&!ok;t++){                       // never spawn it inside terrain or a building
+    const f=0.15+Math.random()*0.7;
+    x=COVE.x+(HARMONY.x-COVE.x)*f+(Math.random()*2-1)*150;
+    z=COVE.z+(HARMONY.z-COVE.z)*f+(Math.random()*2-1)*150;
+    y=10+Math.random()*24;
+    ok=true;
+    for(const b of solids){
+      if(x>b.min.x-8&&x<b.max.x+8&&y>b.min.y-8&&y<b.max.y+8&&z>b.min.z-8&&z<b.max.z+8){ ok=false; break; }
+    }
+  }
+  g.position.set(x, y, z);
   scene.add(g);
   battPickup={g, t:Math.random()*6};
 }
