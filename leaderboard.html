@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Home — Drone Courier: Marin</title>
+<title>Leaderboard — Drone Courier: Marin</title>
 <meta name="description" content="Drone Courier: Marin — fly a delivery drone the real distance from your Marin County home to Harmony Montessori and back. Free browser game.">
 <style>
 :root{--bg:#08060f;--ink:#f2e9ff;--dim:#9a8ab8;--line:rgba(255,45,149,.28);--teal:#00f0ff;--teal2:#5cffe4;--gold:#faff4d;--coral:#ff2d95;--card:#120c1f}
@@ -108,36 +108,37 @@ footer a{color:#6a5b85}
 </style></head><body>
 <nav><div class="wrap">
   <a class="logo" href="index.html">DRONE COURIER<span>: MARIN</span></a>
-  <div class="links"><a href="index.html" class="on">Home</a><a href="guide.html">How to Play</a><a href="fleet.html">Fleet</a><a href="leaderboard.html">Leaderboard</a><a href="news.html">News</a><a href="support.html">Support</a><a class="btn" href="play.html?go=1">PLAY FREE</a></div>
+  <div class="links"><a href="index.html">Home</a><a href="guide.html">How to Play</a><a href="fleet.html">Fleet</a><a href="leaderboard.html" class="on">Leaderboard</a><a href="news.html">News</a><a href="support.html">Support</a><a class="btn" href="play.html?go=1">PLAY FREE</a></div>
 </div></nav>
 
-<div class="hero"><div class="wrap">
-  <h1>DRONE COURIER: MARIN</h1>
-  <div class="tag">Fly a delivery drone from your own front door to Harmony Montessori in Tiburon — and back on a battery that can't quite do both.</div>
-  <div class="sub">Free · plays in your browser · nothing to install</div>
-  <a class="btn coral big" href="play.html?go=1">▲ PLAY FREE</a>
-  <div style="font-size:12px;color:#4a6b76;margin-top:10px">Takes 10 seconds to start</div>
-</div></div>
-
+<header class="page"><div class="wrap"><h1>Leaderboard</h1>
+<p>The busiest couriers in Marin, ranked by completed round trips. Every delivery you land shows up here.</p></div></header>
 <section class="wrap">
-  <div class="grid">
-    <div class="card"><div class="ico">📍</div><h3>Your real route</h3><p>Enter your Marin address and the game measures the true distance to Harmony — a mile takes 30 seconds to fly.</p></div>
-    <div class="card"><div class="ico">🔋</div><h3>Battery is the game</h3><p>One charge covers about half the round trip. Recharge at Harmony, or find the field battery on the way.</p></div>
-    <div class="card"><div class="ico">🔧</div><h3>Crashes cost you</h3><p>Hit something hard and a part breaks. Buy the replacement and fit it yourself at the workbench.</p></div>
-  </div>
+  <div id="lbWrap"><p class="lead">Loading pilots…</p></div>
+  <div style="text-align:center;margin-top:30px"><a class="btn coral big" href="play.html?go=1">▲ CLIMB THE BOARD</a></div>
 </section>
-
-<div class="strip"><div class="wrap">
-  <div class="stat"><b>🪙100</b><span>PER ROUND TRIP</span></div>
-  <div class="stat"><b>5</b><span>DRONES</span></div>
-  <div class="stat"><b>24</b><span>SKINS</span></div>
-  <div class="stat"><b>9</b><span>CRASH EFFECTS</span></div>
-</div></div>
-
-<section class="wrap" style="text-align:center;padding-bottom:50px">
-  <a class="btn coral big" href="play.html?go=1">▲ START FLYING</a>
-  <div style="margin-top:16px;font-size:13.5px"><a href="guide.html">How to play</a> · <a href="fleet.html">The fleet</a> · <a href="leaderboard.html">Leaderboard</a></div>
-</section>
+<script>
+const DRONE_ICON={sparrow:'🚁',swift:'⚡',mule:'🛡',falcon:'🦅',titan:'👑'};
+const DRONE_NAME={sparrow:'Sparrow',swift:'Swift',mule:'Mule',falcon:'Falcon',titan:'Titan'};
+fetch('/api/leaderboard').then(r=>r.json()).then(d=>{
+  const w=document.getElementById('lbWrap');
+  if(!d.pilots||!d.pilots.length){
+    w.innerHTML='<p class="lead">No completed deliveries yet — be the first pilot on the board.</p>';
+    return;
+  }
+  let h='<table><tr><th>#</th><th>Pilot</th><th>Trips</th><th>Coins</th><th>Drone</th></tr>';
+  d.pilots.forEach((p,i)=>{
+    const medal=['🥇','🥈','🥉'][i]||(i+1);
+    h+='<tr><td class="rank'+(i<3?' top':'')+'">'+medal+'</td><td><b>'+
+      String(p.user).replace(/[<>]/g,'')+'</b></td><td>'+p.trips+'</td><td>🪙'+p.coins+'</td><td>'+
+      (DRONE_ICON[p.drone]||'🚁')+' '+(DRONE_NAME[p.drone]||'Sparrow')+'</td></tr>';
+  });
+  h+='</table><p class="lead" style="margin-top:14px">'+d.total+' pilot'+(d.total===1?'':'s')+' registered.</p>';
+  w.innerHTML=h;
+}).catch(()=>{
+  document.getElementById('lbWrap').innerHTML='<p class="lead">Leaderboard is offline right now — try again in a moment.</p>';
+});
+</script>
 
 <footer><div class="wrap">
   <a href="index.html">Home</a>·<a href="guide.html">How to Play</a>·<a href="fleet.html">Fleet</a>·<a href="leaderboard.html">Leaderboard</a>·<a href="news.html">News</a>·<a href="support.html">Support</a>

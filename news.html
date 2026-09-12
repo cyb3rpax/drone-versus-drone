@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Home — Drone Courier: Marin</title>
+<title>News — Drone Courier: Marin</title>
 <meta name="description" content="Drone Courier: Marin — fly a delivery drone the real distance from your Marin County home to Harmony Montessori and back. Free browser game.">
 <style>
 :root{--bg:#08060f;--ink:#f2e9ff;--dim:#9a8ab8;--line:rgba(255,45,149,.28);--teal:#00f0ff;--teal2:#5cffe4;--gold:#faff4d;--coral:#ff2d95;--card:#120c1f}
@@ -108,36 +108,32 @@ footer a{color:#6a5b85}
 </style></head><body>
 <nav><div class="wrap">
   <a class="logo" href="index.html">DRONE COURIER<span>: MARIN</span></a>
-  <div class="links"><a href="index.html" class="on">Home</a><a href="guide.html">How to Play</a><a href="fleet.html">Fleet</a><a href="leaderboard.html">Leaderboard</a><a href="news.html">News</a><a href="support.html">Support</a><a class="btn" href="play.html?go=1">PLAY FREE</a></div>
+  <div class="links"><a href="index.html">Home</a><a href="guide.html">How to Play</a><a href="fleet.html">Fleet</a><a href="leaderboard.html">Leaderboard</a><a href="news.html" class="on">News</a><a href="support.html">Support</a><a class="btn" href="play.html?go=1">PLAY FREE</a></div>
 </div></nav>
 
-<div class="hero"><div class="wrap">
-  <h1>DRONE COURIER: MARIN</h1>
-  <div class="tag">Fly a delivery drone from your own front door to Harmony Montessori in Tiburon — and back on a battery that can't quite do both.</div>
-  <div class="sub">Free · plays in your browser · nothing to install</div>
-  <a class="btn coral big" href="play.html?go=1">▲ PLAY FREE</a>
-  <div style="font-size:12px;color:#4a6b76;margin-top:10px">Takes 10 seconds to start</div>
-</div></div>
-
+<header class="page"><div class="wrap"><h1>News</h1>
+<p>Updates from the hangar — new drones, events and changes to the game.</p></div></header>
 <section class="wrap">
+  <div id="live"></div>
+  <h2>Changelog</h2>
   <div class="grid">
-    <div class="card"><div class="ico">📍</div><h3>Your real route</h3><p>Enter your Marin address and the game measures the true distance to Harmony — a mile takes 30 seconds to fly.</p></div>
-    <div class="card"><div class="ico">🔋</div><h3>Battery is the game</h3><p>One charge covers about half the round trip. Recharge at Harmony, or find the field battery on the way.</p></div>
-    <div class="card"><div class="ico">🔧</div><h3>Crashes cost you</h3><p>Hit something hard and a part breaks. Buy the replacement and fit it yourself at the workbench.</p></div>
+    <div class="card"><div class="ico">📢</div><h3>Game-wide announcements</h3><p>Messages from the hangar now appear for every pilot the moment they log in.</p></div>
+    <div class="card"><div class="ico">🏘</div><h3>Villages &amp; farmland</h3><p>Islands now have real streets, rows of homes, apartment blocks, fields, and grazing animals to buzz.</p></div>
+    <div class="card"><div class="ico">🔧</div><h3>Eleven breakable parts</h3><p>Motor mounts, arm struts, GPS antennas, flight computers and more — and what breaks depends on how you crash.</p></div>
+    <div class="card"><div class="ico">👑</div><h3>Falcon &amp; Titan</h3><p>Two new top-tier drones join the fleet for the pilots grinding toward the top of the leaderboard.</p></div>
+    <div class="card"><div class="ico">📷</div><h3>First-person view</h3><p>Press C mid-flight for a nose-cam that leans into your turns. Threading pines has never been scarier.</p></div>
+    <div class="card"><div class="ico">🐦</div><h3>Birds that hunt your altitude</h3><p>Flocks now drift to whatever height you're flying, so you have to steer around them.</p></div>
   </div>
 </section>
-
-<div class="strip"><div class="wrap">
-  <div class="stat"><b>🪙100</b><span>PER ROUND TRIP</span></div>
-  <div class="stat"><b>5</b><span>DRONES</span></div>
-  <div class="stat"><b>24</b><span>SKINS</span></div>
-  <div class="stat"><b>9</b><span>CRASH EFFECTS</span></div>
-</div></div>
-
-<section class="wrap" style="text-align:center;padding-bottom:50px">
-  <a class="btn coral big" href="play.html?go=1">▲ START FLYING</a>
-  <div style="margin-top:16px;font-size:13.5px"><a href="guide.html">How to play</a> · <a href="fleet.html">The fleet</a> · <a href="leaderboard.html">Leaderboard</a></div>
-</section>
+<script>
+fetch('/api/announce').then(r=>r.json()).then(n=>{
+  if(n&&n.text){
+    document.getElementById('live').innerHTML=
+      '<div class="note" style="margin-bottom:26px"><b>📢 LATEST ANNOUNCEMENT</b><br>'+
+      String(n.text).replace(/[<>]/g,'')+'</div>';
+  }
+}).catch(()=>{});
+</script>
 
 <footer><div class="wrap">
   <a href="index.html">Home</a>·<a href="guide.html">How to Play</a>·<a href="fleet.html">Fleet</a>·<a href="leaderboard.html">Leaderboard</a>·<a href="news.html">News</a>·<a href="support.html">Support</a>

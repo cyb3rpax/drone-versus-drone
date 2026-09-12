@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Home — Drone Courier: Marin</title>
+<title>How to Play — Drone Courier: Marin</title>
 <meta name="description" content="Drone Courier: Marin — fly a delivery drone the real distance from your Marin County home to Harmony Montessori and back. Free browser game.">
 <style>
 :root{--bg:#08060f;--ink:#f2e9ff;--dim:#9a8ab8;--line:rgba(255,45,149,.28);--teal:#00f0ff;--teal2:#5cffe4;--gold:#faff4d;--coral:#ff2d95;--card:#120c1f}
@@ -108,36 +108,47 @@ footer a{color:#6a5b85}
 </style></head><body>
 <nav><div class="wrap">
   <a class="logo" href="index.html">DRONE COURIER<span>: MARIN</span></a>
-  <div class="links"><a href="index.html" class="on">Home</a><a href="guide.html">How to Play</a><a href="fleet.html">Fleet</a><a href="leaderboard.html">Leaderboard</a><a href="news.html">News</a><a href="support.html">Support</a><a class="btn" href="play.html?go=1">PLAY FREE</a></div>
+  <div class="links"><a href="index.html">Home</a><a href="guide.html" class="on">How to Play</a><a href="fleet.html">Fleet</a><a href="leaderboard.html">Leaderboard</a><a href="news.html">News</a><a href="support.html">Support</a><a class="btn" href="play.html?go=1">PLAY FREE</a></div>
 </div></nav>
 
-<div class="hero"><div class="wrap">
-  <h1>DRONE COURIER: MARIN</h1>
-  <div class="tag">Fly a delivery drone from your own front door to Harmony Montessori in Tiburon — and back on a battery that can't quite do both.</div>
-  <div class="sub">Free · plays in your browser · nothing to install</div>
-  <a class="btn coral big" href="play.html?go=1">▲ PLAY FREE</a>
-  <div style="font-size:12px;color:#4a6b76;margin-top:10px">Takes 10 seconds to start</div>
-</div></div>
-
+<header class="page"><div class="wrap"><h1>How to Play</h1>
+<p>Everything you need to fly your first delivery — controls, the battery rule, crashes, and how repairs work.</p></div></header>
 <section class="wrap">
+  <h2>Controls</h2>
   <div class="grid">
-    <div class="card"><div class="ico">📍</div><h3>Your real route</h3><p>Enter your Marin address and the game measures the true distance to Harmony — a mile takes 30 seconds to fly.</p></div>
-    <div class="card"><div class="ico">🔋</div><h3>Battery is the game</h3><p>One charge covers about half the round trip. Recharge at Harmony, or find the field battery on the way.</p></div>
-    <div class="card"><div class="ico">🔧</div><h3>Crashes cost you</h3><p>Hit something hard and a part breaks. Buy the replacement and fit it yourself at the workbench.</p></div>
+    <div class="card"><h3>Flying</h3><p>
+      <span class="keys"><kbd>W</kbd><kbd>S</kbd></span> forward &amp; back<br>
+      <span class="keys"><kbd>A</kbd><kbd>D</kbd></span> strafe left &amp; right<br>
+      <span class="keys"><kbd>◀</kbd><kbd>▶</kbd><kbd>Q</kbd><kbd>E</kbd></span> turn<br>
+      <span class="keys"><kbd>SPACE</kbd></span> climb &nbsp; <span class="keys"><kbd>SHIFT</kbd></span> descend</p></div>
+    <div class="card"><h3>Camera</h3><p><span class="keys"><kbd>C</kbd></span> switches between the chase camera and a first-person nose cam that leans into your turns. FPV is harder — and much more fun in the trees.</p></div>
+    <div class="card"><h3>Repairs</h3><p>Drag each screw onto the glowing mount hole on your drone, then turn it clockwise: <span class="keys"><kbd>⬆</kbd><kbd>➡</kbd><kbd>⬇</kbd><kbd>⬅</kbd></span> — four quarter-turns per screw, four screws per part.</p></div>
   </div>
 </section>
-
-<div class="strip"><div class="wrap">
-  <div class="stat"><b>🪙100</b><span>PER ROUND TRIP</span></div>
-  <div class="stat"><b>5</b><span>DRONES</span></div>
-  <div class="stat"><b>24</b><span>SKINS</span></div>
-  <div class="stat"><b>9</b><span>CRASH EFFECTS</span></div>
-</div></div>
-
-<section class="wrap" style="text-align:center;padding-bottom:50px">
-  <a class="btn coral big" href="play.html?go=1">▲ START FLYING</a>
-  <div style="margin-top:16px;font-size:13.5px"><a href="guide.html">How to play</a> · <a href="fleet.html">The fleet</a> · <a href="leaderboard.html">Leaderboard</a></div>
+<section class="wrap">
+  <h2>The rules of the sky</h2>
+  <ol class="steps">
+    <li><b>One battery per leg.</b> It drains the whole flight and covers only about half the round trip. Watch the range estimate against the miles to go.</li>
+    <li><b>Recharge on pads only.</b> Your home pad and Harmony's pad are your lifelines. Run dry over open water and you ditch at sea.</li>
+    <li><b>The round trip pays.</b> Reaching Harmony isn't enough — land back home to bank your 🪙100.</li>
+    <li><b>Grab the field battery.</b> One floats along your route each run. Fly through it for an instant free full charge.</li>
+    <li><b>Terrain wins every argument.</b> Trees, houses, apartment towers, hills and rocks are all solid. Gentle taps bounce; fast hits break parts.</li>
+    <li><b>Birds match your altitude.</b> You can't climb over a flock — steer around or thread the formation.</li>
+    <li><b>Broken drones limp.</b> A fraction of your speed, capped at treetop height — just enough to reach the parts shop.</li>
+    <li><b>You do the repairs.</b> Buy the part (on credit if you're broke), then fit it yourself at the workbench.</li>
+  </ol>
 </section>
+<section class="wrap">
+  <h2>What breaks, and when</h2>
+  <div class="lead">Damage depends on how you crash — eleven parts, each with its own mount point on the airframe.</div>
+  <div class="grid">
+    <div class="card"><div class="ico">⬇️</div><h3>Belly-flop the ground</h3><p>Landing gear, battery cell, GPS antenna or an arm strut.</p></div>
+    <div class="card"><div class="ico">➡️</div><h3>Nose-first into something</h3><p>Camera gimbal, nav lights, frame plates — or the flight computer, the priciest part in the game.</p></div>
+    <div class="card"><div class="ico">↔️</div><h3>Side-swipe</h3><p>Rotor assembly, arm strut or motor mount — the spinning props clip first.</p></div>
+    <div class="card"><div class="ico">🐦</div><h3>Bird strike</h3><p>Rotors, prop guards, motor mount or nav lights.</p></div>
+  </div>
+</section>
+<section class="wrap"><div class="note">💡 <b>Pro tip:</b> fly high over open water to save battery, then drop low only when you need to thread the islands. Climbing costs power — but so does a repair bill.</div></section>
 
 <footer><div class="wrap">
   <a href="index.html">Home</a>·<a href="guide.html">How to Play</a>·<a href="fleet.html">Fleet</a>·<a href="leaderboard.html">Leaderboard</a>·<a href="news.html">News</a>·<a href="support.html">Support</a>
