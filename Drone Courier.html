@@ -86,7 +86,7 @@
   #sgBtn:hover{background:rgba(40,160,105,.7)}
   .sgNote{font-size:10px;color:#6a5f88;margin-top:14px}
   /* built-in marketing splash — always the first thing you see */
-  #splash{position:fixed;inset:0;z-index:55;overflow-y:auto;background:#0b1d1a;color:#e4f6ef;display:block}
+  #splash{display:none!important}   /* single page: no marketing splash */
   #splash .hero{padding:70px 24px 50px;text-align:center;background:linear-gradient(180deg,#0f6e64 0%,#2aa896 55%,#8fe0d0 100%)}
   #splash h1{font-size:46px;margin:0;letter-spacing:4px;color:#fff;text-shadow:0 0 30px rgba(190,110,255,.6)}
   #splash .tag{font-size:17px;color:#f3e2ff;margin:14px auto 6px;max-width:620px;line-height:1.55}
@@ -510,7 +510,7 @@
     <div class="lead">Create your pilot account, enter your address, and make your first delivery now.</div>
     <button class="splashPlay">▲ CREATE ACCOUNT &amp; FLY</button>
   </section>
-  <footer>Drone Courier: Marin · a browser drone-delivery game</footer>
+  <footer>Drone Courier: Marin</footer>
 </div>
 <div id="addr"><div id="addrBox">
   <h1>SET YOUR HOME BASE 🏠</h1>
@@ -995,8 +995,8 @@ function buildRouteTerrain(){
     const x=(Math.random()*2-1)*400;
     if(onLand(x,z)) continue;
     if(Math.abs(x)<40 && Math.random()<0.5) continue;       // keep a rough corridor
-    if(!farFromPads(x,z,120)||!place(x,z,r*1.1,r*1.1,6)) continue;
     const r=28+Math.random()*52, h=12+Math.random()*40;
+    if(!farFromPads(x,z,120)||!place(x,z,r*1.1,r*1.1,6)) continue;
     const rock=addT(new THREE.Mesh(new THREE.SphereGeometry(r,10,8), rockMatT));
     rock.scale.y=h/r; rock.position.set(x,1,z);
     addSolid(x,h/2,z,r*1.7,h,r*1.7);
@@ -1575,9 +1575,9 @@ function moneyHUD(){
   $('trips').textContent='Round trips: '+trips;
 }
 // ---------- Home page (hangar) ----------
-function uiBlocked(){ return $('splash').style.display!=='none'||$('overlay').style.display==='flex'||$('home').style.display==='flex'||$('signup').style.display==='flex'||$('addr').style.display==='flex'; }
+function uiBlocked(){ return $('overlay').style.display==='flex'||$('home').style.display==='flex'||$('signup').style.display==='flex'||$('addr').style.display==='flex'; }
 // arriving from the website? the marketing pitch was already made — go straight to signup
-if(location.search.indexOf('go')>=0){ $('splash').style.display='none'; }
+$('splash').style.display='none';   // single page: straight to sign-in
 document.querySelectorAll('.splashPlay').forEach(b=>b.addEventListener('click',()=>{
   $('splash').style.display='none';                 // marketing seen — on to the account gate
 }));
