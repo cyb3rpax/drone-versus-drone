@@ -1528,13 +1528,17 @@ $('sgBtn').addEventListener('click',async ()=>{
     const user=$('sgUser').value.trim();
     if(user.length<3){ $('sgErr').textContent='Username needs at least 3 characters.'; return; }
     if(REMOTE){
-      const res=await api('register',{user,email,pass}).catch(()=>({error:'Server unreachable.'}));
-      if(res.error){ $('sgErr').textContent=res.error; return; }
-      localStorage.setItem('coveToken',res.token);
-      account={user,email,token:res.token};
-      applySave(res.save);
-      saveGame();
-    } else {
+      const res=await api('register',{user,email,pass}).catch(()=>({error:'__OFFLINE__'}));
+      if(res.error==='__OFFLINE__'){ REMOTE=false; initAccount(); }   // no server → play with a local account
+      else if(res.error){ $('sgErr').textContent=res.error; return; }
+      else {
+        localStorage.setItem('coveToken',res.token);
+        account={user,email,token:res.token};
+        applySave(res.save);
+        saveGame();
+      }
+    }
+    if(!REMOTE){
       if(accountsDB.accounts[email]){ $('sgErr').textContent='An account with that email already exists — log in instead.'; return; }
       for(const k in accountsDB.accounts){
         if(accountsDB.accounts[k].user.toLowerCase()===user.toLowerCase()){ $('sgErr').textContent='That username is taken.'; return; }
@@ -1553,12 +1557,16 @@ $('sgBtn').addEventListener('click',async ()=>{
     afterAuth();
   } else {
     if(REMOTE){
-      const res=await api('login',{email,pass}).catch(()=>({error:'Server unreachable.'}));
-      if(res.error){ $('sgErr').textContent=res.error; return; }
-      localStorage.setItem('coveToken',res.token);
-      account={user:res.user,email,token:res.token};
-      applySave(res.save);
-    } else {
+      const res=await api('login',{email,pass}).catch(()=>({error:'__OFFLINE__'}));
+      if(res.error==='__OFFLINE__'){ REMOTE=false; initAccount(); }
+      else if(res.error){ $('sgErr').textContent=res.error; return; }
+      else {
+        localStorage.setItem('coveToken',res.token);
+        account={user:res.user,email,token:res.token};
+        applySave(res.save);
+      }
+    }
+    if(!REMOTE&&!account){
       const a=accountsDB.accounts[email];
       if(!a||a.pass!==h){ $('sgErr').textContent='Wrong email or password.'; return; }
       account=a; accountsDB.last=email; saveDB();
@@ -2425,7 +2433,11 @@ function loop(){
 loadDB();
 // if we're on a host with no account API (e.g. a static deploy), fall back to local accounts
 if(REMOTE){
-  fetch('/api/me').then(r=>{ if(r.status===404||r.status>=500) throw 0; }).catch(()=>{ REMOTE=false; initAccount(); });
+  fetch('/api/me').then(async r=>{
+    if(r.status===404||r.status>=500) throw 0;
+    const ct=(r.headers.get('content-type')||'');
+    if(ct.indexOf('json')<0) throw 0;                 // got a web page back, not the API
+  }).catch(()=>{ REMOTE=false; initAccount(); });
 }
 // NO auto-login, ever: every launch requires logging in or signing up
 try{ localStorage.removeItem('coveToken'); }catch(e){}
