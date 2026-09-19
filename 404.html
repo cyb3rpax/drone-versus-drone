@@ -703,7 +703,7 @@ function addSolid(x,y,z,w,h,d){ solids.push({min:new THREE.Vector3(x-w/2,y-h/2,z
     const a=Math.PI*0.15+Math.random()*Math.PI*0.7;          // cliffs arc behind the pad
     const r=55+Math.random()*45;
     const x=COVE.x+Math.cos(a)*r, z=COVE.z+Math.sin(a)*r;
-    const w=28+Math.random()*40, h=32+Math.random()*60;
+    const w=42+Math.random()*60, h=48+Math.random()*90;
     const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,w), rockMat);
     m.position.set(x,h/2+2,z); m.rotation.y=Math.random(); scene.add(m);
     addSolid(x,h/2+2,z,w,h,w);
@@ -726,8 +726,8 @@ function addSolid(x,y,z,w,h,d){ solids.push({min:new THREE.Vector3(x-w/2,y-h/2,z
 const SHOP=new THREE.Vector3(COVE.x-55,0,COVE.z-30);
 let shopBeacon=null;
 (function buildShop(){
-  const hut=new THREE.Mesh(new THREE.BoxGeometry(24,14,18), new THREE.MeshLambertMaterial({color:0x6a4a2a}));
-  hut.position.set(SHOP.x,9,SHOP.z-14); scene.add(hut); addSolid(SHOP.x,9,SHOP.z-14,24,14,18);
+  const hut=new THREE.Mesh(new THREE.BoxGeometry(36,21,27), new THREE.MeshLambertMaterial({color:0x6a4a2a}));
+  hut.position.set(SHOP.x,13.5,SHOP.z-20); scene.add(hut); addSolid(SHOP.x,13.5,SHOP.z-20,36,21,27);
   const sign=new THREE.Mesh(new THREE.BoxGeometry(8,2,0.4), new THREE.MeshBasicMaterial({color:0xffa040}));
   sign.position.set(SHOP.x,10,SHOP.z-8); scene.add(sign);
   const pad=new THREE.Mesh(new THREE.CylinderGeometry(7,7,1,22), new THREE.MeshLambertMaterial({color:0x7a4f1e}));
@@ -750,7 +750,7 @@ const harmonyBoxes=[];
   for(let i=0;i<22;i++){
     const a=Math.random()*Math.PI*2, r=25+Math.random()*75;
     const x=Math.cos(a)*r, z=Math.sin(a)*r;
-    const w=16+Math.random()*20, h=16+Math.random()*44, d=16+Math.random()*20;
+    const w=24+Math.random()*30, h=25+Math.random()*66, d=24+Math.random()*30;
     const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d), new THREE.MeshLambertMaterial({color:cols[i%4]}));
     m.position.set(x,h/2+2,z); harmonyG.add(m);
     harmonyBoxes.push({x,z,w,h,d});
@@ -779,7 +779,7 @@ function onLand(x,z){ for(const d of landDiscs){ if(Math.hypot(x-d.x,z-d.z)<d.r)
 function farFromPads(x,z,m){
   return Math.hypot(x-COVE.x,z-COVE.z)>m && Math.hypot(x-HARMONY.x,z-HARMONY.z)>m && Math.hypot(x-SHOP.x,z-SHOP.z)>Math.min(m,70);
 }
-function addT(m){ m.castShadow=true; m.receiveShadow=true; scene.add(m); terrainMeshes.push(m); return m; }
+function addT(m,cast){ m.castShadow=(cast!==false); m.receiveShadow=true; scene.add(m); terrainMeshes.push(m); return m; }
 const wallMats=[0xc9c0b0,0xb5a894,0xa8b2b8,0xc2b09c,0x9e9686].map(c=>new THREE.MeshStandardMaterial({color:c,roughness:0.9}));
 const roofMats=[0x5f6a72,0x4e4a52,0x3f5560,0x6b5f52].map(c=>new THREE.MeshStandardMaterial({color:c,roughness:0.85}));
 // every placed object claims a ground rectangle; nothing may intersect one
@@ -822,7 +822,7 @@ function windowTex(){
   return t;
 }
 function buildBarn(x,z,rot){                        // grey apartment block
-  const w=56+Math.random()*20, d=44+Math.random()*16, h=84+Math.random()*44;
+  const w=84+Math.random()*30, d=66+Math.random()*24, h=130+Math.random()*66;
   const win=new THREE.MeshStandardMaterial({map:windowTex(),roughness:0.85});
   const cap=new THREE.MeshStandardMaterial({color:0x7d858c,roughness:0.95});
   const body=addT(new THREE.Mesh(new THREE.BoxGeometry(w,h,d), [win,win,cap,cap,win,win]));
@@ -837,26 +837,26 @@ function addAnimal(x,z){
   claim(x,z,6,6);
   const m=animalMats[Math.floor(Math.random()*animalMats.length)];
   const a=Math.random()*Math.PI*2;
-  const body=addT(new THREE.Mesh(new THREE.SphereGeometry(5.2,8,6), m));
-  body.scale.set(1.5,1.0,0.9); body.position.set(x,8.2,z); body.rotation.y=a;
-  const head=addT(new THREE.Mesh(new THREE.SphereGeometry(2.6,6,6), m));
-  head.position.set(x+Math.cos(a)*8.8, 7.4, z-Math.sin(a)*8.8);
+  const body=addT(new THREE.Mesh(new THREE.SphereGeometry(7.6,8,6), m));
+  body.scale.set(1.5,1.0,0.9); body.position.set(x,10.8,z); body.rotation.y=a;
+  const head=addT(new THREE.Mesh(new THREE.SphereGeometry(3.8,6,6), m));
+  head.position.set(x+Math.cos(a)*13, 9.8, z-Math.sin(a)*13);
 }
 function buildSettlement(cx,cz,r){
   const a=Math.random()*Math.PI;
   const dx=Math.cos(a), dz=Math.sin(a), px=-dz, pz=dx;
   // the main road through town
   const len=r*1.7;
-  for(let t=-len/2; t<len/2; t+=40) claim(cx+dx*t, cz+dz*t, 26, 26);
-  const road=addT(new THREE.Mesh(new THREE.BoxGeometry(len,0.3,32), roadMat), false);
+  for(let t=-len/2; t<len/2; t+=40) claim(cx+dx*t, cz+dz*t, 34, 34);
+  const road=addT(new THREE.Mesh(new THREE.BoxGeometry(len,0.3,48), roadMat), false);
   road.position.set(cx,3.12,cz); road.rotation.y=-a;
   // rows of homes along both sides, facing the street (with gaps, like real streets)
-  for(let t=-len/2+80; t<len/2-70; t+=120+Math.random()*40){
+  for(let t=-len/2+115; t<len/2-105; t+=180+Math.random()*55){
     for(const side of [-1,1]){
       if(Math.random()<0.22) continue;
-      const hx=cx+dx*t+px*side*(72+Math.random()*16);
-      const hz=cz+dz*t+pz*side*(72+Math.random()*16);
-      if(!onLand(hx,hz)||!farFromPads(hx,hz,140)||!place(hx,hz,48,42,8)) continue;
+      const hx=cx+dx*t+px*side*(108+Math.random()*22);
+      const hz=cz+dz*t+pz*side*(108+Math.random()*22);
+      if(!onLand(hx,hz)||!farFromPads(hx,hz,140)||!place(hx,hz,72,64,10)) continue;
       buildHouse(hx,hz,-a+(side>0?0:Math.PI));
     }
   }
@@ -867,9 +867,9 @@ function buildSettlement(cx,cz,r){
     if(onLand(fx,fz)&&farFromPads(fx,fz,90)){
       const nF=1+Math.floor(Math.random()*2);
       for(let f=0;f<nF;f++){
-        const gx=fx+(Math.random()*2-1)*120, gz=fz+(Math.random()*2-1)*120;
-        if(!onLand(gx,gz)||!place(gx,gz,120,80,2)) continue;
-        const field=addT(new THREE.Mesh(new THREE.BoxGeometry(180+Math.random()*100,0.2,120+Math.random()*72), fieldMats[Math.floor(Math.random()*3)]), false);
+        const gx=fx+(Math.random()*2-1)*160, gz=fz+(Math.random()*2-1)*160;
+        if(!onLand(gx,gz)||!place(gx,gz,170,110,2)) continue;
+        const field=addT(new THREE.Mesh(new THREE.BoxGeometry(250+Math.random()*140,0.2,170+Math.random()*100), fieldMats[Math.floor(Math.random()*3)]), false);
         field.position.set(gx,3.08,gz); field.rotation.y=-a+(Math.random()-0.5)*0.25;
         if(Math.random()<0.55){
           const n=3+Math.floor(Math.random()*5);
@@ -877,16 +877,16 @@ function buildSettlement(cx,cz,r){
         }
       }
       const bx=fx+dx*130, bz=fz+dz*130;
-      if(onLand(bx,bz)&&place(bx,bz,42,38,10)) buildBarn(bx,bz,-a);
+      if(onLand(bx,bz)&&place(bx,bz,62,54,12)) buildBarn(bx,bz,-a);
     }
   }
 }
 function buildHouse(x,z,rotIn){
-  const w=52+Math.random()*28, d=44+Math.random()*20, h=28+Math.random()*14+(Math.random()<0.3?20:0);
+  const w=78+Math.random()*42, d=66+Math.random()*30, h=42+Math.random()*21+(Math.random()<0.3?30:0);
   const rot=(rotIn===undefined)?Math.random()*Math.PI:rotIn;
   const body=addT(new THREE.Mesh(new THREE.BoxGeometry(w,h,d), wallMats[Math.floor(Math.random()*wallMats.length)]));
   body.position.set(x,3+h/2,z); body.rotation.y=rot;
-  const rh=16+Math.random()*8;
+  const rh=24+Math.random()*12;
   const roof=addT(new THREE.Mesh(new THREE.ConeGeometry(Math.max(w,d)*0.78,rh,4), roofMats[Math.floor(Math.random()*roofMats.length)]));
   roof.position.set(x,3+h+rh/2-0.5,z); roof.rotation.y=rot+Math.PI/4;
   const ca=Math.abs(Math.cos(rot)), sa=Math.abs(Math.sin(rot));
@@ -918,30 +918,30 @@ function buildRouteTerrain(){
       // a cottage or two first
       for(let i=0;i<2;i++){
         const hx0=cx+(Math.random()*2-1)*r*0.5, hz0=cz+(Math.random()*2-1)*r*0.5;
-        if(!onLand(hx0,hz0)||!place(hx0,hz0,48,42,8)) continue;
+        if(!onLand(hx0,hz0)||!place(hx0,hz0,72,64,10)) continue;
         buildHouse(hx0,hz0);
       }
       const nMini=3+Math.floor(Math.random()*3);         // a little grove, no hills
       for(let i=0;i<nMini;i++){
         const x=cx+(Math.random()*2-1)*r*0.6, z=cz+(Math.random()*2-1)*r*0.6;
-        if(!place(x,z,11,11,3)) continue;
-        const th=20+Math.random()*16, lean=(Math.random()-0.5)*0.05;
+        if(!place(x,z,17,17,4)) continue;
+        const th=32+Math.random()*26, lean=(Math.random()-0.5)*0.05;
         const shade=new THREE.Color(0x2f4a32); shade.offsetHSL((Math.random()-0.5)*0.05,(Math.random()-0.5)*0.18,(Math.random()-0.5)*0.14);
         const pm=new THREE.MeshStandardMaterial({color:shade,roughness:1});
-        const trunk=addT(new THREE.Mesh(new THREE.CylinderGeometry(1.4,2.4,th,8), trunkMat));
+        const trunk=addT(new THREE.Mesh(new THREE.CylinderGeometry(2.1,3.6,th,8), trunkMat));
         trunk.position.set(x,th/2+2,z); trunk.rotation.z=lean;
         let cy=th+2;
-        for(let c=0;c<3;c++){
-          const cone=addT(new THREE.Mesh(new THREE.ConeGeometry(13-c*3.6,13,9), pm));
-          cone.position.set(x+lean*cy,cy+5.2,z); cy+=8.4;
+        for(let c=0;c<2;c++){
+          const cone=addT(new THREE.Mesh(new THREE.ConeGeometry(20-c*7,26,10), pm), false);
+          cone.position.set(x+lean*cy,cy+11,z); cy+=17;
         }
-        addSolid(x,(cy+2)/2,z,10,cy+2,10);
+        addSolid(x,(cy+2)/2,z,21,cy+2,21);
       }
       // and a couple of rocks in the remaining water
       for(let i=0;i<3;i++){
         const z=cz+(Math.random()*2-1)*gap*0.45, x=(Math.random()*2-1)*300;
         if(onLand(x,z)||!farFromPads(x,z,110)) continue;
-        const rr=20+Math.random()*28, h=10+Math.random()*20;
+        const rr=30+Math.random()*42, h=15+Math.random()*30;
         const rock=addT(new THREE.Mesh(new THREE.SphereGeometry(rr,10,8), rockMatT));
         rock.scale.y=h/rr; rock.position.set(x,1,z);
         addSolid(x,h/2,z,rr*1.6,h,rr*1.6);
@@ -951,7 +951,7 @@ function buildRouteTerrain(){
     return;
   }
   // grassy landmasses spread evenly across the whole crossing
-  const nLand=Math.max(1, Math.round(span/900));
+  const nLand=Math.min(8, Math.max(1, Math.round(span/900)));
   for(let li=0; li<nLand; li++){
     let cz=z0-span*(li+0.5)/nLand;
     const cx=(Math.random()*2-1)*170;
@@ -964,9 +964,9 @@ function buildRouteTerrain(){
     const land=addT(new THREE.Mesh(new THREE.CylinderGeometry(r,r+20,4,40), new THREE.MeshStandardMaterial({map:grassTex,color:tint,roughness:1})));
     land.position.set(cx,1,cz);
     // rolling hills
-    const nH=Math.max(4, Math.round(r/40));
+    const nH=Math.min(8, Math.max(4, Math.round(r/40)));
     for(let i=0;i<nH;i++){
-      const hr=70+Math.random()*100, h=52+Math.random()*92;
+      const hr=105+Math.random()*150, h=78+Math.random()*138;
       const ang=Math.random()*Math.PI*2, rad=r*(0.62+Math.random()*0.3);
       const x=cx+Math.cos(ang)*rad, z=cz+Math.sin(ang)*rad;
       if(!onLand(x,z)||!farFromPads(x,z,90)||!place(x,z,hr*0.82,hr*0.82,10)) continue;
@@ -978,38 +978,38 @@ function buildRouteTerrain(){
     // town first, so the big buildings always get their space
     buildSettlement(cx,cz,r);
     // tall pines fill in around it
-    const nT=Math.max(10, Math.round(r/9));
+    const nT=Math.min(26, Math.max(8, Math.round(r/11)));
     for(let i=0;i<nT;i++){
       const x=cx+(Math.random()*2-1)*r*0.85, z=cz+(Math.random()*2-1)*r*0.85;
-      if(!onLand(x,z)||!farFromPads(x,z,70)||!place(x,z,13,13,3)) continue;
-      const th=48+Math.random()*48, lean=(Math.random()-0.5)*0.06;
+      if(!onLand(x,z)||!farFromPads(x,z,70)||!place(x,z,20,20,4)) continue;
+      const th=72+Math.random()*72, lean=(Math.random()-0.5)*0.06;
       const shade=new THREE.Color(0x2f4a32); shade.offsetHSL((Math.random()-0.5)*0.05,(Math.random()-0.5)*0.18,(Math.random()-0.5)*0.14);
       const pineMat=new THREE.MeshStandardMaterial({color:shade,roughness:1});
-      const trunk=addT(new THREE.Mesh(new THREE.CylinderGeometry(2,3.8,th,8), trunkMat));
+      const trunk=addT(new THREE.Mesh(new THREE.CylinderGeometry(3,5.6,th,8), trunkMat));
       trunk.position.set(x,th/2+2,z); trunk.rotation.z=lean;
       let cy=th+2;
-      for(let c=0;c<5;c++){
-        const cone=addT(new THREE.Mesh(new THREE.ConeGeometry(23-c*4.0,18,9), pineMat));
-        cone.position.set(x+lean*cy,cy+7,z); cy+=11.2;
+      for(let c=0;c<3;c++){
+        const cone=addT(new THREE.Mesh(new THREE.ConeGeometry(34-c*9,40,10), pineMat), false);
+        cone.position.set(x+lean*cy,cy+16,z); cy+=26;
       }
-      addSolid(x,(cy+2)/2,z,13,cy+2,13);          // matches trunk+inner canopy, not the widest needle tips
+      addSolid(x,(cy+2)/2,z,27,cy+2,27);   // hitbox = trunk + inner canopy
     }
   }
   // sea rocks along the whole way
-  const nR=Math.max(12, Math.round(span/60));
+  const nR=Math.min(60, Math.max(12, Math.round(span/60)));
   for(let i=0;i<nR;i++){
     const z=z0-Math.random()*span;
     const x=(Math.random()*2-1)*400;
     if(onLand(x,z)) continue;
     if(Math.abs(x)<40 && Math.random()<0.5) continue;       // keep a rough corridor
-    const r=28+Math.random()*52, h=12+Math.random()*40;
+    const r=42+Math.random()*78, h=18+Math.random()*60;
     if(!farFromPads(x,z,120)||!place(x,z,r*1.1,r*1.1,6)) continue;
-    const rock=addT(new THREE.Mesh(new THREE.SphereGeometry(r,10,8), rockMatT));
+    const rock=addT(new THREE.Mesh(new THREE.SphereGeometry(r,10,8), rockMatT), false);
     rock.scale.y=h/r; rock.position.set(x,1,z);
     addSolid(x,h/2,z,r*1.7,h,r*1.7);
     islands.push({x,z});
     if(Math.random()<0.5){
-      const tree=addT(new THREE.Mesh(new THREE.ConeGeometry(4,10,7), coneMatT));
+      const tree=addT(new THREE.Mesh(new THREE.ConeGeometry(6,15,7), coneMatT), false);
       tree.position.set(x+r*0.3,h+5,z);
     }
   }
@@ -1095,8 +1095,58 @@ function makeDrone(bodyColor,accent){
     const blur=new THREE.Mesh(new THREE.CylinderGeometry(0.8,0.8,0.02,18), blurMat); rotor.add(blur);
     rotor.position.set(p[0],0.5,p[1]); g.add(rotor); rotors.push(rotor);
   });
+  // ---- upgrade hardware, hidden until you own the tier ----
+  const steel=new THREE.MeshStandardMaterial({color:0x8d949c,metalness:0.85,roughness:0.3});
+  const plate=new THREE.MeshStandardMaterial({color:0x5a626b,metalness:0.7,roughness:0.45});
+  const rubber=new THREE.MeshStandardMaterial({color:0x15181d,roughness:0.95});
+  const tiers=[new THREE.Group(),new THREE.Group(),new THREE.Group(),new THREE.Group()];
+  // T1 SWIFT — aero nose cone + winglets
+  (()=>{
+    const cone=new THREE.Mesh(new THREE.ConeGeometry(0.42,0.9,10), steel);
+    cone.rotation.x=-Math.PI/2; cone.position.set(0,0.02,-1.45); tiers[0].add(cone);
+    [-1,1].forEach(sx=>{
+      const w=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.06,0.34), plate);
+      w.position.set(sx*0.78,0.16,0.62); w.rotation.z=sx*0.5; tiers[0].add(w);
+    });
+  })();
+  // T2 MULE — belly cargo pod + heavy skids
+  (()=>{
+    const pod=new THREE.Mesh(new THREE.BoxGeometry(1.0,0.5,1.5), plate);
+    pod.position.set(0,-0.72,0.1); tiers[1].add(pod);
+    const hatch=new THREE.Mesh(new THREE.BoxGeometry(0.7,0.06,0.9), steel);
+    hatch.position.set(0,-0.97,0.1); tiers[1].add(hatch);
+    [-1,1].forEach(sx=>{
+      const skid=new THREE.Mesh(new THREE.BoxGeometry(0.14,0.14,2.0), rubber);
+      skid.position.set(sx*0.62,-0.92,0.05); tiers[1].add(skid);
+    });
+  })();
+  // T3 FALCON — armour plating on the arms + comms mast
+  (()=>{
+    [[-1.3,-1.1],[1.3,-1.1],[-1.3,1.1],[1.3,1.1]].forEach(p=>{
+      const arm=new THREE.Mesh(new THREE.BoxGeometry(0.55,0.1,0.34), plate);
+      arm.position.set(p[0]*0.6,0.22,p[1]*0.6); arm.rotation.y=Math.atan2(-p[1],p[0]); tiers[2].add(arm);
+    });
+    const mast=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,1.1,6), steel);
+    mast.position.set(0,0.85,0.75); tiers[2].add(mast);
+    const dish=new THREE.Mesh(new THREE.SphereGeometry(0.17,8,6,0,Math.PI*2,0,Math.PI/2), steel);
+    dish.position.set(0,1.4,0.75); tiers[2].add(dish);
+  })();
+  // T4 TITAN — full roll cage, reinforced shell, twin battery bricks
+  (()=>{
+    const shell=new THREE.Mesh(new THREE.BoxGeometry(1.5,0.28,2.3), plate);
+    shell.position.set(0,0.42,0); tiers[3].add(shell);
+    [-1,1].forEach(sx=>{
+      const cage=new THREE.Mesh(new THREE.TorusGeometry(0.95,0.055,6,14,Math.PI), steel);
+      cage.rotation.y=Math.PI/2; cage.position.set(sx*0.5,0.2,0); tiers[3].add(cage);
+      const brick=new THREE.Mesh(new THREE.BoxGeometry(0.34,0.3,1.0), rubber);
+      brick.position.set(sx*0.52,-0.5,0.35); tiers[3].add(brick);
+    });
+    const bumper=new THREE.Mesh(new THREE.BoxGeometry(1.35,0.16,0.2), steel);
+    bumper.position.set(0,-0.1,-1.2); tiers[3].add(bumper);
+  })();
+  tiers.forEach(t=>{ t.visible=false; g.add(t); });
   const light=new THREE.PointLight(accent,0.6,10); light.position.y=0.5; g.add(light);
-  return {group:g, rotors, mats:{body:bodyMat, nose:noseMat, rotor:rotMat, light:light}};
+  return {group:g, rotors, tiers, mats:{body:bodyMat, nose:noseMat, rotor:rotMat, light:light}};
 }
 const player=makeDrone(0x9fb8d8,0x35d0ff);
 scene.add(player.group);
@@ -1275,9 +1325,12 @@ function skinSwatch(s){
   if(s.pat==='star')    return 'radial-gradient(circle at 25% 30%,'+A+' 8%,transparent 9%),radial-gradient(circle at 65% 20%,'+A+' 5%,transparent 6%),radial-gradient(circle at 80% 70%,'+A+' 7%,transparent 8%),radial-gradient(circle at 35% 75%,'+A+' 5%,transparent 6%),'+B;
   return B;
 }
+const DRONE_RANK={sparrow:0,swift:1,mule:2,falcon:3,titan:4};
 function applyDrone(id){
   curDrone=id; const d=DRONES[id];
   player.group.scale.set(d.scale[0],d.scale[1],d.scale[2]);
+  const rank=DRONE_RANK[id]||0;                       // heavier hardware appears as you upgrade
+  if(player.tiers) player.tiers.forEach((t,i)=>{ t.visible = rank>i; });
   P.batt=Math.min(P.batt,maxBattF());
 }
 
@@ -2050,7 +2103,10 @@ function crashEffects(){
       m.scale.setScalar(0.9+Math.random()*1.8); scene.add(m);
       smoke.push({m, v:new THREE.Vector3((Math.random()*2-1)*11,5+Math.random()*9,(Math.random()*2-1)*11), life:1.5, grow:1.2, fade:0.8});
     }
-    for(let i=0;i<4;i++) spawnBolt(p,i%2?0x9fd8ff:0x4a7bff);   // shorting out in the salt water
+    for(let i=0;i<9;i++) spawnBolt(p,i%2?0x9fd8ff:0x4a7bff);   // shorting out in the salt water
+    sparkShower(p,26);
+    steamPuff(p,10);
+    sizzle();
     arcT=0; sunk=false;
     crashSpin.set((Math.random()*2-1)*1.6,(Math.random()*2-1)*2.2,(Math.random()*2-1)*1.6);
     P.vel.set(P.vel.x*0.15,0,P.vel.z*0.15);
@@ -2117,6 +2173,46 @@ function crashEffects(){
   crashSpin.set((Math.random()*2-1)*7,(Math.random()*2-1)*7,(Math.random()*2-1)*7);
   P.vel.multiplyScalar(-0.35); P.vel.y=Math.max(P.vel.y,6);
   blipCrash();
+}
+function sizzle(){                                   // electrical frying + steam hiss
+  if(!AC) return;
+  try{
+    const len=Math.floor(AC.sampleRate*1.6), buf=AC.createBuffer(1,len,AC.sampleRate), d=buf.getChannelData(0);
+    for(let i=0;i<len;i++){
+      const t=i/len;
+      d[i]=(Math.random()*2-1)*Math.pow(1-t,1.1)*(0.55+0.45*Math.sin(i*0.05));
+    }
+    const n=AC.createBufferSource(); n.buffer=buf;
+    const bp=AC.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=3200; bp.Q.value=0.7;
+    const g=AC.createGain(); g.gain.value=0.2;
+    n.connect(bp); bp.connect(g); g.connect(AC.destination); n.start();
+    for(let k=0;k<5;k++){                              // crackling arcs
+      const o=AC.createOscillator(), og=AC.createGain();
+      o.type='square'; o.frequency.value=900+Math.random()*2600;
+      og.gain.setValueAtTime(0.0001,AC.currentTime+k*0.18);
+      og.gain.exponentialRampToValueAtTime(0.09,AC.currentTime+k*0.18+0.01);
+      og.gain.exponentialRampToValueAtTime(0.0001,AC.currentTime+k*0.18+0.09);
+      o.connect(og); og.connect(AC.destination); o.start(AC.currentTime+k*0.18); o.stop(AC.currentTime+k*0.18+0.1);
+    }
+  }catch(e){}
+}
+function sparkShower(p,n){                            // bright sparks that arc and die
+  for(let i=0;i<n;i++){
+    const m=new THREE.Mesh(debrisGeo,new THREE.MeshBasicMaterial({color:i%3?0xfff1a8:0x9fd8ff,transparent:true}));
+    m.position.copy(p).add(new THREE.Vector3((Math.random()*2-1)*2,(Math.random()*2-1)*1.4,(Math.random()*2-1)*2));
+    m.scale.setScalar(0.3+Math.random()*0.6); scene.add(m);
+    debris.push({m, v:new THREE.Vector3((Math.random()*2-1)*20,6+Math.random()*16,(Math.random()*2-1)*20),
+                 spin:new THREE.Vector3(Math.random()*12,Math.random()*12,Math.random()*12), life:0.5+Math.random()*0.6});
+  }
+}
+function steamPuff(p,n){                              // white steam off the hot motors
+  for(let i=0;i<n;i++){
+    const m=new THREE.Mesh(smokeGeo,new THREE.MeshBasicMaterial({color:0xf2fbff,transparent:true,opacity:0.7,depthWrite:false}));
+    m.position.set(p.x+(Math.random()*2-1)*3, 2.0+Math.random()*1.5, p.z+(Math.random()*2-1)*3);
+    m.scale.setScalar(1+Math.random()*1.8); scene.add(m);
+    smoke.push({m, v:new THREE.Vector3((Math.random()*2-1)*2.5, 5+Math.random()*6, (Math.random()*2-1)*2.5),
+                life:1.8, grow:2.6, fade:0.7});
+  }
 }
 function blipCrash(){
   if(!AC) return;
@@ -2206,9 +2302,11 @@ function loop(){
     if(crashWater){
       // electricity keeps arcing over the hull while it goes under
       arcT-=dt;
-      if(arcT<=0 && P.pos.y>-4){
-        arcT=0.13;
+      if(arcT<=0 && P.pos.y>-6){
+        arcT=0.1;
         spawnBolt(P.pos.clone(), Math.random()<0.5?0x9fd8ff:0x4a7bff);
+        sparkShower(P.pos.clone(),4);
+        if(P.pos.y<3&&Math.random()<0.6) steamPuff(P.pos.clone(),2);
       }
       if(P.pos.y>1.9){                       // still falling to the surface
         P.vel.y-=26*dt; P.pos.addScaledVector(P.vel,dt);
