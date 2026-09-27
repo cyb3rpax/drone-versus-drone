@@ -574,7 +574,7 @@
   <div class="hSect"><h2>MISSION BUILDER ✈</h2>
     <div id="mbWrap">
       <label>MISSION NAME<input id="mbName" maxlength="22" placeholder="The Tiburon Dash"></label>
-      <label>DISTANCE <span id="mbMiV">4.0</span> mi<input id="mbMi" type="range" min="1" max="200" value="40"></label>
+      <label>DISTANCE <span id="mbMiV">4.0</span> mi<span style="display:block;font-size:10px;color:#9a8ab8;letter-spacing:1px;margin-top:3px">🔒 set by your real home base → Harmony</span></label>
       <label>CARGO
         <select id="mbCargo">
           <option value="0">Mail — light &amp; easy</option>
@@ -1991,11 +1991,12 @@ $('flyBtn').addEventListener('click',closeHome);
 // ---------- mission builder ----------
 function readBuilder(){
   return {name:($('mbName').value||'').trim().slice(0,22),
-          miles:Math.max(0.1,(+$('mbMi').value||40)/10),
+          miles:homeMiles(),
           cargo:+$('mbCargo').value||0, birds:+$('mbBirds').value||0,
           wind:+$('mbWind').value||0, dusk:!!$('mbDusk').checked};
 }
-if($('mbMi')) $('mbMi').addEventListener('input',()=>{ $('mbMiV').textContent=((+$('mbMi').value)/10).toFixed(1); });
+function homeMiles(){ return (routeInfo&&routeInfo.miles)?routeInfo.miles:4; }                   // distance is always your real home → Harmony
+function syncBuilderMiles(){ if($('mbMiV')) $('mbMiV').textContent=homeMiles().toFixed(1); }
 if($('mbMake')) $('mbMake').addEventListener('click',()=>{
   const m=readBuilder();
   const code=encodeMission(m);
@@ -2012,6 +2013,7 @@ if($('mbPlay')) $('mbPlay').addEventListener('click',()=>{
   startCustomMission(m);
 });
 function startCustomMission(m){
+  m.miles=homeMiles();                              // every mission flies YOUR real route
   custom=m; missionClock=0; phase=1;
   applyMissionConditions(m);
   setRouteWorld(m.miles);
@@ -2046,6 +2048,7 @@ async function loadNews(){
   }catch(e){}
 }
 function renderHome(){
+  syncBuilderMiles();
   $('homeSub').textContent=(account?'Pilot '+account.user+' · ':'')+(routeInfo?('your real route: '+routeInfo.miles+' mi to Harmony \u00b7 '):'')+'earn Drone Coins, build your fleet'+(REMOTE?' · 🌐 server account':' · 💾 local save');
   $('coinBig').textContent='🪙 '+money+' DRONE COINS'+(money<0?' (IN DEBT)':'');
   $('coinBig').style.color=money<0?'#ff8a8a':'#ffd66b';
