@@ -72,3 +72,21 @@ Make free coin codes:
   yoursite.netlify.app/api/gencode?secret=YOURPASSWORD&coins=500&n=5
 
 ================================================
+
+
+------------------------------------------------
+MISSION BUILDER  (new!)
+------------------------------------------------
+
+In the hangar, scroll to MISSION BUILDER. Set a name,
+distance, cargo, birds, wind and dusk, then press
+CREATE MISSION CODE.
+
+You get a code like  MRN-3K9F
+
+Send that code to anyone. They paste it into the
+"Got a code?" box, press FLY IT, and they fly YOUR
+mission — same distance, same weather, same hazards.
+
+The game times every run and remembers your best.
+Nastier conditions and heavier cargo pay more coins.
