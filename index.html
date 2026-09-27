@@ -1726,7 +1726,7 @@ resetPlayer();
 const keys={};
 addEventListener('keydown',e=>{
   if(e.target&&e.target.tagName==='INPUT') return;   // let the signup form type freely
-  if(walk){ walkKey(e); keys[e.code]=true; if(['Space','ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.code)) e.preventDefault(); return; }
+  if(walk && !(typeof screwing!=='undefined'&&screwing)){ walkKey(e); keys[e.code]=true; if(['Space','ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.code)) e.preventDefault(); return; }
   if(typeof screwing!=='undefined' && screwing){
     if(['ArrowUp','ArrowRight','ArrowDown','ArrowLeft'].includes(e.code)){ e.preventDefault(); screwInput(e.code); }
     return;
@@ -2541,18 +2541,36 @@ function setHUDForWalk(on){
 function fadeSwap(fn){ const f=$('fade'); f.style.opacity='1'; setTimeout(()=>{ fn(); f.style.opacity='0'; },330); }
 function enterRoom(){
   walk='room'; decorating=false; decoSel=null; pickMode=false; carrying=false;
-  dropCarry(); if(benchDrone) benchDrone.visible=true;
+  if(!screwing) $('overlay').style.display='none';
+  dropCarry(); if(benchDrone){ benchDrone.visible=true; benchDrone.rotation.set(0,0,0); }
   rp.x=RX0+(R_SPAWN.c+0.5)*CELL; rp.z=RZ0+(R_SPAWN.r+0.5)*CELL; rp.h=Math.PI; rp.y=0;
   roofPerson.visible=false; roofPerson.userData.waving=false;
   buildRoom();
+  if(broken){ carrying=true; attachCarry(roomPerson); benchDrone.visible=false; }   // wrecked — you carried it home
+  styleCarry();
   setHUDForWalk(true); renderDeco();
   for(const k in keys) keys[k]=false;
 }
+function styleCarry(){                    // a wrecked drone hangs crooked with a drooping arm
+  carryDrone.rotation.set(0,0,broken?0.45:0);
+  if(benchDrone) benchDrone.rotation.set(0,0,broken?0.35:0);
+}
+function openRepairOrder(){
+  const canAfford=money>=broken.cost;
+  showOverlay('shop','🔧 REPAIR DESK','#ffa040',
+    'Your '+broken.name+' is wrecked. Order a new one — 🪙'+broken.cost+'. You have 🪙'+money+'.'+(canAfford?'':' Short on coins? Take it on credit and pay it off with mission earnings.'),
+    (canAfford?'ORDER IT':'ORDER ON CREDIT')+'  🪙'+broken.cost);
+}
 function pickUpDrone(){
-  if(walk!=='room'||!nearBench()) return false;
-  carrying=!carrying;
-  if(carrying){ attachCarry(roomPerson); benchDrone.visible=false; banner('🚁 GOT YOUR DRONE — HEAD UP THE STAIRS'); }
-  else { dropCarry(); benchDrone.visible=true; }
+  if(walk!=='room'||!nearBench()||$('overlay').style.display==='flex') return false;
+  if(carrying){
+    carrying=false; dropCarry(); benchDrone.visible=true; styleCarry();   // set it down on the desk
+    if(broken){ openRepairOrder(); return true; }                          // …and fix it right there
+    return true;
+  }
+  if(broken){ openRepairOrder(); return true; }                            // it's still on the desk, still broken
+  carrying=true; attachCarry(roomPerson); benchDrone.visible=false; styleCarry();
+  banner('🚁 GOT YOUR DRONE — HEAD UP THE STAIRS');
   return true;
 }
 function roofSwitch(){
@@ -2565,9 +2583,9 @@ function roofSwitch(){
   camera.position.set(COVE.x+fp2.x,ROOF_Y+7,COVE.z+fp2.z+12);
 }
 let swapping=false;
-function goRoof(){ if(walk==='room'&&carrying&&!swapping){ swapping=true; fadeSwap(()=>{ swapping=false; if(walk==='room') roofSwitch(); }); } }
+function goRoof(){ if(walk==='room'&&carrying&&!broken&&!swapping){ swapping=true; fadeSwap(()=>{ swapping=false; if(walk==='room') roofSwitch(); }); } }
 function launchFromRoof(){
-  if(walk!=='roof'||!onPadZone()) return false;
+  if(walk!=='roof'||!onPadZone()||broken) return false;
   walk=null; carrying=false; dropCarry();
   fp2.x=-9; fp2.z=11; fp2.h=Math.atan2(-fp2.x,-fp2.z);               // step off the pad and wave you off
   roofPerson.userData.waving=true;
@@ -2603,6 +2621,7 @@ function walkKey(e){
 function stepWalk(dt,t){
   const mv=walkInput();
   let hint='';
+  if($('overlay').style.display==='flex'){ mv.x=0; mv.z=0; }
   if(walk==='room'){
     const moving=moveP(rp,mv.x,mv.z,dt,roomFree);
     rp.y=stairY(rp.x,rp.z);
@@ -2618,7 +2637,9 @@ function stepWalk(dt,t){
     }
     if(benchDrone&&benchDrone.visible) benchDrone.rotation.y=Math.sin(t*0.6)*0.2;
     if(decorating) hint=pickMode?'✋ Click a piece of furniture to put it back in storage':(decoSel?'Click the floor to place · R rotate · Esc cancel':'🛠 Pick something from the panel · Esc when done');
-    else if(!carrying) hint=nearBench()?'Press E to grab your drone':'Walk to the workbench (back-left) and grab your drone · WASD / arrows to walk';
+    else if(broken&&carrying) hint=nearBench()?'Press E to put your broken drone down on the repair desk':'🔧 Your drone is wrecked — carry it to the repair desk (back-left)';
+    else if(broken) hint=nearBench()?'Press E to order the part and repair it':'🔧 Walk to the repair desk to fix your drone';
+    else if(!carrying) hint=nearBench()?'Press E to grab your drone':'Walk to the repair desk (back-left) and grab your drone · WASD / arrows to walk';
     else hint=(rp.x>STAIR_X0&&rp.z<STAIR_Z1)?'Keep climbing ↑':'Take the stairs (back-right) up to the roof ↑';
     const cx=decorating?0:Math.max(-4,Math.min(4,rp.x*0.35));
     roomCam.aspect=innerWidth/innerHeight; roomCam.updateProjectionMatrix();
@@ -2950,10 +2971,9 @@ function badCrash(cause){
     player.group.visible=true;
     crashWater=false; sunk=false;
     phase=1;
-    $('mission').textContent='GO TO THE PARTS SHOP — follow the orange beacon';
-    if(shopBeacon) shopBeacon.visible=true;
+    $('mission').textContent='REPAIR YOUR DRONE';
     showOverlay('crash','CRASHED!','#ff7b7b',
-      'Your '+broken.name+' is wrecked — you were hauled back to the hangar. Limp over to the PARTS SHOP (orange beacon next to the hangar) and buy a new one for 🪙'+broken.cost+'.','OK — HEAD TO THE SHOP');
+      'Your '+broken.name+' is wrecked. You carried it home — put it down on your repair desk to fix it (new part: 🪙'+broken.cost+').','OK — TAKE IT HOME');
   },crashing*1000);
 }
 function complete(){
@@ -3048,7 +3068,8 @@ function finishRepair(){
   $('overlayBtn').style.display='';
   $('overlay').style.display='none';
   $('mission').textContent='FLY TO HARMONY';
-  banner('ALL SCREWED ON — GOOD AS NEW');
+  if(walk==='room') styleCarry();
+  banner('ALL SCREWED ON — GOOD AS NEW · GRAB IT AND HEAD UP');
 }
 
 $('overlayBtn').addEventListener('click',()=>{
@@ -3059,6 +3080,7 @@ $('overlayBtn').addEventListener('click',()=>{
     return;
   }
   $('overlay').style.display='none';
+  if(ovMode==='crash'){ ovMode=''; roofPerson.visible=false; enterRoom(); return; }
   if(ovMode==='fail'){ resetPlayer(); phase=1; $('mission').textContent='FLY TO HARMONY'; resetBattPickup(); spawnAllFlocks(); }
   else if(ovMode==='complete'){ resetPlayer(); openHome(); }   // back to the hangar screen
   ovMode='';
@@ -3445,7 +3467,6 @@ function loop(){
     const spd=P.vel.length(); curSpd=spd;
     if(spd>cap) P.vel.multiplyScalar(cap/spd);
     P.pos.addScaledVector(P.vel,dt);
-    if(limp && P.pos.y>14) P.pos.y=14;                // can't climb while broken
     const gY=groundY(P.pos.x,P.pos.z);
     const sinkRate=-P.vel.y;                          // how hard we're coming down
     let touchedDown=false;
@@ -3483,17 +3504,6 @@ function loop(){
     player.group.rotation.x=THREE.MathUtils.clamp(fS*0.014,-0.45,0.45);
     player.group.rotation.z=THREE.MathUtils.clamp(-sS*0.014,-0.4,0.4);
     player.rotors.forEach((r,i)=>r.rotation.y+=dt*(30+i));
-
-    // ---- parts shop (when something's broken) ----
-    if(broken && !screwing){
-      const dShop=Math.hypot(P.pos.x-SHOP.x,P.pos.z-SHOP.z);
-      if(dShop<9 && P.pos.y<8){
-        const canAfford=money>=broken.cost;
-        showOverlay('shop','PARTS SHOP','#ffa040',
-          'One '+broken.name+' in stock — 🪙'+broken.cost+'. You have 🪙'+money+'.'+(canAfford?'':' Short on coins? Take it on credit and pay it off with mission earnings.'),
-          (canAfford?'BUY':'TAKE ON CREDIT')+'  🪙'+broken.cost);
-      }
-    }
 
     // ---- pads: landing & recharge ----
     charging=false;
@@ -3546,7 +3556,7 @@ function loop(){
     $('charge').style.display=charging?'block':'none';
     $('charge').textContent='⚡ CHARGING '+Math.round(P.batt)+'%';
     const w=$('warn');
-    if(broken){ w.style.display='block'; w.textContent='🔧 LIMP MODE — PARTS SHOP '+Math.round(Math.hypot(P.pos.x-SHOP.x,P.pos.z-SHOP.z))+'m'; }
+    if(broken){ w.style.display='block'; w.textContent='🔧 DRONE WRECKED — REPAIR IT ON YOUR DESK AT HOME'; }
     else if(!charging && bp<0.25){ w.style.display='block'; w.textContent='⚡ LOW BATTERY'; }
     else w.style.display='none';
   }
