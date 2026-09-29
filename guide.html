@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>How to Play — Drone Courier: Marin</title>
+<title>How It Works — Drone Courier: Marin</title>
 <meta name="description" content="Drone Courier: Marin — fly a delivery drone the real distance from your Marin County home to Harmony Montessori and back. Free browser game.">
 <style>
 :root{--bg:#08060f;--ink:#f2e9ff;--dim:#9a8ab8;--line:rgba(255,45,149,.28);--teal:#00f0ff;--teal2:#5cffe4;--gold:#faff4d;--coral:#ff2d95;--card:#120c1f}
@@ -105,13 +105,327 @@ kbd{border:1px solid rgba(0,240,255,.4);background:rgba(0,240,255,.08);color:#bf
 a{color:var(--teal)}
 footer{border-top:1px solid var(--line);color:#6a5b85}
 footer a{color:#6a5b85}
+
+.schem{width:100%;height:auto;display:block;background:#0b0816;border:1px solid rgba(0,240,255,.28);border-radius:14px;box-shadow:0 0 26px rgba(0,240,255,.08);margin:6px 0 18px}
+.schem text{font-family:ui-monospace,'Courier New',Menlo,monospace}
+.schem .t-lbl{font-size:14px;font-weight:700;fill:#f2e9ff}
+.schem .t-sm{font-size:13px;font-weight:700}
+.schem .t-xs{font-size:11px}
+.schem .t-dim{font-size:12px;fill:#9a8ab8;letter-spacing:3px}
+.schem .t-gold{font-size:13px;font-weight:700;fill:#faff4d}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.facts .card p{font-size:13px}
+.hiw-hero{padding:56px 0 20px;text-align:center}
+.hiw-hero h1{font-family:ui-monospace,'Courier New',Menlo,monospace;font-size:36px;letter-spacing:4px;margin:0;color:#fff;text-shadow:0 0 12px #ff2d95,0 0 32px rgba(255,45,149,.7)}
+.hiw-hero p{color:#9a8ab8;max-width:680px;margin:10px auto 0;font-size:15px}
+.jump{display:flex;gap:10px;justify-content:center;margin-top:18px;flex-wrap:wrap}
 </style></head><body>
 <nav><div class="wrap">
   <a class="logo" href="index.html">DRONE COURIER<span>: MARIN</span></a>
-  <div class="links"><a href="index.html">Play</a><a href="guide.html" class="on">How to Play</a><a href="fleet.html">Fleet</a><a href="leaderboard.html">Leaderboard</a><a href="news.html">News</a><a href="support.html">Support</a></div>
+  <div class="links"><a href="index.html">Play</a><a href="guide.html" class="on">How It Works</a><a href="fleet.html">Fleet</a><a href="leaderboard.html">Leaderboard</a><a href="news.html">News</a><a href="support.html">Support</a></div>
 </div></nav>
 
-<header class="page"><div class="wrap"><h1>How to Play</h1>
+
+<div class="hiw-hero"><div class="wrap">
+  <h1>HOW IT WORKS</h1>
+  <p>How a real delivery drone stays in the air — and a full schematic of how Drone Courier: Marin fits together, from your front door to Harmony and back.</p>
+  <div class="jump"><a class="btn" href="#drones">How drones work</a><a class="btn coral" href="#schematic">The game schematic</a><a class="btn" href="index.html">▶ Play</a></div>
+</div></div>
+
+<section class="wrap" id="drones">
+  <h2>How drones work</h2>
+  <p class="lead">A delivery drone is a <b>quadcopter</b>: four motors, four propellers, a battery and a small computer that makes thousands of tiny corrections every second. There are no flaps or rudder — every move comes from changing how fast each motor spins.</p>
+  <svg viewBox="0 0 1000 560" class="schem" role="img" aria-label="Labelled top-down schematic of a delivery quadcopter">
+<defs>
+ <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#faff4d"/></marker>
+ <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M20 0H0V20" fill="none" stroke="rgba(0,240,255,.07)" stroke-width="1"/></pattern>
+</defs>
+<rect x="0" y="0" width="1000" height="560" fill="url(#grid)"/>
+<text x="500" y="26" text-anchor="middle" class="t-dim">▲ FRONT ▲</text>
+<circle cx="360" cy="135" r="82" fill="rgba(0,240,255,.05)" stroke="#00f0ff" stroke-opacity=".35" stroke-dasharray="4 5"/>
+<ellipse cx="360" cy="135" rx="80" ry="8" fill="rgba(0,240,255,.22)" transform="rotate(25 360 135)"/>
+<path d="M300,100 A70,70 0 0,1 420,100" fill="none" stroke="#faff4d" stroke-width="2.5" marker-end="url(#ah)"/>
+<text x="360" y="191" text-anchor="middle" class="t-gold">CW</text>
+<circle cx="640" cy="135" r="82" fill="rgba(0,240,255,.05)" stroke="#00f0ff" stroke-opacity=".35" stroke-dasharray="4 5"/>
+<ellipse cx="640" cy="135" rx="80" ry="8" fill="rgba(0,240,255,.22)" transform="rotate(-25 640 135)"/>
+<path d="M700,100 A70,70 0 0,0 580,100" fill="none" stroke="#faff4d" stroke-width="2.5" marker-end="url(#ah)"/>
+<text x="640" y="191" text-anchor="middle" class="t-gold">CCW</text>
+<circle cx="360" cy="425" r="82" fill="rgba(0,240,255,.05)" stroke="#00f0ff" stroke-opacity=".35" stroke-dasharray="4 5"/>
+<ellipse cx="360" cy="425" rx="80" ry="8" fill="rgba(0,240,255,.22)" transform="rotate(-25 360 425)"/>
+<path d="M420,390 A70,70 0 0,0 300,390" fill="none" stroke="#faff4d" stroke-width="2.5" marker-end="url(#ah)"/>
+<text x="360" y="481" text-anchor="middle" class="t-gold">CCW</text>
+<circle cx="640" cy="425" r="82" fill="rgba(0,240,255,.05)" stroke="#00f0ff" stroke-opacity=".35" stroke-dasharray="4 5"/>
+<ellipse cx="640" cy="425" rx="80" ry="8" fill="rgba(0,240,255,.22)" transform="rotate(25 640 425)"/>
+<path d="M580,390 A70,70 0 0,1 700,390" fill="none" stroke="#faff4d" stroke-width="2.5" marker-end="url(#ah)"/>
+<text x="640" y="481" text-anchor="middle" class="t-gold">CW</text>
+<line x1="500" y1="280" x2="360" y2="135" stroke="#3a3350" stroke-width="18" stroke-linecap="round"/>
+<line x1="500" y1="280" x2="360" y2="135" stroke="#5a4f78" stroke-width="3"/>
+<line x1="500" y1="280" x2="640" y2="135" stroke="#3a3350" stroke-width="18" stroke-linecap="round"/>
+<line x1="500" y1="280" x2="640" y2="135" stroke="#5a4f78" stroke-width="3"/>
+<line x1="500" y1="280" x2="360" y2="425" stroke="#3a3350" stroke-width="18" stroke-linecap="round"/>
+<line x1="500" y1="280" x2="360" y2="425" stroke="#5a4f78" stroke-width="3"/>
+<line x1="500" y1="280" x2="640" y2="425" stroke="#3a3350" stroke-width="18" stroke-linecap="round"/>
+<line x1="500" y1="280" x2="640" y2="425" stroke="#5a4f78" stroke-width="3"/>
+<rect x="397.2" y="182.1" width="32" height="16" rx="3" fill="#1b3a2a" stroke="#8dff3a" stroke-width="1.5" transform="rotate(-134.0 413.2 190.1)"/>
+<rect x="570.8" y="182.1" width="32" height="16" rx="3" fill="#1b3a2a" stroke="#8dff3a" stroke-width="1.5" transform="rotate(-46.0 586.8 190.1)"/>
+<rect x="397.2" y="361.9" width="32" height="16" rx="3" fill="#1b3a2a" stroke="#8dff3a" stroke-width="1.5" transform="rotate(134.0 413.2 369.9)"/>
+<rect x="570.8" y="361.9" width="32" height="16" rx="3" fill="#1b3a2a" stroke="#8dff3a" stroke-width="1.5" transform="rotate(46.0 586.8 369.9)"/>
+<circle cx="360" cy="135" r="20" fill="#26222f" stroke="#ff2d95" stroke-width="2.5"/><circle cx="360" cy="135" r="8" fill="#ff2d95"/>
+<circle cx="640" cy="135" r="20" fill="#26222f" stroke="#ff2d95" stroke-width="2.5"/><circle cx="640" cy="135" r="8" fill="#ff2d95"/>
+<circle cx="360" cy="425" r="20" fill="#26222f" stroke="#ff2d95" stroke-width="2.5"/><circle cx="360" cy="425" r="8" fill="#ff2d95"/>
+<circle cx="640" cy="425" r="20" fill="#26222f" stroke="#ff2d95" stroke-width="2.5"/><circle cx="640" cy="425" r="8" fill="#ff2d95"/>
+<circle cx="381" cy="158" r="6" fill="#ff4a4a"/><circle cx="619" cy="158" r="6" fill="#35ff7a"/>
+<circle cx="381" cy="402" r="6" fill="#ffffff"/><circle cx="619" cy="402" r="6" fill="#ffffff"/>
+<line x1="440" y1="185" x2="440" y2="378" stroke="#9a8ab8" stroke-width="3" stroke-dasharray="7 6"/><line x1="560" y1="185" x2="560" y2="378" stroke="#9a8ab8" stroke-width="3" stroke-dasharray="7 6"/>
+<rect x="425" y="198" width="150" height="165" rx="18" fill="#171226" stroke="#00f0ff" stroke-width="2"/>
+<rect x="472" y="170" width="56" height="30" rx="8" fill="#101018" stroke="#00f0ff" stroke-width="2"/><circle cx="500" cy="185" r="9" fill="#3aa0ff"/><circle cx="500" cy="185" r="4" fill="#0b1830"/>
+<rect x="445" y="212" width="110" height="42" rx="6" fill="#3a2a10" stroke="#ff9a3c" stroke-width="2"/><text x="500" y="238" text-anchor="middle" class="t-sm" fill="#ff9a3c">LiPo 4S</text>
+<rect x="467" y="264" width="66" height="54" rx="4" fill="#0f2a33" stroke="#00f0ff" stroke-width="2"/><text x="500" y="290" text-anchor="middle" class="t-sm" fill="#00f0ff">FC</text><circle cx="500" cy="304" r="5" fill="#faff4d"/>
+<circle cx="500" cy="340" r="13" fill="#1a1a22" stroke="#ff2d95" stroke-width="2"/><text x="500" y="344" text-anchor="middle" class="t-xs" fill="#ff2d95">GPS</text>
+<line x1="450" y1="360" x2="428" y2="398" stroke="#ff2d95" stroke-width="2.5"/><line x1="550" y1="360" x2="572" y2="398" stroke="#ff2d95" stroke-width="2.5"/>
+<rect x="458" y="378" width="84" height="40" rx="6" fill="none" stroke="#faff4d" stroke-width="2" stroke-dasharray="6 5"/><text x="500" y="403" text-anchor="middle" class="t-xs" fill="#faff4d">PAYLOAD</text>
+<text x="18" y="62" class="t-lbl">Propeller</text><text x="18" y="80" class="t-xs" fill="#9a8ab8">Spins ~8,000 rpm, pushes air down</text>
+<polyline points="208,57 222,57 300,112" fill="none" stroke="#faff4d" stroke-width="1.2" stroke-opacity=".8"/><circle cx="300" cy="112" r="3.5" fill="#faff4d"/>
+<text x="18" y="146" class="t-lbl">Brushless motor</text><text x="18" y="164" class="t-xs" fill="#9a8ab8">Magnets, no brushes to wear out</text>
+<polyline points="208,141 222,141 341,128" fill="none" stroke="#faff4d" stroke-width="1.2" stroke-opacity=".8"/><circle cx="341" cy="128" r="3.5" fill="#faff4d"/>
+<text x="18" y="230" class="t-lbl">Nav lights</text><text x="18" y="248" class="t-xs" fill="#9a8ab8">Red left · green right · white rear</text>
+<polyline points="208,225 222,225 381,158" fill="none" stroke="#faff4d" stroke-width="1.2" stroke-opacity=".8"/><circle cx="381" cy="158" r="3.5" fill="#faff4d"/>
+<text x="18" y="314" class="t-lbl">ESC (speed controller)</text><text x="18" y="332" class="t-xs" fill="#9a8ab8">Battery power → motor speed</text>
+<polyline points="208,309 222,309 413,187" fill="none" stroke="#faff4d" stroke-width="1.2" stroke-opacity=".8"/><circle cx="413" cy="187" r="3.5" fill="#faff4d"/>
+<text x="18" y="398" class="t-lbl">Landing gear</text><text x="18" y="416" class="t-xs" fill="#9a8ab8">Skids underneath the frame</text>
+<polyline points="208,393 222,393 440,372" fill="none" stroke="#faff4d" stroke-width="1.2" stroke-opacity=".8"/><circle cx="440" cy="372" r="3.5" fill="#faff4d"/>
+<text x="18" y="482" class="t-lbl">Payload hook</text><text x="18" y="500" class="t-xs" fill="#9a8ab8">The package rides underneath</text>
+<polyline points="208,477 222,477 458,405" fill="none" stroke="#faff4d" stroke-width="1.2" stroke-opacity=".8"/><circle cx="458" cy="405" r="3.5" fill="#faff4d"/>
+<text x="982" y="62" text-anchor="end" class="t-lbl">Frame arm</text><text x="982" y="80" text-anchor="end" class="t-xs" fill="#9a8ab8">Carbon fibre: stiff and light</text>
+<polyline points="792,57 778,57 603,174" fill="none" stroke="#faff4d" stroke-width="1.2" stroke-opacity=".8"/><circle cx="603" cy="174" r="3.5" fill="#faff4d"/>
+<text x="982" y="146" text-anchor="end" class="t-lbl">Camera gimbal</text><text x="982" y="164" text-anchor="end" class="t-xs" fill="#9a8ab8">Keeps the camera level</text>
+<polyline points="792,141 778,141 528,185" fill="none" stroke="#faff4d" stroke-width="1.2" stroke-opacity=".8"/><circle cx="528" cy="185" r="3.5" fill="#faff4d"/>
+<text x="982" y="230" text-anchor="end" class="t-lbl">LiPo battery</text><text x="982" y="248" text-anchor="end" class="t-xs" fill="#9a8ab8">The #1 limit on range</text>
+<polyline points="792,225 778,225 555,232" fill="none" stroke="#faff4d" stroke-width="1.2" stroke-opacity=".8"/><circle cx="555" cy="232" r="3.5" fill="#faff4d"/>
+<text x="982" y="314" text-anchor="end" class="t-lbl">Flight controller</text><text x="982" y="332" text-anchor="end" class="t-xs" fill="#9a8ab8">The brain, with a gyro inside</text>
+<polyline points="792,309 778,309 533,290" fill="none" stroke="#faff4d" stroke-width="1.2" stroke-opacity=".8"/><circle cx="533" cy="290" r="3.5" fill="#faff4d"/>
+<text x="982" y="398" text-anchor="end" class="t-lbl">GPS + compass</text><text x="982" y="416" text-anchor="end" class="t-xs" fill="#9a8ab8">Where it is + which way is north</text>
+<polyline points="792,393 778,393 513,340" fill="none" stroke="#faff4d" stroke-width="1.2" stroke-opacity=".8"/><circle cx="513" cy="340" r="3.5" fill="#faff4d"/>
+<text x="982" y="482" text-anchor="end" class="t-lbl">Radio receiver</text><text x="982" y="500" text-anchor="end" class="t-xs" fill="#9a8ab8">Hears your controller</text>
+<polyline points="792,477 778,477 572,398" fill="none" stroke="#faff4d" stroke-width="1.2" stroke-opacity=".8"/><circle cx="572" cy="398" r="3.5" fill="#faff4d"/>
+<text x="500" y="548" text-anchor="middle" class="t-xs" fill="#9a8ab8">TOP VIEW · dashed parts sit underneath the frame · diagonal propellers spin the same way</text>
+</svg>
+  <div class="facts">
+    <div class="card"><div class="ico">🌀</div><h3>Lift</h3><p>Each propeller is a spinning wing. It pushes air down, and the air pushes the drone up. When all four together push harder than gravity pulls, the drone climbs.</p></div>
+    <div class="card"><div class="ico">🔄</div><h3>Why two spin backwards</h3><p>A spinning prop tries to twist the drone the opposite way. So diagonal pairs spin opposite directions (two clockwise, two counter-clockwise) and the twists cancel out.</p></div>
+    <div class="card"><div class="ico">🧠</div><h3>The flight controller</h3><p>A gyro and accelerometer act like your inner ear. The flight controller reads them thousands of times a second and adjusts each motor so the drone stays level, even in a gust.</p></div>
+    <div class="card"><div class="ico">🔋</div><h3>Battery = range</h3><p>Lithium-polymer (LiPo) batteries are light and powerful, but hovering eats energy fast. Most delivery drones fly 15–40 minutes, which is why the game makes you recharge at Harmony.</p></div>
+    <div class="card"><div class="ico">🛰</div><h3>GPS + compass</h3><p>GPS says where the drone is and the compass says which way it faces. Together they let it hold its position, fly a route, and come home by itself if the radio link drops.</p></div>
+    <div class="card"><div class="ico">📦</div><h3>Carrying a package</h3><p>The payload hangs under the centre so it doesn’t tip the drone. Heavier cargo means more thrust just to hover, so there’s less speed and battery left over. In the game, gold bullion flies slower than mail.</p></div>
+  </div>
+  <h2 style="margin-top:34px">How it moves</h2>
+  <p class="lead">Every move comes from changing motor speeds. Here’s what the flight controller does when you press a key:</p>
+  <svg viewBox="0 0 1000 230" class="schem" role="img" aria-label="How a quadcopter moves by changing motor speeds">
+<defs><marker id="a2faff4d" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#faff4d"/></marker></defs>
+<line x1="125" y1="100" x2="80" y2="55" stroke="#5a4f78" stroke-width="6" stroke-linecap="round"/>
+<line x1="125" y1="100" x2="170" y2="55" stroke="#5a4f78" stroke-width="6" stroke-linecap="round"/>
+<line x1="125" y1="100" x2="80" y2="145" stroke="#5a4f78" stroke-width="6" stroke-linecap="round"/>
+<line x1="125" y1="100" x2="170" y2="145" stroke="#5a4f78" stroke-width="6" stroke-linecap="round"/>
+<rect x="109" y="84" width="32" height="32" rx="6" fill="#171226" stroke="#00f0ff" stroke-width="2"/>
+<circle cx="80" cy="55" r="20" fill="rgba(255,45,149,0.32)" stroke="#ff2d95" stroke-width="2"/>
+<circle cx="170" cy="55" r="20" fill="rgba(255,45,149,0.32)" stroke="#ff2d95" stroke-width="2"/>
+<circle cx="80" cy="145" r="20" fill="rgba(255,45,149,0.32)" stroke="#ff2d95" stroke-width="2"/>
+<circle cx="170" cy="145" r="20" fill="rgba(255,45,149,0.32)" stroke="#ff2d95" stroke-width="2"/>
+<text x="125" y="195" text-anchor="middle" class="t-lbl">HOVER</text><text x="125" y="213" text-anchor="middle" class="t-xs" fill="#9a8ab8">all four equal</text>
+<line x1="375" y1="100" x2="330" y2="55" stroke="#5a4f78" stroke-width="6" stroke-linecap="round"/>
+<line x1="375" y1="100" x2="420" y2="55" stroke="#5a4f78" stroke-width="6" stroke-linecap="round"/>
+<line x1="375" y1="100" x2="330" y2="145" stroke="#5a4f78" stroke-width="6" stroke-linecap="round"/>
+<line x1="375" y1="100" x2="420" y2="145" stroke="#5a4f78" stroke-width="6" stroke-linecap="round"/>
+<rect x="359" y="84" width="32" height="32" rx="6" fill="#171226" stroke="#00f0ff" stroke-width="2"/>
+<circle cx="330" cy="55" r="16.0" fill="rgba(255,45,149,0.25)" stroke="#ff2d95" stroke-width="2"/>
+<circle cx="420" cy="55" r="16.0" fill="rgba(255,45,149,0.25)" stroke="#ff2d95" stroke-width="2"/>
+<circle cx="330" cy="145" r="24.0" fill="rgba(255,45,149,0.38)" stroke="#ff2d95" stroke-width="2"/>
+<circle cx="420" cy="145" r="24.0" fill="rgba(255,45,149,0.38)" stroke="#ff2d95" stroke-width="2"/>
+<line x1="375" y1="90" x2="375" y2="22" stroke="#faff4d" stroke-width="3" marker-end="url(#a2faff4d)"/>
+<text x="375" y="195" text-anchor="middle" class="t-lbl">FLY FORWARD</text><text x="375" y="213" text-anchor="middle" class="t-xs" fill="#9a8ab8">back two faster → nose tips down</text>
+<line x1="625" y1="100" x2="580" y2="55" stroke="#5a4f78" stroke-width="6" stroke-linecap="round"/>
+<line x1="625" y1="100" x2="670" y2="55" stroke="#5a4f78" stroke-width="6" stroke-linecap="round"/>
+<line x1="625" y1="100" x2="580" y2="145" stroke="#5a4f78" stroke-width="6" stroke-linecap="round"/>
+<line x1="625" y1="100" x2="670" y2="145" stroke="#5a4f78" stroke-width="6" stroke-linecap="round"/>
+<rect x="609" y="84" width="32" height="32" rx="6" fill="#171226" stroke="#00f0ff" stroke-width="2"/>
+<circle cx="580" cy="55" r="24.0" fill="rgba(255,45,149,0.38)" stroke="#ff2d95" stroke-width="2"/>
+<circle cx="670" cy="55" r="16.0" fill="rgba(255,45,149,0.25)" stroke="#ff2d95" stroke-width="2"/>
+<circle cx="580" cy="145" r="16.0" fill="rgba(255,45,149,0.25)" stroke="#ff2d95" stroke-width="2"/>
+<circle cx="670" cy="145" r="24.0" fill="rgba(255,45,149,0.38)" stroke="#ff2d95" stroke-width="2"/>
+<path d="M625,70 A30,30 0 1,0 655,100" fill="none" stroke="#faff4d" stroke-width="3" marker-end="url(#a2faff4d)"/>
+<text x="625" y="195" text-anchor="middle" class="t-lbl">TURN (YAW)</text><text x="625" y="213" text-anchor="middle" class="t-xs" fill="#9a8ab8">one diagonal pair faster → turns</text>
+<line x1="875" y1="100" x2="830" y2="55" stroke="#5a4f78" stroke-width="6" stroke-linecap="round"/>
+<line x1="875" y1="100" x2="920" y2="55" stroke="#5a4f78" stroke-width="6" stroke-linecap="round"/>
+<line x1="875" y1="100" x2="830" y2="145" stroke="#5a4f78" stroke-width="6" stroke-linecap="round"/>
+<line x1="875" y1="100" x2="920" y2="145" stroke="#5a4f78" stroke-width="6" stroke-linecap="round"/>
+<rect x="859" y="84" width="32" height="32" rx="6" fill="#171226" stroke="#00f0ff" stroke-width="2"/>
+<circle cx="830" cy="55" r="25.0" fill="rgba(255,45,149,0.40)" stroke="#ff2d95" stroke-width="2"/>
+<circle cx="920" cy="55" r="25.0" fill="rgba(255,45,149,0.40)" stroke="#ff2d95" stroke-width="2"/>
+<circle cx="830" cy="145" r="25.0" fill="rgba(255,45,149,0.40)" stroke="#ff2d95" stroke-width="2"/>
+<circle cx="920" cy="145" r="25.0" fill="rgba(255,45,149,0.40)" stroke="#ff2d95" stroke-width="2"/>
+<text x="875" y="105" text-anchor="middle" class="t-lbl" fill="#faff4d">↑↑</text>
+<text x="875" y="195" text-anchor="middle" class="t-lbl">CLIMB</text><text x="875" y="213" text-anchor="middle" class="t-xs" fill="#9a8ab8">all four faster</text>
+<text x="500" y="18" text-anchor="middle" class="t-xs" fill="#9a8ab8">bigger circle = faster motor · FRONT is up</text>
+</svg>
+  <h2 style="margin-top:34px">Power &amp; signal, inside the drone</h2>
+  <p class="lead">Power flows from the battery to the motors (orange). Sensor data flows into the flight controller (cyan). Your commands arrive over the radio (pink).</p>
+  <svg viewBox="0 0 1000 400" class="schem" role="img" aria-label="Power and signal flow inside a drone">
+<defs><marker id="a2ff9a3c" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ff9a3c"/></marker><marker id="a200f0ff" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#00f0ff"/></marker><marker id="a2ff2d95" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ff2d95"/></marker><marker id="a2faff4d" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#faff4d"/></marker><marker id="a28dff3a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8dff3a"/></marker></defs>
+<rect x="20" y="40" width="150" height="64" rx="10" fill="#120c1f" stroke="#ff9a3c" stroke-width="2"/>
+<text x="95.0" y="66.0" text-anchor="middle" class="t-lbl" fill="#ff9a3c">LiPo battery</text>
+<text x="95.0" y="83.0" text-anchor="middle" class="t-xs" fill="#9a8ab8">14.8 V · the fuel tank</text>
+<rect x="215" y="40" width="160" height="64" rx="10" fill="#120c1f" stroke="#ff9a3c" stroke-width="2"/>
+<text x="295.0" y="66.0" text-anchor="middle" class="t-lbl" fill="#ff9a3c">Power board</text>
+<text x="295.0" y="83.0" text-anchor="middle" class="t-xs" fill="#9a8ab8">splits power 4 ways</text>
+<rect x="420" y="40" width="150" height="64" rx="10" fill="#120c1f" stroke="#8dff3a" stroke-width="2"/>
+<text x="495.0" y="66.0" text-anchor="middle" class="t-lbl" fill="#8dff3a">ESC ×4</text>
+<text x="495.0" y="83.0" text-anchor="middle" class="t-xs" fill="#9a8ab8">DC → 3-phase AC</text>
+<rect x="615" y="40" width="150" height="64" rx="10" fill="#120c1f" stroke="#ff2d95" stroke-width="2"/>
+<text x="690.0" y="66.0" text-anchor="middle" class="t-lbl" fill="#ff2d95">Motors ×4</text>
+<text x="690.0" y="83.0" text-anchor="middle" class="t-xs" fill="#9a8ab8">brushless · 8k rpm</text>
+<rect x="810" y="40" width="170" height="64" rx="10" fill="#120c1f" stroke="#faff4d" stroke-width="2"/>
+<text x="895.0" y="66.0" text-anchor="middle" class="t-lbl" fill="#faff4d">Propellers ×4</text>
+<text x="895.0" y="83.0" text-anchor="middle" class="t-xs" fill="#9a8ab8">= THRUST ↑</text>
+<polyline points="170,72 213,72" fill="none" stroke="#ff9a3c" stroke-width="2.4"  marker-end="url(#a2ff9a3c)"/>
+<polyline points="375,72 418,72" fill="none" stroke="#ff9a3c" stroke-width="2.4"  marker-end="url(#a2ff9a3c)"/>
+<polyline points="570,72 613,72" fill="none" stroke="#ff9a3c" stroke-width="2.4"  marker-end="url(#a2ff9a3c)"/>
+<polyline points="765,72 808,72" fill="none" stroke="#ff2d95" stroke-width="2.4"  marker-end="url(#a2ff2d95)"/>
+<rect x="375" y="190" width="250" height="90" rx="10" fill="#0c1f26" stroke="#00f0ff" stroke-width="2"/>
+<text x="500.0" y="229.0" text-anchor="middle" class="t-lbl" fill="#00f0ff">FLIGHT CONTROLLER</text>
+<text x="500.0" y="246.0" text-anchor="middle" class="t-xs" fill="#9a8ab8">loops 1,000s of times a second</text>
+<text x="500.0" y="260.0" text-anchor="middle" class="t-xs" fill="#9a8ab8">“am I level? where am I going?”</text>
+<polyline points="295,104 295,160 430,160 430,188" fill="none" stroke="#ff9a3c" stroke-width="2.4"  marker-end="url(#a2ff9a3c)"/>
+<text x="345" y="152" text-anchor="middle" class="t-xs" fill="#ff9a3c">5 V (BEC)</text>
+<polyline points="520,190 520,106" fill="none" stroke="#00f0ff" stroke-width="2.4"  marker-end="url(#a200f0ff)"/>
+<text x="615" y="150" text-anchor="middle" class="t-xs" fill="#00f0ff">motor speed commands</text>
+<rect x="20" y="190" width="190" height="56" rx="10" fill="#120c1f" stroke="#00f0ff" stroke-width="2"/>
+<text x="115.0" y="212.0" text-anchor="middle" class="t-lbl" fill="#00f0ff">Gyro + accelerometer</text>
+<text x="115.0" y="229.0" text-anchor="middle" class="t-xs" fill="#9a8ab8">the “inner ear” (IMU)</text>
+<rect x="20" y="262" width="190" height="56" rx="10" fill="#120c1f" stroke="#00f0ff" stroke-width="2"/>
+<text x="115.0" y="284.0" text-anchor="middle" class="t-lbl" fill="#00f0ff">Barometer</text>
+<text x="115.0" y="301.0" text-anchor="middle" class="t-xs" fill="#9a8ab8">altitude from air pressure</text>
+<rect x="20" y="334" width="190" height="56" rx="10" fill="#120c1f" stroke="#00f0ff" stroke-width="2"/>
+<text x="115.0" y="356.0" text-anchor="middle" class="t-lbl" fill="#00f0ff">GPS + compass</text>
+<text x="115.0" y="373.0" text-anchor="middle" class="t-xs" fill="#9a8ab8">position &amp; heading</text>
+<polyline points="210,218 373,218" fill="none" stroke="#00f0ff" stroke-width="2.4"  marker-end="url(#a200f0ff)"/>
+<polyline points="210,290 300,290 300,248 373,248" fill="none" stroke="#00f0ff" stroke-width="2.4"  marker-end="url(#a200f0ff)"/>
+<polyline points="210,362 325,362 325,268 373,268" fill="none" stroke="#00f0ff" stroke-width="2.4"  marker-end="url(#a200f0ff)"/>
+<rect x="790" y="190" width="190" height="56" rx="10" fill="#120c1f" stroke="#ff2d95" stroke-width="2"/>
+<text x="885.0" y="212.0" text-anchor="middle" class="t-lbl" fill="#ff2d95">Radio receiver</text>
+<text x="885.0" y="229.0" text-anchor="middle" class="t-xs" fill="#9a8ab8">← sticks on your controller</text>
+<rect x="790" y="300" width="190" height="64" rx="10" fill="#120c1f" stroke="#ff2d95" stroke-width="2"/>
+<text x="885.0" y="326.0" text-anchor="middle" class="t-lbl" fill="#ff2d95">Telemetry + video</text>
+<text x="885.0" y="343.0" text-anchor="middle" class="t-xs" fill="#9a8ab8">→ battery %, GPS, camera</text>
+<text x="885.0" y="357.0" text-anchor="middle" class="t-xs" fill="#9a8ab8">back to the pilot</text>
+<polyline points="790,218 627,218" fill="none" stroke="#ff2d95" stroke-width="2.4"  marker-end="url(#a2ff2d95)"/>
+<text x="708" y="208" text-anchor="middle" class="t-xs" fill="#ff2d95">your commands</text>
+<polyline points="625,262 700,262 700,332 788,332" fill="none" stroke="#ff2d95" stroke-width="2.4"  marker-end="url(#a2ff2d95)"/>
+<text x="20" y="24" class="t-xs" fill="#ff9a3c">━ POWER</text><text x="110" y="24" class="t-xs" fill="#00f0ff">━ SENSOR DATA</text><text x="240" y="24" class="t-xs" fill="#ff2d95">━ RADIO</text>
+</svg>
+</section>
+
+<section class="wrap" id="schematic">
+  <h2>How the game works — the full schematic</h2>
+  <p class="lead">Every screen and every step, in order. Numbered boxes are the normal loop. Red is what happens when things go wrong. The dashed box is the server that keeps your account safe.</p>
+  <svg viewBox="0 0 1000 780" class="schem" role="img" aria-label="Schematic of how Drone Courier Marin works">
+<defs><marker id="a200f0ff" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#00f0ff"/></marker><marker id="a2ff2d95" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ff2d95"/></marker><marker id="a2faff4d" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#faff4d"/></marker><marker id="a28dff3a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8dff3a"/></marker><marker id="a2ff4a4a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ff4a4a"/></marker><marker id="a29a8ab8" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#9a8ab8"/></marker><marker id="a2ff9a3c" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ff9a3c"/></marker></defs>
+<rect x="30" y="30" width="220" height="78" rx="10" fill="#120c1f" stroke="#00f0ff" stroke-width="2"/>
+<text x="140.0" y="63.0" text-anchor="middle" class="t-lbl" fill="#00f0ff">① SIGN UP / LOG IN</text>
+<text x="140.0" y="80.0" text-anchor="middle" class="t-xs" fill="#9a8ab8">email · username · password</text>
+<rect x="290" y="30" width="220" height="78" rx="10" fill="#120c1f" stroke="#00f0ff" stroke-width="2"/>
+<text x="400.0" y="63.0" text-anchor="middle" class="t-lbl" fill="#00f0ff">② SET HOME ADDRESS</text>
+<text x="400.0" y="80.0" text-anchor="middle" class="t-xs" fill="#9a8ab8">must be in Marin County</text>
+<rect x="550" y="30" width="220" height="78" rx="10" fill="#120c1f" stroke="#00f0ff" stroke-width="2"/>
+<text x="660.0" y="63.0" text-anchor="middle" class="t-lbl" fill="#00f0ff">③ MEASURE REAL MILES</text>
+<text x="660.0" y="80.0" text-anchor="middle" class="t-xs" fill="#9a8ab8">home → Harmony Montessori</text>
+<text x="660.0" y="94.0" text-anchor="middle" class="t-xs" fill="#9a8ab8">1 mile = 30 s of flight</text>
+<polyline points="250,69 288,69" fill="none" stroke="#00f0ff" stroke-width="2.4"  marker-end="url(#a200f0ff)"/>
+<polyline points="510,69 548,69" fill="none" stroke="#00f0ff" stroke-width="2.4"  marker-end="url(#a200f0ff)"/>
+<rect x="800" y="30" width="180" height="200" rx="12" fill="#0e0a1a" stroke="#9a8ab8" stroke-width="2" stroke-dasharray="7 5"/>
+<text x="890" y="58" text-anchor="middle" class="t-lbl" fill="#f2e9ff">☁ THE SERVER</text>
+<text x="890" y="84" text-anchor="middle" class="t-xs" fill="#9a8ab8">accounts &amp; logins</text>
+<text x="890" y="106" text-anchor="middle" class="t-xs" fill="#9a8ab8">cloud saves</text>
+<text x="890" y="128" text-anchor="middle" class="t-xs" fill="#9a8ab8">leaderboard</text>
+<text x="890" y="150" text-anchor="middle" class="t-xs" fill="#9a8ab8">game-wide announcements</text>
+<text x="890" y="172" text-anchor="middle" class="t-xs" fill="#9a8ab8">Stripe coin packs</text>
+<text x="890" y="194" text-anchor="middle" class="t-xs" fill="#9a8ab8">mission codes</text>
+<polyline points="772,52 798,52" fill="none" stroke="#9a8ab8" stroke-width="2.4" stroke-dasharray="6 5" marker-end="url(#a29a8ab8)"/>
+<rect x="30" y="150" width="740" height="78" rx="10" fill="#120c1f" stroke="#faff4d" stroke-width="2"/>
+<text x="400.0" y="183.0" text-anchor="middle" class="t-lbl" fill="#faff4d">④ HANGAR</text>
+<text x="400.0" y="200.0" text-anchor="middle" class="t-xs" fill="#9a8ab8">Drone Coins · 5 drones (Sparrow → Titan) · paint shop · crash effects</text>
+<text x="400.0" y="214.0" text-anchor="middle" class="t-xs" fill="#9a8ab8">mission builder (share codes) · home base · coin store</text>
+<polyline points="660,108 660,148" fill="none" stroke="#00f0ff" stroke-width="2.4"  marker-end="url(#a200f0ff)"/>
+<polyline points="770,190 798,190" fill="none" stroke="#9a8ab8" stroke-width="2.4" stroke-dasharray="6 5" marker-end="url(#a29a8ab8)"/>
+<rect x="30" y="290" width="220" height="78" rx="10" fill="#120c1f" stroke="#8dff3a" stroke-width="2"/>
+<text x="140.0" y="323.0" text-anchor="middle" class="t-lbl" fill="#8dff3a">⑤ YOUR ROOM</text>
+<text x="140.0" y="340.0" text-anchor="middle" class="t-xs" fill="#9a8ab8">walk as your pilot</text>
+<text x="140.0" y="354.0" text-anchor="middle" class="t-xs" fill="#9a8ab8">decorate · 16 pieces of furniture</text>
+<rect x="290" y="290" width="220" height="78" rx="10" fill="#120c1f" stroke="#8dff3a" stroke-width="2"/>
+<text x="400.0" y="323.0" text-anchor="middle" class="t-lbl" fill="#8dff3a">⑥ REPAIR DESK</text>
+<text x="400.0" y="340.0" text-anchor="middle" class="t-xs" fill="#9a8ab8">press E to grab your drone</text>
+<rect x="550" y="290" width="220" height="78" rx="10" fill="#120c1f" stroke="#8dff3a" stroke-width="2"/>
+<text x="660.0" y="323.0" text-anchor="middle" class="t-lbl" fill="#8dff3a">⑦ STAIRS → ROOF PAD</text>
+<text x="660.0" y="340.0" text-anchor="middle" class="t-xs" fill="#9a8ab8">walk onto the pad</text>
+<text x="660.0" y="354.0" text-anchor="middle" class="t-xs" fill="#9a8ab8">SPACE to launch</text>
+<polyline points="140,228 140,288" fill="none" stroke="#faff4d" stroke-width="2.4"  marker-end="url(#a2faff4d)"/>
+<text x="210" y="262" text-anchor="middle" class="t-xs" fill="#faff4d">GO HOME &amp; FLY</text>
+<polyline points="250,329 288,329" fill="none" stroke="#8dff3a" stroke-width="2.4"  marker-end="url(#a28dff3a)"/>
+<polyline points="510,329 548,329" fill="none" stroke="#8dff3a" stroke-width="2.4"  marker-end="url(#a28dff3a)"/>
+<rect x="550" y="420" width="220" height="78" rx="10" fill="#120c1f" stroke="#ff2d95" stroke-width="2"/>
+<text x="660.0" y="453.0" text-anchor="middle" class="t-lbl" fill="#ff2d95">⑧ FLY TO HARMONY</text>
+<text x="660.0" y="470.0" text-anchor="middle" class="t-xs" fill="#9a8ab8">town · birds · wind</text>
+<text x="660.0" y="484.0" text-anchor="middle" class="t-xs" fill="#9a8ab8">one charge ≈ 60% of a leg</text>
+<rect x="290" y="420" width="220" height="78" rx="10" fill="#120c1f" stroke="#ff2d95" stroke-width="2"/>
+<text x="400.0" y="453.0" text-anchor="middle" class="t-lbl" fill="#ff2d95">⑨ HARMONY PAD</text>
+<text x="400.0" y="470.0" text-anchor="middle" class="t-xs" fill="#9a8ab8">land to recharge</text>
+<rect x="30" y="420" width="220" height="78" rx="10" fill="#120c1f" stroke="#ff2d95" stroke-width="2"/>
+<text x="140.0" y="453.0" text-anchor="middle" class="t-lbl" fill="#ff2d95">⑩ FLY HOME</text>
+<text x="140.0" y="470.0" text-anchor="middle" class="t-xs" fill="#9a8ab8">grab the field battery</text>
+<text x="140.0" y="484.0" text-anchor="middle" class="t-xs" fill="#9a8ab8">if it floats past</text>
+<polyline points="660,368 660,418" fill="none" stroke="#8dff3a" stroke-width="2.4"  marker-end="url(#a28dff3a)"/>
+<polyline points="550,459 512,459" fill="none" stroke="#ff2d95" stroke-width="2.4"  marker-end="url(#a2ff2d95)"/>
+<polyline points="290,459 252,459" fill="none" stroke="#ff2d95" stroke-width="2.4"  marker-end="url(#a2ff2d95)"/>
+<rect x="30" y="550" width="220" height="78" rx="10" fill="#120c1f" stroke="#faff4d" stroke-width="2"/>
+<text x="140.0" y="583.0" text-anchor="middle" class="t-lbl" fill="#faff4d">⑪ LAND ON YOUR ROOF</text>
+<text x="140.0" y="600.0" text-anchor="middle" class="t-xs" fill="#9a8ab8">+🪙100 per round trip</text>
+<polyline points="140,498 140,548" fill="none" stroke="#ff2d95" stroke-width="2.4"  marker-end="url(#a2ff2d95)"/>
+<polyline points="30,589 12,589 12,189 28,189" fill="none" stroke="#faff4d" stroke-width="2.4"  marker-end="url(#a2faff4d)"/>
+<text x="44" y="400" text-anchor="middle" class="t-xs" fill="#faff4d">spend it</text>
+<rect x="550" y="550" width="220" height="78" rx="10" fill="#120c1f" stroke="#ff4a4a" stroke-width="2"/>
+<text x="660.0" y="583.0" text-anchor="middle" class="t-lbl" fill="#ff4a4a">💥 CRASH</text>
+<text x="660.0" y="600.0" text-anchor="middle" class="t-xs" fill="#9a8ab8">the screen tells you how</text>
+<text x="660.0" y="614.0" text-anchor="middle" class="t-xs" fill="#9a8ab8">you died (what · how fast · where)</text>
+<polyline points="700,498 700,548" fill="none" stroke="#ff4a4a" stroke-width="2.4"  marker-end="url(#a2ff4a4a)"/>
+<text x="775" y="527" text-anchor="middle" class="t-xs" fill="#ff4a4a">hit anything too fast</text>
+<rect x="550" y="680" width="220" height="78" rx="10" fill="#120c1f" stroke="#ff9a3c" stroke-width="2"/>
+<text x="660.0" y="713.0" text-anchor="middle" class="t-lbl" fill="#ff9a3c">CARRIED HOME</text>
+<text x="660.0" y="730.0" text-anchor="middle" class="t-xs" fill="#9a8ab8">put it on the repair desk</text>
+<rect x="290" y="680" width="220" height="78" rx="10" fill="#120c1f" stroke="#ff9a3c" stroke-width="2"/>
+<text x="400.0" y="713.0" text-anchor="middle" class="t-lbl" fill="#ff9a3c">ORDER THE PART</text>
+<text x="400.0" y="730.0" text-anchor="middle" class="t-xs" fill="#9a8ab8">pay coins · or take it on credit</text>
+<rect x="30" y="680" width="220" height="78" rx="10" fill="#120c1f" stroke="#ff9a3c" stroke-width="2"/>
+<text x="140.0" y="713.0" text-anchor="middle" class="t-lbl" fill="#ff9a3c">SCREW IT ON</text>
+<text x="140.0" y="730.0" text-anchor="middle" class="t-xs" fill="#9a8ab8">drag screws · turn with arrows</text>
+<text x="140.0" y="744.0" text-anchor="middle" class="t-xs" fill="#9a8ab8">↺ then back to ⑥</text>
+<polyline points="660,628 660,678" fill="none" stroke="#ff4a4a" stroke-width="2.4"  marker-end="url(#a2ff4a4a)"/>
+<polyline points="550,719 512,719" fill="none" stroke="#ff9a3c" stroke-width="2.4"  marker-end="url(#a2ff9a3c)"/>
+<polyline points="290,719 252,719" fill="none" stroke="#ff9a3c" stroke-width="2.4"  marker-end="url(#a2ff9a3c)"/>
+<rect x="800" y="420" width="180" height="78" rx="10" fill="#120c1f" stroke="#ff4a4a" stroke-width="2"/>
+<text x="890.0" y="453.0" text-anchor="middle" class="t-lbl" fill="#ff4a4a">🔋 BATTERY DEAD</text>
+<text x="890.0" y="470.0" text-anchor="middle" class="t-xs" fill="#9a8ab8">ditched · fly again</text>
+<text x="890.0" y="484.0" text-anchor="middle" class="t-xs" fill="#9a8ab8">↺ back to ⑤</text>
+<polyline points="770,459 798,459" fill="none" stroke="#ff4a4a" stroke-width="2.4"  marker-end="url(#a2ff4a4a)"/>
+</svg>
+  <div class="facts">
+    <div class="card"><h3>Your real route</h3><p>Your address is looked up once and turned into a straight-line distance to Harmony Montessori in Tiburon. The world is stretched to match, so the drone flies at the same speed on every route. Longer routes just take longer.</p></div>
+    <div class="card"><h3>Coins in, coins out</h3><p>Every round trip pays 🪙100 (custom missions pay more for tougher conditions). You spend coins in the hangar on drones, paint and crash effects, and at home on furniture and floors.</p></div>
+    <div class="card"><h3>Crashes cost you</h3><p>Hit something too fast and a part breaks. Which part depends on how you hit it. You carry the drone home, set it on the repair desk, buy the part, and screw it on yourself.</p></div>
+    <div class="card"><h3>Nothing overlaps</h3><p>The town, the forest, your rooftop and every piece of furniture in your room are placed on a reserved grid. Two things can never sit in the same spot, and your path to the desk and stairs always stays clear.</p></div>
+  </div>
+</section>
+
+<section class="wrap"><h2 style="margin-top:10px">How to play</h2></section>
+<header class="page" style="padding-top:0"><div class="wrap"><h1 style="font-size:26px">Controls &amp; rules</h1>
 <p>Everything you need to fly your first delivery — controls, the battery rule, crashes, and how repairs work.</p></div></header>
 <section class="wrap">
   <h2>Controls</h2>
@@ -121,6 +435,7 @@ footer a{color:#6a5b85}
       <span class="keys"><kbd>A</kbd><kbd>D</kbd></span> strafe left &amp; right<br>
       <span class="keys"><kbd>◀</kbd><kbd>▶</kbd><kbd>Q</kbd><kbd>E</kbd></span> turn<br>
       <span class="keys"><kbd>SPACE</kbd></span> climb &nbsp; <span class="keys"><kbd>SHIFT</kbd></span> descend</p></div>
+    <div class="card"><h3>At home</h3><p><span class="keys"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span> walk &nbsp; <span class="keys"><kbd>E</kbd></span> grab / set down your drone<br><span class="keys"><kbd>R</kbd></span> rotate furniture &nbsp; <span class="keys"><kbd>SPACE</kbd></span> launch from the roof pad &nbsp; <span class="keys"><kbd>ESC</kbd></span> back to the hangar</p></div>
     <div class="card"><h3>Camera</h3><p><span class="keys"><kbd>C</kbd></span> switches between the chase camera and a first-person nose cam that leans into your turns. FPV is harder — and much more fun in the trees.</p></div>
     <div class="card"><h3>Repairs</h3><p>Drag each screw onto the glowing mount hole on your drone, then turn it clockwise: <span class="keys"><kbd>⬆</kbd><kbd>➡</kbd><kbd>⬇</kbd><kbd>⬅</kbd></span> — four quarter-turns per screw, four screws per part.</p></div>
   </div>
@@ -134,8 +449,8 @@ footer a{color:#6a5b85}
     <li><b>Grab the field battery.</b> One floats along your route each run. Fly through it for an instant free full charge.</li>
     <li><b>Terrain wins every argument.</b> Trees, houses, apartment towers, hills and rocks are all solid. Gentle taps bounce; fast hits break parts.</li>
     <li><b>Birds match your altitude.</b> You can't climb over a flock — steer around or thread the formation.</li>
-    <li><b>Broken drones limp.</b> A fraction of your speed, capped at treetop height — just enough to reach the parts shop.</li>
-    <li><b>You do the repairs.</b> Buy the part (on credit if you're broke), then fit it yourself at the workbench.</li>
+    <li><b>Crashes send you home.</b> The screen tells you how you died. Then you carry the wreck home and set it on your repair desk.</li>
+    <li><b>You do the repairs.</b> Order the part at the desk (on credit if you're broke), then screw it on yourself.</li>
   </ol>
 </section>
 <section class="wrap">
@@ -151,6 +466,6 @@ footer a{color:#6a5b85}
 <section class="wrap"><div class="note">💡 <b>Pro tip:</b> fly high over open water to save battery, then drop low only when you need to thread the islands. Climbing costs power — but so does a repair bill.</div></section>
 
 <footer><div class="wrap">
-  <a href="index.html">Play</a>·<a href="guide.html">How to Play</a>·<a href="fleet.html">Fleet</a>·<a href="leaderboard.html">Leaderboard</a>·<a href="news.html">News</a>·<a href="support.html">Support</a>
+  <a href="index.html">Play</a>·<a href="guide.html">How It Works</a>·<a href="fleet.html">Fleet</a>·<a href="leaderboard.html">Leaderboard</a>·<a href="news.html">News</a>·<a href="support.html">Support</a>
   <div style="margin-top:10px">Drone Courier: Marin — a free browser drone-delivery game. Fly safe. 🚁</div>
 </div></footer></body></html>

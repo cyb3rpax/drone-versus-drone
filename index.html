@@ -796,13 +796,15 @@ sea.rotation.x=-Math.PI/2; sea.position.z=-13800; scene.add(sea);
 
 // collision boxes
 const solids=[];
-function addSolid(x,y,z,w,h,d){ solids.push({min:new THREE.Vector3(x-w/2,y-h/2,z-d/2), max:new THREE.Vector3(x+w/2,y+h/2,z+d/2)}); }
+let SOLID_TAG='something solid', lastHitTag='something solid';   // every obstacle remembers what it is
+function addSolid(x,y,z,w,h,d){ solids.push({min:new THREE.Vector3(x-w/2,y-h/2,z-d/2), max:new THREE.Vector3(x+w/2,y+h/2,z+d/2), tag:SOLID_TAG}); }
 
 // The Cove: rocky bay + customizable home base
 // Everything the player can customize lives inside a 40-unit "base zone" around the pad;
 // the cliffs are only allowed outside it, and never overlap each other or the parts shop.
 const BASE_ZONE=40;
 (function buildCove(){
+  SOLID_TAG='the cliffs by your home';
   const rockMat=new THREE.MeshStandardMaterial({map:rockTex,roughness:1});
   const sandMat=new THREE.MeshStandardMaterial({map:sandTex,roughness:1});
   const beach=new THREE.Mesh(new THREE.CylinderGeometry(90,100,4,26), sandMat);
@@ -871,6 +873,7 @@ function buildBase(){
   bc.castShadow=false;
   const gl=new THREE.PointLight(0x5cb8ff,1,45); gl.position.set(COVE.x,ROOF_Y+7,COVE.z); baseGroup.add(gl);
   // stair hut the pilot walks out of
+  SOLID_TAG='the stair hut on your roof';
   bMesh(new THREE.BoxGeometry(HUT.h*2,6,HUT.h*2),wall,HUT.x,ROOF_Y+3,HUT.z);
   bMesh(new THREE.BoxGeometry(HUT.h*2+0.6,0.4,HUT.h*2+0.6),new THREE.MeshStandardMaterial({color:0x6b6f76}),HUT.x,ROOF_Y+6.2,HUT.z);
   const dr=bMesh(new THREE.BoxGeometry(2.4,4,0.2),new THREE.MeshStandardMaterial({color:0x4a2e1f}),HUT.x-HUT.h-0.05,ROOF_Y+2,HUT.z);
@@ -882,6 +885,7 @@ buildBase();
 const SHOP=new THREE.Vector3(COVE.x-55,0,COVE.z-30);
 let shopBeacon=null;
 (function buildShop(){
+  SOLID_TAG='the parts shop';
   const hut=new THREE.Mesh(new THREE.BoxGeometry(36,21,27), new THREE.MeshLambertMaterial({color:0x6a4a2a}));
   hut.position.set(SHOP.x,13.5,SHOP.z-20); scene.add(hut); addSolid(SHOP.x,13.5,SHOP.z-20,36,21,27);
   const sign=new THREE.Mesh(new THREE.BoxGeometry(8,2,0.4), new THREE.MeshBasicMaterial({color:0xffa040}));
@@ -977,7 +981,7 @@ function windowTex(){
   winTexCache.push(t);
   return t;
 }
-function buildBarn(x,z,rot){                        // grey apartment block
+function buildBarn(x,z,rot){SOLID_TAG='an apartment block';                        // grey apartment block
   const w=84+Math.random()*30, d=66+Math.random()*24, h=130+Math.random()*66;
   const win=new THREE.MeshStandardMaterial({map:windowTex(),roughness:0.85});
   const cap=new THREE.MeshStandardMaterial({color:0x7d858c,roughness:0.95});
@@ -1037,7 +1041,7 @@ function buildSettlement(cx,cz,r){
     }
   }
 }
-function buildHouse(x,z,rotIn){
+function buildHouse(x,z,rotIn){SOLID_TAG='a house';
   const w=78+Math.random()*42, d=66+Math.random()*30, h=42+Math.random()*21+(Math.random()<0.3?30:0);
   const rot=(rotIn===undefined)?Math.random()*Math.PI:rotIn;
   const body=addT(new THREE.Mesh(new THREE.BoxGeometry(w,h,d), wallMats[Math.floor(Math.random()*wallMats.length)]));
@@ -1070,6 +1074,7 @@ function buildRouteTerrain(){
   const r=Math.min(760, Math.max(240, span*0.34));
   buildTown(0,cz,r);
   // a few rocks out in the open water either side of town
+  SOLID_TAG='a rock out in the bay';
   const nR=Math.min(30, Math.max(6, Math.round(span/260)));
   for(let i=0;i<nR;i++){
     const z=z0-Math.random()*span, x=(Math.random()*2-1)*760;
@@ -1110,7 +1115,7 @@ function pitchedRoof(x,y,z,w,d,mat,rot){
   m.rotation.z=Math.PI/2; m.rotation.y=rot||0; m.position.set(x,y,z); return m;
 }
 // ---- individual buildings ----
-function bTownHall(x,z,rot){
+function bTownHall(x,z,rot){SOLID_TAG='the town hall';
   box(x,3+16,z,86,32,56,townMats.plaster,rot);
   box(x,3+34,z,90,4,60,townMats.roof,rot);
   box(x,3+42,z,22,20,22,townMats.plaster,rot);                 // clock tower
@@ -1119,7 +1124,7 @@ function bTownHall(x,z,rot){
   face.position.set(x+Math.sin(rot)*0.1, 3+46, z+11.5*Math.cos(rot)+Math.sin(rot)*11.5); face.rotation.y=rot;
   addSolid(x,3+22,z,92,60,62);
 }
-function bChurch(x,z,rot){
+function bChurch(x,z,rot){SOLID_TAG='the church steeple';
   box(x,3+13,z,34,26,64,townMats.white,rot);
   pitchedRoof(x,3+30,z,34,26,townMats.roofB,rot);
   box(x+Math.cos(rot)*0,3+26,z-Math.cos(rot)*36,22,52,22,townMats.white,rot);   // steeple base
@@ -1127,7 +1132,7 @@ function bChurch(x,z,rot){
   sp.position.set(x,3+67,z-Math.cos(rot)*36); sp.rotation.y=rot+Math.PI/4;
   addSolid(x,3+30,z,40,64,74);
 }
-function bSchool(x,z,rot){
+function bSchool(x,z,rot){SOLID_TAG='the school';
   box(x,3+13,z,120,26,44,townMats.brick,rot);
   box(x,3+27,z,124,3,48,townMats.roof,rot);
   for(let i=-2;i<=2;i++) box(x+i*22*Math.cos(rot),3+14,z+22.5*Math.cos(rot)-i*22*Math.sin(rot),14,10,1.5,townMats.glass,rot,false);
@@ -1135,13 +1140,13 @@ function bSchool(x,z,rot){
   flag.position.set(x-70*Math.cos(rot),3+17,z+70*Math.sin(rot));
   addSolid(x,3+15,z,126,30,50);
 }
-function bFireStation(x,z,rot){
+function bFireStation(x,z,rot){SOLID_TAG='the fire station';
   box(x,3+13,z,66,26,42,townMats.red,rot);
   box(x,3+27,z,70,3,46,townMats.roof,rot);
   for(const o of [-16,16]) box(x+o*Math.cos(rot),3+9,z+21.5*Math.cos(rot)-o*Math.sin(rot),24,18,1.5,townMats.dark,rot,false);
   addSolid(x,3+15,z,72,30,48);
 }
-function bGasStation(x,z,rot){
+function bGasStation(x,z,rot){SOLID_TAG='the gas station';
   box(x,3+8,z-18,40,16,26,townMats.white,rot);                 // kiosk
   box(x,3+17,z-18,44,2.5,30,townMats.roof,rot);
   box(x,3+19,z+14,56,2.5,34,townMats.white,rot);               // canopy
@@ -1150,7 +1155,7 @@ function bGasStation(x,z,rot){
   slab(x,z+14,60,40,townMats.asphalt,rot);
   addSolid(x,3+10,z-18,46,22,32);
 }
-function bShopRow(x,z,rot){
+function bShopRow(x,z,rot){SOLID_TAG='the shops on Main Street';
   const cols=[townMats.brick,townMats.plaster,townMats.white,townMats.grey];
   for(let i=0;i<4;i++){
     const o=(i-1.5)*26;
@@ -1161,19 +1166,19 @@ function bShopRow(x,z,rot){
   }
   addSolid(x,3+14,z,108,32,40);
 }
-function bLibrary(x,z,rot){
+function bLibrary(x,z,rot){SOLID_TAG='the library';
   box(x,3+14,z,60,28,40,townMats.plaster,rot);
   box(x,3+29,z,64,3,44,townMats.roof,rot);
   for(const o of [-12,0,12]) box(x+o*Math.cos(rot),3+21,z+20.5*Math.cos(rot)-o*Math.sin(rot),3,16,3,townMats.white,rot,false);
   addSolid(x,3+16,z,66,34,46);
 }
-function bPostOffice(x,z,rot){
+function bPostOffice(x,z,rot){SOLID_TAG='the post office';
   box(x,3+11,z,48,22,34,townMats.grey,rot);
   box(x,3+23,z,52,3,38,townMats.roof,rot);
   box(x,3+6,z+18*Math.cos(rot),10,12,2,townMats.glass,rot,false);
   addSolid(x,3+13,z,54,28,40);
 }
-function bCafe(x,z,rot){
+function bCafe(x,z,rot){SOLID_TAG='the café';
   box(x,3+9,z,34,18,26,townMats.plaster,rot);
   pitchedRoof(x,3+21,z,34,14,townMats.roofB,rot);
   for(let i=-1;i<=1;i++){                                       // patio tables
@@ -1183,7 +1188,7 @@ function bCafe(x,z,rot){
   slab(x,z+18,40,20,townMats.sand,rot);
   addSolid(x,3+12,z,40,26,32);
 }
-function bWaterTower(x,z){
+function bWaterTower(x,z){SOLID_TAG='the water tower';
   for(const a of [0,1,2,3]){
     const ang=a*Math.PI/2+0.78, lx=x+Math.cos(ang)*9, lz=z+Math.sin(ang)*9;
     const leg=addT(new THREE.Mesh(new THREE.CylinderGeometry(1.4,1.4,46,6),townMats.metal));
@@ -1195,20 +1200,20 @@ function bWaterTower(x,z){
   cap.position.set(x,3+73,z);
   addSolid(x,3+40,z,34,80,34);
 }
-function bSilo(x,z){
+function bSilo(x,z){SOLID_TAG='the grain silo';
   const s=addT(new THREE.Mesh(new THREE.CylinderGeometry(13,13,58,14),townMats.white));
   s.position.set(x,3+29,z);
   const top=addT(new THREE.Mesh(new THREE.SphereGeometry(13,14,8,0,Math.PI*2,0,Math.PI/2),townMats.metal));
   top.position.set(x,3+58,z);
   addSolid(x,3+30,z,28,64,28);
 }
-function bBarnRed(x,z,rot){
+function bBarnRed(x,z,rot){SOLID_TAG='the red barn';
   box(x,3+14,z,54,28,38,townMats.red,rot);
   pitchedRoof(x,3+33,z,54,20,townMats.roofB,rot);
   box(x,3+9,z+19.5*Math.cos(rot),16,18,1.5,townMats.dark,rot,false);
   addSolid(x,3+18,z,60,44,46);
 }
-function bPark(x,z,r2){
+function bPark(x,z,r2){SOLID_TAG='a tree in the park';
   slab(x,z,r2*2,r2*2,townMats.pitch);
   const n=Math.max(3,Math.round(r2/16));
   for(let i=0;i<n;i++){
@@ -1338,6 +1343,7 @@ function buildTown(cx,cz,r){
       for(let k=0;k<n;k++) addAnimal(x+(Math.random()*2-1)*80, z+(Math.random()*2-1)*55); }
   }
   const nT=Math.min(24, Math.max(8, Math.round(r/26)));
+  SOLID_TAG='a pine tree';
   for(let i=0;i<nT;i++){
     const ang=Math.random()*Math.PI*2, rad=r*(0.55+Math.random()*0.42);
     const x=cx+Math.cos(ang)*rad, z=cz+Math.sin(ang)*rad;
@@ -1364,6 +1370,7 @@ function setHarmonyPos(zNew){
   TRIP=COVE.distanceTo(HARMONY);
   BOUND.zMin=zNew-300;
   solids.length=BASE_SOLIDS;                     // town buildings at their new home
+  SOLID_TAG='a building at Harmony';
   for(const b of harmonyBoxes) addSolid(b.x, b.h/2+2, zNew+b.z, b.w, b.h, b.d);
   buildRouteTerrain();                           // fresh landmasses, hills, forests & rocks for the whole span
 }
@@ -1910,7 +1917,7 @@ function applySave(s){
   for(const k in OLD_STYLE) if(b.ownedStyles&&b.ownedStyles[k]) money+=OLD_STYLE[k];
   for(const k in OLD_EXTRA) if(b.extras&&b.extras[k]!==undefined) money+=OLD_EXTRA[k];
   baseCfg={name:String(b.name||'').slice(0,18), outfit:OUTFITS[b.outfit]?b.outfit:'pink', room:sanitizeRoom(b.room)};
-  buildBase(); buildRoom();
+  buildRoom();
   applySkin(curSkin); applyDrone(curDrone);
   P.batt=maxBattF();
   moneyHUD();
@@ -2928,20 +2935,20 @@ function showOverlay(mode,title,color,text,btn){
 }
 function fail(){
   if(custom) endCustomMission();
-  if(!onLand(P.pos.x,P.pos.z)){                 // going down at sea: arcs + sink first
+  if(isWater(P.pos.x,P.pos.z)){                 // going down at sea: arcs + sink first
     crashWater=true; crashing=3.2; arcT=0; sunk=false;   // outlasts the 2.6s recovery timer
     crashSpin.set((Math.random()*2-1)*1.4,(Math.random()*2-1)*2,(Math.random()*2-1)*1.4);
     for(let i=0;i<4;i++) spawnBolt(P.pos.clone(), i%2?0x9fd8ff:0x4a7bff);
     blipCrash();
     setTimeout(()=>{ P.alive=false; player.group.visible=false; crashing=0;
-      showOverlay('fail','DITCHED AT SEA','#ff7b7b',
-        'The battery ran dry and your drone went into the water. One charge can’t make the round trip — top up at Harmony before turning back.','FLY AGAIN');
+      showOverlay('fail','🔋 BATTERY DIED — DITCHED AT SEA','#ff7b7b',
+        'Your battery ran dry '+whereYouAre()+' and your drone dropped into the water. One charge can’t make the round trip — top up at Harmony before turning back.','FLY AGAIN');
     },2600);
     return;
   }
   P.alive=false; player.group.visible=false;
-  showOverlay('fail','DITCHED AT SEA','#ff7b7b',
-    'The battery ran dry. One charge can’t make the round trip — top up at Harmony before turning back.','FLY AGAIN');
+  showOverlay('fail','🔋 BATTERY DIED','#ff7b7b',
+    'Your battery ran dry '+whereYouAre()+' and your drone fell out of the sky. One charge can’t make the round trip — top up at Harmony before turning back.','FLY AGAIN');
 }
 function pickBrokenPart(cause){
   const part=n=>PARTS.find(p=>p.name===n);
@@ -2957,10 +2964,29 @@ function pickBrokenPart(cause){
   // side-swipe: the spinning rotors and the arm they ride on
   return pickFrom(['ROTOR ASSEMBLY','ROTOR ASSEMBLY','ARM STRUT','MOTOR MOUNT','PROP GUARDS']);
 }
-function badCrash(cause){
+function whereYouAre(){
+  const mi=Math.hypot(P.pos.x-COVE.x,P.pos.z-COVE.z)/MILE;
+  if(mi<0.05) return 'right at home';
+  if(Math.hypot(P.pos.x-HARMONY.x,P.pos.z-HARMONY.z)<130) return 'at Harmony';
+  return mi.toFixed(1)+' mi from home, '+(phase===1?'on the way to Harmony':'on the way back home');
+}
+function howYouDied(cause,impact){
+  const mph=Math.max(1,Math.round((impact||P.vel.length())*30/38));   // real-drone speeds: Sparrow tops out ~30 mph, Titan ~47
+  const x=P.pos.x, z=P.pos.z;
+  let title, what;
+  if(cause==='bird'){ title='🐦 BIRD STRIKE'; what='You flew into a flock of birds at '+mph+' mph and one went straight through your rotors'; }
+  else if(cause==='solid'){ title='💥 HIT '+lastHitTag.replace(/^(the|a|an) /,'').toUpperCase(); what='You slammed into '+lastHitTag+' at '+mph+' mph'; }
+  else if(inHouse(x,z)){ title='💥 ROUGH LANDING'; what='You dropped onto your own roof way too hard ('+mph+' mph)'; }
+  else if(isWater(x,z)){ title='🌊 SPLASHDOWN'; what='You nose-dived into the bay at '+mph+' mph'; }
+  else { title='💥 HARD LANDING'; what='You hit the ground at '+mph+' mph — way too fast to land'; }
+  return {title, text:what+', '+whereYouAre()+'.'};
+}
+let lastDeath=null;
+function badCrash(cause,impact){
   if(crashing>0) return;
+  lastDeath=howYouDied(cause,impact);
   if(custom) endCustomMission();                    // one crash sequence at a time
-  crashing=onLand(P.pos.x,P.pos.z)?2.2:3.0;  // seconds of wreckage before recovery
+  crashing=isWater(P.pos.x,P.pos.z)?3.0:2.2;  // seconds of wreckage before recovery
   crashEffects();
   broken=pickBrokenPart(cause)||PARTS[0];
   resetBattPickup();
@@ -2972,8 +2998,8 @@ function badCrash(cause){
     crashWater=false; sunk=false;
     phase=1;
     $('mission').textContent='REPAIR YOUR DRONE';
-    showOverlay('crash','CRASHED!','#ff7b7b',
-      'Your '+broken.name+' is wrecked. You carried it home — put it down on your repair desk to fix it (new part: 🪙'+broken.cost+').','OK — TAKE IT HOME');
+    showOverlay('crash',lastDeath.title,'#ff7b7b',
+      lastDeath.text+' Your '+broken.name+' is wrecked. You carried it home — put it down on your repair desk to fix it (new part: 🪙'+broken.cost+').','OK — TAKE IT HOME');
   },crashing*1000);
 }
 function complete(){
@@ -3116,6 +3142,11 @@ function drawMap(){
 }
 
 // ---------- Physics ----------
+function inHouse(x,z){ return Math.abs(x-COVE.x)<HOUSE_HALF&&Math.abs(z-COVE.z)<HOUSE_HALF; }
+function isWater(x,z){
+  if(inHouse(x,z)||Math.hypot(x-COVE.x,z-COVE.z)<95||Math.hypot(x-HARMONY.x,z-HARMONY.z)<115) return false;
+  return !onLand(x,z);
+}
 function groundY(x,z){
   if(Math.abs(x-COVE.x)<HOUSE_HALF&&Math.abs(z-COVE.z)<HOUSE_HALF) return ROOF_Y+1.1;   // the roof of your home
   return onLand(x,z)?3.6:1.9; }   // landing gear rests ON the surface, never in it
@@ -3132,6 +3163,7 @@ function collide(pos){
   pos.z=Math.max(BOUND.zMin,Math.min(BOUND.zMax,pos.z));
   for(const b of solids){
     if(pos.x>b.min.x-R&&pos.x<b.max.x+R&&pos.y>b.min.y-R&&pos.y<b.max.y+R&&pos.z>b.min.z-R&&pos.z<b.max.z+R){
+      lastHitTag=b.tag||'something solid';
       const dx1=pos.x-(b.min.x-R),dx2=(b.max.x+R)-pos.x;
       const dy1=pos.y-(b.min.y-R),dy2=(b.max.y+R)-pos.y;
       const dz1=pos.z-(b.min.z-R),dz2=(b.max.z+R)-pos.z;
@@ -3201,7 +3233,7 @@ function spawnBolt(p,col){
 function crashEffects(){
   const p=P.pos.clone();
   const fx=FX[curFX]||FX.basic;
-  crashWater=!onLand(p.x,p.z);
+  crashWater=isWater(p.x,p.z);
   if(crashWater){                    // ditching: white splash ring, then the sinking sequence
     for(let i=0;i<22;i++){
       const m=new THREE.Mesh(smokeGeo,new THREE.MeshBasicMaterial({color:0xeaf6ff,transparent:true,opacity:0.8,depthWrite:false}));
@@ -3479,7 +3511,7 @@ function loop(){
     if(hit){
       // a hard belly-landing OR any fast scrape wrecks you
       const impact=(hit==='ground')?Math.max(sinkRate*1.6,spd*0.85):spd;
-      if(impact>crashTol()){ badCrash(hit==='ground'?'ground':'solid'); }  // what breaks depends on what you hit
+      if(impact>crashTol()){ badCrash(hit==='ground'?'ground':'solid',impact); }  // what breaks depends on what you hit
       else { P.vel.multiplyScalar(hit==='ground'?0.75:0.4); }
     }
 
@@ -3490,7 +3522,7 @@ function loop(){
       for(const f of flocks) for(const b of f.birds){
         if(P.pos.distanceTo(b.g.position)<2.6){
           birdCd=1.5;
-          if(spd>crashTol()*0.8){ badCrash('bird'); }         // bird through the props — rotor damage
+          if(spd>crashTol()*0.8){ badCrash('bird',spd); }         // bird through the props — rotor damage
           else { P.vel.multiplyScalar(0.45); P.batt=Math.max(0,P.batt-4); banner('🐦 BIRD STRIKE!'); }
           break outer;
         }
