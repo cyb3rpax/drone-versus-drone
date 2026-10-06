@@ -161,6 +161,62 @@ export default async (req)=>{
       }
       return json(200,{coins,codes:out});
     }
+    // --- public mission board: any pilot posts a mission, every pilot can fly it ---
+    const MISSION_RE=/^(?:MRN-?)?([0-9A-Z]{1,6})$/;
+    const validCode=c=>{ const m=MISSION_RE.exec(String(c||'').trim().toUpperCase()); if(!m) return null;
+      const v=parseInt(m[1],36); if(!isFinite(v)||v<=0) return null;
+      const miles=(v>>8)/10, cargo=(v>>5)&7; if(miles<0.1||miles>51.1||cargo>5) return null;
+      return 'MRN-'+v.toString(36).toUpperCase().padStart(4,'0'); };
+    const clean=t=>String(t||'').replace(/[<>]/g,'').trim();
+    if(route==='missions'&&req.method==='GET'){
+      const board=getStore('missions');
+      const out=[];
+      try{
+        const {blobs}=await board.list();
+        for(const bl of (blobs||[]).slice(0,400)){ const mi=await board.get(bl.key,{type:'json'}); if(mi&&!mi.hidden) out.push(mi); }
+      }catch(e){}
+      out.sort((x,y)=>(y.at||0)-(x.at||0));
+      return json(200,{missions:out.slice(0,80), total:out.length});
+    }
+    if(route==='postmission'&&req.method==='POST'){
+      const a=await authed();
+      if(!a) return json(401,{error:'Log in to post a mission.'});
+      const b=await req.json();
+      const code=validCode(b.code);
+      if(!code) return json(400,{error:'That mission code isn’t valid.'});
+      const name=clean(b.name).slice(0,22)||'Custom run';
+      const brief=clean(b.brief).slice(0,140);
+      const board=getStore('missions');
+      const cur=await board.get(code,{type:'json'});
+      if(cur&&cur.byEmail!==a.email) return json(409,{error:'Someone already posted that exact mission — fly it from the board instead.'});
+      const mi=Object.assign({code,flights:0,best:null,bestBy:null,at:Date.now()},cur||{},{name,brief,by:a.user,byEmail:a.email});
+      await board.setJSON(code,mi);
+      const pub=Object.assign({},mi); delete pub.byEmail;
+      return json(200,{mission:pub});
+    }
+    if(route==='flown'&&req.method==='POST'){
+      const a=await authed();
+      if(!a) return json(401,{error:'Not logged in.'});
+      const b=await req.json();
+      const code=validCode(b.code), secs=Math.max(1,Math.min(36000,Math.round(+b.secs||0)));
+      if(!code) return json(400,{error:'bad code'});
+      const board=getStore('missions');
+      const mi=await board.get(code,{type:'json'});
+      if(!mi) return json(404,{error:'That mission isn’t on the board.'});
+      mi.flights=(mi.flights||0)+1;
+      let record=false;
+      if(!mi.best||secs<mi.best){ mi.best=secs; mi.bestBy=a.user; record=true; }
+      await board.setJSON(code,mi);
+      return json(200,{flights:mi.flights,best:mi.best,bestBy:mi.bestBy,record});
+    }
+    if(route==='delmission'&&req.method==='GET'){
+      const secret=url.searchParams.get('secret')||'';
+      if(!process.env.ADMIN_SECRET||secret!==process.env.ADMIN_SECRET) return json(403,{error:'Owner only. Call /api/delmission?secret=YOURSECRET&code=MRN-XXXX'});
+      const code=validCode(url.searchParams.get('code')); if(!code) return json(400,{error:'bad code'});
+      const board=getStore('missions'); const mi=await board.get(code,{type:'json'});
+      if(mi){ mi.hidden=true; await board.setJSON(code,mi); }
+      return json(200,{ok:true,hidden:code});
+    }
     return json(404,{error:'Not found.'});
   }catch(e){
     return json(500,{error:'Server error.'});

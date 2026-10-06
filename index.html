@@ -438,7 +438,24 @@
   #mbMake,#mbPlay{margin-top:10px;padding:9px 14px;border-radius:9px;border:1px solid #ff2d95;
     background:rgba(255,45,149,.16);color:#ff8ec6;font-size:11px;font-weight:700;letter-spacing:1.5px;cursor:pointer;
     font-family:ui-monospace,'Courier New',monospace}
-  #mbMake{width:100%}
+  #mbBtns{display:flex;gap:8px}
+  #mbBtns button{flex:1}
+  #mbPost{border-color:#4dffd2!important;color:#d8fff4!important;background:rgba(77,255,210,.12)!important}
+  #mbPost:hover{background:rgba(77,255,210,.3)!important}
+  #boardTop{display:flex;align-items:center;justify-content:space-between;margin:6px 0 8px;font-size:11px;color:#9a8ab8;letter-spacing:1px}
+  #boardRefresh{padding:5px 10px;border-radius:7px;border:1px solid rgba(180,140,255,.4);background:rgba(50,35,90,.45);color:#e8dcf8;font-size:10px;letter-spacing:1px;cursor:pointer}
+  #boardList{display:flex;flex-direction:column;gap:8px;max-height:330px;overflow-y:auto;padding-right:4px}
+  .bm{display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:center;padding:9px 12px;border-radius:10px;border:1px solid rgba(0,240,255,.22);background:rgba(10,6,22,.6)}
+  .bm.mine{border-color:rgba(77,255,210,.45)}
+  .bm .t{font-size:13px;font-weight:700;color:#fff;letter-spacing:.5px}
+  .bm .t small{font-weight:400;color:#9a8ab8;letter-spacing:1px;margin-left:8px;font-family:ui-monospace,'Courier New',monospace}
+  .bm .c{font-size:10.5px;color:#9a8ab8;letter-spacing:.5px;line-height:1.5}
+  .bm .c b{color:#ffd66b;font-weight:600}
+  .bm .brief{font-size:11px;color:#d8c8f0;font-style:italic}
+  .bm .s{font-size:10px;color:#4dffd2;letter-spacing:1px}
+  .bm button{grid-row:1/4;padding:8px 14px;border-radius:9px;border:1px solid #ff2d95;background:rgba(255,45,149,.15);color:#ffd0ea;font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;white-space:nowrap}
+  .bm button:hover{background:rgba(255,45,149,.35);color:#fff}
+  #boardList .empty{font-size:12px;color:#9a8ab8;padding:10px;text-align:center}
   #mbMake:hover,#mbPlay:hover{background:rgba(255,45,149,.3);color:#fff}
   #mbOut{margin-top:10px;font-size:13px;color:#faff4d;font-family:ui-monospace,'Courier New',monospace;
     letter-spacing:2px;text-align:center;min-height:16px}
@@ -631,7 +648,8 @@
         <select id="mbWind"><option value="0">Calm</option><option value="1" selected>Breezy</option><option value="2">Strong</option><option value="3">Gale</option></select>
       </label>
       <label class="mbChk"><input id="mbDusk" type="checkbox"> Fly at dusk (harder to see)</label>
-      <button id="mbMake">CREATE MISSION CODE</button>
+      <label>BRIEFING (optional)<input id="mbBrief" maxlength="140" placeholder="Rush the vaccines over before dusk…"></label>
+      <div id="mbBtns"><button id="mbMake">GET A CODE</button><button id="mbPost">📌 POST TO THE BOARD</button></div>
       <div id="mbOut"></div>
     </div>
     <div id="mbPlayRow">
@@ -639,6 +657,11 @@
       <button id="mbPlay">FLY IT</button>
     </div>
     <div id="mbMsg"></div>
+  </div>
+  <div class="hSect"><h2>MISSION BOARD 📌</h2>
+    <div class="hbNote">Missions posted by pilots everywhere. Anyone can fly any of them — each pilot flies their own real route, and the fastest time holds the record.</div>
+    <div id="boardTop"><span id="boardCount"></span><button id="boardRefresh">↻ REFRESH</button></div>
+    <div id="boardList"></div>
   </div>
   <div class="hSect"><h2>PAINT SHOP</h2>
     <div id="skinTabs">
@@ -2098,7 +2121,7 @@ async function geocodeAddr(){
 $('addrBtn').addEventListener('click',geocodeAddr);
 $('addrIn').addEventListener('keydown',e=>{ if(e.key==='Enter') geocodeAddr(); });
 
-function openHome(){ renderHome(); $('home').style.display='flex'; claimPending(); loadNews(); }
+function openHome(){ renderHome(); $('home').style.display='flex'; claimPending(); loadNews(); loadBoard(); }
 let ctrlT=null;
 function closeHome(){
   if(!account){ initAccount(); return; }            // no account, no flying
@@ -2133,11 +2156,68 @@ if($('mbMake')) $('mbMake').addEventListener('click',()=>{
 if($('mbPlay')) $('mbPlay').addEventListener('click',()=>{
   const m=decodeMission($('mbCode').value);
   if(!m){ $('mbMsg').textContent='That code isn\'t valid — they look like MRN-3K9F.'; return; }
-  try{ const names=JSON.parse(localStorage.getItem('coveMissionNames')||'{}'); m.name=names[m.code]||'Custom run'; }catch(e){ m.name='Custom run'; }
+  const onBoard=board.find(b=>b.code===m.code);
+  if(onBoard) m.name=onBoard.name;
+  else { try{ const names=JSON.parse(localStorage.getItem('coveMissionNames')||'{}'); m.name=names[m.code]||'Custom run'; }catch(e){ m.name='Custom run'; } }
   startCustomMission(m);
 });
+// ---------- public mission board ----------
+let board=[];
+const BIRD_N=['no birds','normal birds','heavy birds','a swarm'], WIND_N=['calm','breezy','strong wind','a gale'];
+function loadLocalBoard(){ try{ return JSON.parse(localStorage.getItem('coveBoard')||'[]'); }catch(e){ return []; } }
+function saveLocalBoard(){ try{ localStorage.setItem('coveBoard',JSON.stringify(board.slice(0,80))); }catch(e){} }
+async function loadBoard(){
+  if(REMOTE){
+    try{ const r=await (await fetch('/api/missions')).json(); if(r&&r.missions){ board=r.missions; renderBoard(); return; } }catch(e){}
+  }
+  board=loadLocalBoard(); renderBoard();
+}
+async function postMission(){
+  if(!account){ initAccount(); return; }
+  const m=readBuilder(), code=encodeMission(m), name=m.name||'Custom run', brief=($('mbBrief')?$('mbBrief').value:'').trim().slice(0,140);
+  try{ const names=JSON.parse(localStorage.getItem('coveMissionNames')||'{}'); names[code]=name; localStorage.setItem('coveMissionNames',JSON.stringify(names)); }catch(e){}
+  $('mbMsg').textContent='Posting…';
+  if(REMOTE&&account.token){
+    try{
+      const r=await api('postmission',{code,name,brief},account.token);
+      if(r.error){ $('mbMsg').textContent=r.error; return; }
+      $('mbMsg').textContent='📌 Posted! "'+name+'" is on the board for every pilot.';
+      banner('📌 MISSION POSTED — '+name.toUpperCase());
+      $('mbCode').value=code;
+      await loadBoard(); return;
+    }catch(e){ $('mbMsg').textContent='Could not reach the server — try again in a moment.'; return; }
+  }
+  const i=board.findIndex(b=>b.code===code);
+  const mi={code,name,brief,by:account.user,at:Date.now(),flights:0,best:null,bestBy:null,mine:true};
+  if(i>=0) board[i]=Object.assign(board[i],mi); else board.unshift(mi);
+  saveLocalBoard(); renderBoard();
+  $('mbMsg').textContent='📌 Posted to your local board (this browser only — go online to share it with everyone).';
+  $('mbCode').value=code;
+}
+function fmtT(s){ return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0'); }
+function renderBoard(){
+  const L=$('boardList'); if(!L) return;
+  L.innerHTML='';
+  $('boardCount').textContent=board.length?(board.length+' MISSION'+(board.length===1?'':'S')+' POSTED'):'';
+  if(!board.length){ L.innerHTML='<div class="empty">No missions yet — build one above and press POST TO THE BOARD.</div>'; return; }
+  for(const b of board){
+    const m=decodeMission(b.code); if(!m) continue;
+    const row=document.createElement('div'); row.className='bm'+((account&&b.by===account.user)?' mine':'');
+    const safe=t=>String(t||'').replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
+    row.innerHTML='<div class="t">'+safe(b.name)+'<small>'+b.code+'</small></div>'
+      +'<button>▶ FLY IT</button>'
+      +'<div class="c">'+CARGO_TYPES[m.cargo].n+' · '+BIRD_N[m.birds]+' · '+WIND_N[m.wind]+(m.dusk?' · dusk':'')+' · pays ≈<b>🪙'+missionPayout(Object.assign({},m,{miles:homeMiles()}),0)+'</b> on your route</div>'
+      +(b.brief?'<div class="brief">“'+safe(b.brief)+'”</div>':'')
+      +'<div class="s">posted by '+safe(b.by)+' · flown '+(b.flights||0)+'×'+(b.best?' · record '+fmtT(b.best)+' by '+safe(b.bestBy):'')+'</div>';
+    row.querySelector('button').addEventListener('click',()=>{ const mm=decodeMission(b.code); mm.name=b.name; mm.board=true; startCustomMission(mm); });
+    L.appendChild(row);
+  }
+}
+if($('mbPost')) $('mbPost').addEventListener('click',postMission);
+if($('boardRefresh')) $('boardRefresh').addEventListener('click',loadBoard);
 function startCustomMission(m){
   m.miles=homeMiles();                              // every mission flies YOUR real route
+  if(!m.board&&board.some(b=>b.code===m.code)) m.board=true;
   custom=m; missionClock=0; phase=1;
   applyMissionConditions(m);
   setRouteWorld(m.miles);
@@ -2148,6 +2228,15 @@ function startCustomMission(m){
   if(document.activeElement&&document.activeElement.blur) document.activeElement.blur();
   enterRoom();
   banner('▶ '+(m.name||'CUSTOM RUN')+' · '+m.miles.toFixed(1)+' mi · '+CARGO_TYPES[m.cargo].n);
+}
+function reportFlight(code,secs){
+  const s=Math.round(secs);
+  if(REMOTE&&account&&account.token){
+    api('flown',{code,secs:s},account.token).then(r=>{ if(r&&r.record) banner('🏆 NEW BOARD RECORD — '+fmtT(s)); loadBoard(); }).catch(()=>{});
+    return;
+  }
+  const b=board.find(x=>x.code===code);
+  if(b){ b.flights=(b.flights||0)+1; if(!b.best||s<b.best){ b.best=s; b.bestBy=account?account.user:'you'; banner('🏆 NEW BOARD RECORD — '+fmtT(s)); } saveLocalBoard(); renderBoard(); }
 }
 function endCustomMission(){
   custom=null; applyMissionConditions(null);
@@ -3009,6 +3098,7 @@ function complete(){
     const isBest=!prev||secs<prev;
     if(isBest){ bestTimes[m.code]=secs; try{ localStorage.setItem('coveBestTimes',JSON.stringify(bestTimes)); }catch(e){} }
     trips++; money+=pay; saveGame(); moneyHUD();
+    if(m.board) reportFlight(m.code,secs);
     const mm=Math.floor(secs/60), ss=Math.floor(secs%60);
     const t=mm+':'+String(ss).padStart(2,'0');
     endCustomMission();

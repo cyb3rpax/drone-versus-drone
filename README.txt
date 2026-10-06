@@ -33,7 +33,10 @@ _redirects      One line of text that tells Netlify:
 
 api.mjs         The account server. Handles sign-up,
                 login, saving progress, the leaderboard,
-                announcements, and coin purchases.
+                announcements, coin purchases, and the
+                MISSION BOARD (pilots post missions, everyone
+                can fly them). To hide a bad mission:
+                /api/delmission?secret=YOURSECRET&code=MRN-XXXX
                 WITHOUT this file the game still works —
                 accounts just save in each player's own
                 browser instead of online.

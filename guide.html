@@ -106,6 +106,18 @@ a{color:var(--teal)}
 footer{border-top:1px solid var(--line);color:#6a5b85}
 footer a{color:#6a5b85}
 
+.d3fig{margin:10px 0 22px}
+.d3view{position:relative;width:100%;aspect-ratio:16/9;background:radial-gradient(ellipse at 50% 38%,#fbfbfc 0%,#e6e8ec 50%,#c2c7ce 100%);border-radius:14px;overflow:hidden;cursor:grab;touch-action:none;box-shadow:0 0 26px rgba(0,240,255,.1);border:1px solid rgba(0,240,255,.28)}
+.d3view.kit{aspect-ratio:16/10.5}
+.d3view:active{cursor:grabbing}
+.d3view canvas{display:block}
+.d3fallback{display:none;padding:40px;text-align:center;color:#333}
+.d3lbl{position:absolute;left:0;top:0;pointer-events:none;white-space:nowrap}
+.d3lbl i{display:none}
+.d3lbl span{position:absolute;left:0;top:3px;transform:translateX(-50%);font:600 11.5px -apple-system,Segoe UI,Arial,sans-serif;color:#17191c;background:rgba(255,255,255,.88);padding:2px 8px;border-radius:5px;border:1px solid rgba(0,0,0,.08);box-shadow:0 1px 5px rgba(0,0,0,.12)}
+.d3fig figcaption{font-size:12.5px;color:#9a8ab8;margin-top:8px;text-align:center}
+.d3fig figcaption b{color:#00f0ff;letter-spacing:1px}
+
 .schem{width:100%;height:auto;display:block;background:#0b0816;border:1px solid rgba(0,240,255,.28);border-radius:14px;box-shadow:0 0 26px rgba(0,240,255,.08);margin:6px 0 18px}
 .schem text{font-family:ui-monospace,'Courier New',Menlo,monospace}
 .schem .t-lbl{font-size:14px;font-weight:700;fill:#f2e9ff}
@@ -126,6 +138,7 @@ footer a{color:#6a5b85}
 </div></nav>
 
 
+
 <div class="hiw-hero"><div class="wrap">
   <h1>HOW IT WORKS</h1>
   <p>How a real delivery drone stays in the air — and a full schematic of how Drone Courier: Marin fits together, from your front door to Harmony and back.</p>
@@ -135,6 +148,21 @@ footer a{color:#6a5b85}
 <section class="wrap" id="drones">
   <h2>How drones work</h2>
   <p class="lead">A delivery drone is a <b>quadcopter</b>: four motors, four propellers, a battery and a small computer that makes thousands of tiny corrections every second. There are no flaps or rudder — every move comes from changing how fast each motor spins.</p>
+  <p class="lead">The best way to understand a drone is to build one. The <b>Courier Kit</b> is our own hand-sized design: two tinted acrylic decks, four tiny brushless motors in printed pods, ring guards, a round controller board, a 2S battery, and a gamepad remote. It has the same parts as a big delivery drone, small enough to fit in your hand.</p>
+  <figure class="d3fig"><div class="d3view kit" data-mode="exploded"><div class="d3fallback">3D view needs WebGL — see the diagram further down.</div></div>
+    <figcaption><b>ALL APART</b> — everything in the box, laid out on the bench · drag to look around, scroll to zoom</figcaption></figure>
+  <figure class="d3fig"><div class="d3view" data-mode="assembled"><div class="d3fallback">3D view needs WebGL — see the diagram further down.</div></div>
+    <figcaption><b>ALL TOGETHER</b> — the same parts built into a flying drone, about 15 cm across · drag to spin it</figcaption></figure>
+  <div class="facts">
+    <div class="card"><h3>🔷 Two acrylic decks</h3><p>Laser-cut tinted acrylic: a cyan lower deck with four tapered arms, and a smaller pink canopy on brass standoffs. The electronics sit between them, and you can see the LED ring glowing through the top.</p></div>
+    <div class="card"><h3>🌀 Brushless motors + 3-blade props</h3><p>Four tiny outrunner motors clamp into printed pods at the end of each arm. Cyan props spin clockwise and pink ones counter-clockwise, so the twisting forces cancel out.</p></div>
+    <div class="card"><h3>🧠 Courier Core</h3><p>A round controller board with the gyroscope and barometer that keep it level, four motor drivers, a radio, a tiny OLED readout and a USB-C port for code and charging. The motor leads plug straight into it.</p></div>
+    <div class="card"><h3>🔋 2S LiPo battery</h3><p>7.4 V and 450 mAh, in a printed cradle under the lower deck with a velcro strap. Good for a few minutes of flying, which is why the game makes you recharge at Harmony.</p></div>
+    <div class="card"><h3>🛡 Ring guards</h3><p>A printed ring around each propeller on three spokes, so a bump into a wall spins you instead of snapping a blade.</p></div>
+    <div class="card"><h3>🎮 Gamepad remote</h3><p>Two thumbsticks, a little status screen and a radio antenna. The left stick is throttle and turn, the right stick tilts the drone to fly forward, back and sideways.</p></div>
+  </div>
+  <h2 style="margin-top:30px">Scaling it up: a full-size delivery drone</h2>
+  <p class="lead">A real delivery drone works the same way. It just has bigger brushless motors, speed controllers, GPS and a payload hook. Here it is from directly above, with what every part does.</p>
   <svg viewBox="0 0 1000 560" class="schem" role="img" aria-label="Labelled top-down schematic of a delivery quadcopter">
 <defs>
  <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#faff4d"/></marker>
@@ -348,12 +376,12 @@ footer a{color:#6a5b85}
 <text x="890" y="128" text-anchor="middle" class="t-xs" fill="#9a8ab8">leaderboard</text>
 <text x="890" y="150" text-anchor="middle" class="t-xs" fill="#9a8ab8">game-wide announcements</text>
 <text x="890" y="172" text-anchor="middle" class="t-xs" fill="#9a8ab8">Stripe coin packs</text>
-<text x="890" y="194" text-anchor="middle" class="t-xs" fill="#9a8ab8">mission codes</text>
+<text x="890" y="194" text-anchor="middle" class="t-xs" fill="#9a8ab8">mission board</text>
 <polyline points="772,52 798,52" fill="none" stroke="#9a8ab8" stroke-width="2.4" stroke-dasharray="6 5" marker-end="url(#a29a8ab8)"/>
 <rect x="30" y="150" width="740" height="78" rx="10" fill="#120c1f" stroke="#faff4d" stroke-width="2"/>
 <text x="400.0" y="183.0" text-anchor="middle" class="t-lbl" fill="#faff4d">④ HANGAR</text>
 <text x="400.0" y="200.0" text-anchor="middle" class="t-xs" fill="#9a8ab8">Drone Coins · 5 drones (Sparrow → Titan) · paint shop · crash effects</text>
-<text x="400.0" y="214.0" text-anchor="middle" class="t-xs" fill="#9a8ab8">mission builder (share codes) · home base · coin store</text>
+<text x="400.0" y="214.0" text-anchor="middle" class="t-xs" fill="#9a8ab8">mission builder · mission board (post &amp; fly) · home base · coin store</text>
 <polyline points="660,108 660,148" fill="none" stroke="#00f0ff" stroke-width="2.4"  marker-end="url(#a200f0ff)"/>
 <polyline points="770,190 798,190" fill="none" stroke="#9a8ab8" stroke-width="2.4" stroke-dasharray="6 5" marker-end="url(#a29a8ab8)"/>
 <rect x="30" y="290" width="220" height="78" rx="10" fill="#120c1f" stroke="#8dff3a" stroke-width="2"/>
@@ -436,6 +464,7 @@ footer a{color:#6a5b85}
       <span class="keys"><kbd>◀</kbd><kbd>▶</kbd><kbd>Q</kbd><kbd>E</kbd></span> turn<br>
       <span class="keys"><kbd>SPACE</kbd></span> climb &nbsp; <span class="keys"><kbd>SHIFT</kbd></span> descend</p></div>
     <div class="card"><h3>At home</h3><p><span class="keys"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span> walk &nbsp; <span class="keys"><kbd>E</kbd></span> grab / set down your drone<br><span class="keys"><kbd>R</kbd></span> rotate furniture &nbsp; <span class="keys"><kbd>SPACE</kbd></span> launch from the roof pad &nbsp; <span class="keys"><kbd>ESC</kbd></span> back to the hangar</p></div>
+    <div class="card"><h3>At home</h3><p><span class="keys"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span> walk &nbsp; <span class="keys"><kbd>E</kbd></span> grab / set down your drone<br><span class="keys"><kbd>R</kbd></span> rotate furniture &nbsp; <span class="keys"><kbd>SPACE</kbd></span> launch from the roof pad &nbsp; <span class="keys"><kbd>ESC</kbd></span> back to the hangar</p></div>
     <div class="card"><h3>Camera</h3><p><span class="keys"><kbd>C</kbd></span> switches between the chase camera and a first-person nose cam that leans into your turns. FPV is harder — and much more fun in the trees.</p></div>
     <div class="card"><h3>Repairs</h3><p>Drag each screw onto the glowing mount hole on your drone, then turn it clockwise: <span class="keys"><kbd>⬆</kbd><kbd>➡</kbd><kbd>⬇</kbd><kbd>⬅</kbd></span> — four quarter-turns per screw, four screws per part.</p></div>
   </div>
@@ -468,4 +497,378 @@ footer a{color:#6a5b85}
 <footer><div class="wrap">
   <a href="index.html">Play</a>·<a href="guide.html">How It Works</a>·<a href="fleet.html">Fleet</a>·<a href="leaderboard.html">Leaderboard</a>·<a href="news.html">News</a>·<a href="support.html">Support</a>
   <div style="margin-top:10px">Drone Courier: Marin — a free browser drone-delivery game. Fly safe. 🚁</div>
-</div></footer></body></html>
+</div></footer><script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// Photoreal renders of the "Courier Kit": our own hand-sized build-it-yourself drone.
+// Two tinted-acrylic decks, four tiny brushless motors in printed pods, ring prop-guards,
+// a round "Courier Core" controller with an LED ring and OLED, a 2S LiPo on a velcro strap,
+// and a gamepad-style remote. One view lays every part out like a kit photo, the other shows it built.
+// Units: centimetres.
+(function(){
+'use strict';
+const T=window.THREE;
+if(!T){ document.querySelectorAll('.d3fallback').forEach(e=>e.style.display='block'); return; }
+
+// ---------------- procedural textures ----------------
+function cv(w,h){ const c=document.createElement('canvas'); c.width=w; c.height=h; return [c,c.getContext('2d')]; }
+function tex(c){ const t=new T.CanvasTexture(c); t.encoding=T.sRGBEncoding; t.anisotropy=8; t.wrapS=t.wrapT=T.ClampToEdgeWrapping; return t; }
+let seed=11; const rnd=()=>((seed=(seed*16807)%2147483647)/2147483647);
+function decalTex(){                                              // white lettering printed on the top deck (alpha map)
+  const [c,x]=cv(1024,1024);
+  x.clearRect(0,0,1024,1024);
+  x.fillStyle='#ffffff'; x.textAlign='center';
+  x.font='bold 64px Helvetica,Arial,sans-serif'; x.fillText('COURIER KIT',512,560);
+  x.font='bold 30px Helvetica,Arial,sans-serif'; x.fillText('BUILD · CODE · DELIVER',512,610);
+  x.font='bold 36px Helvetica,Arial,sans-serif'; x.fillText('▲',512,330);
+  x.font='bold 24px Helvetica,Arial,sans-serif'; x.fillText('FRONT',512,362);
+  return c;
+}
+function coreTex(){                                               // round controller board, top face
+  const [c,x]=cv(1024,1024); seed=5;
+  x.fillStyle='#14161b'; x.fillRect(0,0,1024,1024);
+  x.strokeStyle='rgba(120,200,255,.10)'; x.lineWidth=4;
+  for(let i=0;i<70;i++){ x.beginPath(); let px=rnd()*1024, py=rnd()*1024; x.moveTo(px,py); for(let k=0;k<3;k++){ if(rnd()<.5) px+=(rnd()-.5)*300; else py+=(rnd()-.5)*300; x.lineTo(px,py); } x.stroke(); }
+  x.fillStyle='#d9b45a'; for(let i=0;i<120;i++){ const a=rnd()*6.3, r=120+rnd()*330; x.fillRect(512+Math.cos(a)*r,512+Math.sin(a)*r,8+rnd()*10,5+rnd()*8); }
+  x.fillStyle='rgba(255,255,255,.9)'; x.textAlign='center';
+  x.font='bold 40px Helvetica,Arial,sans-serif'; x.fillText('COURIER CORE',512,880);
+  x.font='26px monospace'; x.fillText('GYRO · BARO · RADIO · 4× ESC',512,925);
+  x.font='bold 30px Helvetica,Arial,sans-serif'; ['M1','M2','M3','M4'].forEach((t,i)=>{ const a=Math.PI/4+i*Math.PI/2; x.fillText(t,512+Math.cos(a)*430,512+Math.sin(a)*430+10); });
+  return c;
+}
+function oledTex(){
+  const [c,x]=cv(512,256);
+  x.fillStyle='#04060a'; x.fillRect(0,0,512,256);
+  x.fillStyle='#8ff2ff'; x.font='bold 54px monospace'; x.fillText('READY',30,80);
+  x.font='34px monospace'; x.fillText('BATT 7.4V  92%',30,140); x.fillText('LINK ▂▄▆█  HOME 0.0mi',30,200);
+  x.strokeStyle='#8ff2ff'; x.lineWidth=4; x.strokeRect(6,6,500,244);
+  return c;
+}
+function battTex(){
+  const [c,x]=cv(1024,512);
+  x.fillStyle='#1b1d22'; x.fillRect(0,0,1024,512);
+  x.fillStyle='#ff2d95'; x.fillRect(0,0,1024,120);
+  x.fillStyle='#fff'; x.font='bold 88px Helvetica,Arial,sans-serif'; x.fillText('2S 7.4V',40,92);
+  x.font='bold 130px Helvetica,Arial,sans-serif'; x.fillText('450mAh',40,290);
+  x.fillStyle='#8ff2ff'; x.font='bold 50px Helvetica,Arial,sans-serif'; x.fillText('COURIER PACK · 30C',40,380);
+  x.fillStyle='#aaa'; x.font='32px Helvetica,Arial,sans-serif'; x.fillText('Charge through the Core · never puncture',40,460);
+  return c;
+}
+function screenTex(){
+  const [c,x]=cv(512,320);
+  x.fillStyle='#06080c'; x.fillRect(0,0,512,320);
+  x.strokeStyle='#ff2d95'; x.lineWidth=5; x.strokeRect(8,8,496,304);
+  x.fillStyle='#8ff2ff'; x.font='bold 44px monospace'; x.fillText('COURIER',40,80);
+  x.font='30px monospace'; x.fillText('PILOT  tim',40,140); x.fillText('DRONE  linked',40,190); x.fillText('TRIPS  12',40,240);
+  x.fillStyle='#ff2d95'; x.beginPath(); x.arc(440,70,22,0,7); x.fill();
+  return c;
+}
+let TX=null;
+function textures(){ if(TX) return TX; TX={decal:tex(decalTex()),core:tex(coreTex()),oled:tex(oledTex()),batt:tex(battTex()),screen:tex(screenTex())}; return TX; }
+
+// ---------------- materials ----------------
+function M(){
+  const t=textures();
+  const std=o=>new T.MeshStandardMaterial(o), phy=o=>new T.MeshPhysicalMaterial(o);
+  return {
+    deckLo:phy({color:0x2fd9ff,roughness:0.08,metalness:0,transparent:true,opacity:0.62,clearcoat:1,clearcoatRoughness:0.04,side:T.DoubleSide}),   // cyan-tinted acrylic
+    deckHi:phy({color:0xff4fb0,roughness:0.08,metalness:0,transparent:true,opacity:0.5,clearcoat:1,clearcoatRoughness:0.04,side:T.DoubleSide}),    // pink-tinted acrylic
+    decal:std({map:t.decal,alphaMap:t.decal,transparent:true,roughness:0.6,depthWrite:false}),
+    print:std({color:0x2a2d33,roughness:0.75}),                    // 3D-printed matt black-grey
+    printAcc:std({color:0x8ff2ff,roughness:0.6}),
+    core:std({map:t.core,roughness:0.45,metalness:0.1}),
+    pcbEdge:std({color:0x101114,roughness:0.6}),
+    oled:std({map:t.oled,emissive:0xffffff,emissiveMap:t.oled,emissiveIntensity:0.9,roughness:0.2}),
+    screen:std({map:t.screen,emissive:0xffffff,emissiveMap:t.screen,emissiveIntensity:0.8,roughness:0.2}),
+    bell:std({color:0x1d1f24,metalness:0.8,roughness:0.35}),
+    bellTop:std({color:0xff2d95,metalness:0.7,roughness:0.35}),
+    stator:std({color:0xc46a3a,metalness:1,roughness:0.4}),
+    shaft:std({color:0xe0e2e6,metalness:1,roughness:0.15}),
+    propCW:phy({color:0x19d9ff,roughness:0.35,clearcoat:0.6,side:T.DoubleSide}),
+    propCCW:phy({color:0xff2d95,roughness:0.35,clearcoat:0.6,side:T.DoubleSide}),
+    strap:std({color:0x3a3d44,roughness:0.95}),
+    strapHook:std({color:0x24262b,roughness:1}),
+    brass:std({color:0xd4b25a,metalness:1,roughness:0.3}),
+    screw:std({color:0x0f0f11,metalness:0.8,roughness:0.4}),
+    rubber:std({color:0x111111,roughness:0.9}),
+    chip:std({color:0x0d0d0f,roughness:0.35}),
+    jst:std({color:0xf2efe6,roughness:0.5}),
+    usb:std({color:0xb9bcc2,metalness:0.9,roughness:0.3}),
+    ledRing:std({color:0x8ff2ff,emissive:0x2ee6ff,emissiveIntensity:1.8}),
+    ledPink:std({color:0xff6fc0,emissive:0xff2d95,emissiveIntensity:1.8}),
+    wireR:std({color:0xc0171c,roughness:0.45}), wireK:std({color:0x121212,roughness:0.45}), wireC:std({color:0x19d9ff,roughness:0.45}),
+    batt:phy({map:t.batt,roughness:0.3,metalness:0.15,clearcoat:0.7}),
+    battEnd:phy({color:0x1b1d22,roughness:0.35,clearcoat:0.6}),
+    shell:phy({color:0x1e2026,roughness:0.5,clearcoat:0.35}),
+    shellAcc:phy({color:0xff2d95,roughness:0.45,clearcoat:0.4}),
+    stickCap:std({color:0x111214,roughness:0.9}),
+    hexKey:std({color:0x2b2d33,metalness:0.85,roughness:0.4}),
+    cable:std({color:0x2fd9ff,roughness:0.6})
+  };
+}
+
+// ---------------- geometry helpers ----------------
+function mesh(g,m,x,y,z,parent){ const o=new T.Mesh(g,m); o.position.set(x||0,y||0,z||0); o.castShadow=o.receiveShadow=true; if(parent) parent.add(o); return o; }
+function cyl(rt,rb,h,seg){ return new T.CylinderGeometry(rt,rb,h,seg||32); }
+function tube(points,r,m,parent,closed){
+  const curve=new T.CatmullRomCurve3(points.map(p=>new T.Vector3(p[0],p[1],p[2])),!!closed);
+  return mesh(new T.TubeGeometry(curve,48,r,8,!!closed),m,0,0,0,parent);
+}
+function rr(w,h,r){ const s=new T.Shape(), x=-w/2, y=-h/2;
+  s.moveTo(x+r,y); s.lineTo(x+w-r,y); s.quadraticCurveTo(x+w,y,x+w,y+r); s.lineTo(x+w,y+h-r); s.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  s.lineTo(x+r,y+h); s.quadraticCurveTo(x,y+h,x,y+h-r); s.lineTo(x,y+r); s.quadraticCurveTo(x,y,x+r,y); return s; }
+function hole(s,x,y,r){ const p=new T.Path(); p.absarc(x,y,r,0,Math.PI*2,true); s.holes.push(p); }
+function flat(shape,th){ const g=new T.ExtrudeGeometry(shape,{depth:th,bevelEnabled:false,curveSegments:32}); g.rotateX(Math.PI/2); g.translate(0,th,0); return g; }
+function hexShape(r){ const s=new T.Shape(); for(let k=0;k<6;k++){ const a=k/6*Math.PI*2+Math.PI/6; k?s.lineTo(Math.cos(a)*r,Math.sin(a)*r):s.moveTo(Math.cos(a)*r,Math.sin(a)*r); } s.closePath(); return s; }
+function bladeGeo(R,hub,dir,cs){
+  const N=22, K=12, pos=[], idx=[];
+  for(let i=0;i<=N;i++){
+    const s=i/N, r=hub+s*(R-hub);
+    let c=cs*(0.75+2.4*Math.sin(Math.PI*Math.min(1,0.2+s*0.9))*(1-0.45*s)); if(i===N) c*=0.45;
+    const tw=(26*(1-s)+11*s)*Math.PI/180, th=0.11*c;
+    const ring=[]; for(let k=0;k<K;k++) ring.push([k/(K-1),1]); for(let k=K-2;k>0;k--) ring.push([k/(K-1),-1]);
+    for(const [u,sg] of ring){
+      const zc=(u-0.3)*c, yc=0.07*c*Math.sin(Math.PI*u)+sg*th*1.6*Math.sqrt(Math.max(0,u*(1-u)))*(1-u*0.6);
+      pos.push(r, yc*Math.cos(tw)-zc*Math.sin(tw), (yc*Math.sin(tw)+zc*Math.cos(tw))*dir);
+    }
+  }
+  const L=2*K-2;
+  for(let i=0;i<N;i++) for(let k=0;k<L;k++){ const a=i*L+k,b=i*L+(k+1)%L,c2=(i+1)*L+k,d=(i+1)*L+(k+1)%L; idx.push(a,c2,b,b,c2,d); }
+  const g=new T.BufferGeometry(); g.setAttribute('position',new T.Float32BufferAttribute(pos,3)); g.setIndex(idx); g.computeVertexNormals(); return g;
+}
+function propeller(m,cw,parent){                                   // three-blade prop
+  const hub=new T.Group(); parent.add(hub);
+  const pm=cw?m.propCW:m.propCCW, bg=bladeGeo(2.6,0.34,cw?1:-1,0.26);
+  for(let k=0;k<3;k++) mesh(bg,pm,0,0,0,hub).rotation.y=k*Math.PI*2/3;
+  mesh(cyl(0.36,0.4,0.38,24),pm,0,0,0,hub);
+  mesh(cyl(0.14,0.14,0.2,12),m.screw,0,0.28,0,hub);
+  return hub;
+}
+
+// ---------------- the kit ----------------
+const MX=4.3, MZ=4.0;                                 // motor centres at (±MX, ±MZ); front = -z
+const MOTORS=[[MX,-MZ],[-MX,-MZ],[-MX,MZ],[MX,MZ]].map(([x,z])=>new T.Vector3(x,0,z));
+const DECK_T=0.25, LO_Y=0, HI_Y=1.65, PROP_Y=1.95, POD_Y=0.25;
+function buildKit(root){
+  const m=M(), parts=[];
+  const part=(name,label,kitOnly,extra)=>{ const g=new T.Group(); g.userData=Object.assign({name,label,kitOnly:!!kitOnly},extra||{}); root.add(g); parts.push(g); return g; };
+
+  // ---- lower deck: hexagonal hub with four tapered arms, cyan acrylic ----
+  const lower=part('Lower deck','Lower deck');
+  const hub=hexShape(3.1); hole(hub,0,0,0.5); for(const [x,y] of [[-1.5,0],[1.5,0],[0,1.6],[0,-1.6]]) hole(hub,x,y,0.18);
+  mesh(flat(hub,DECK_T),m.deckLo,0,LO_Y,0,lower);
+  MOTORS.forEach(p=>{
+    const dir=p.clone().normalize(), dist=Math.hypot(p.x,p.z), ang=Math.atan2(p.x,-p.z);
+    const len=dist-2.2;
+    const arm=new T.Shape(); arm.moveTo(-0.85,0); arm.lineTo(0.85,0); arm.lineTo(0.55,len); arm.lineTo(-0.55,len); arm.closePath();
+    hole(arm,0,len*0.45,0.17); hole(arm,0,len-0.5,0.14); hole(arm,0,len-1.1,0.14);
+    const g=flat(arm,DECK_T); g.rotateY(Math.atan2(p.x,p.z)); const o=dir.clone().multiplyScalar(2.2); g.translate(o.x,0,o.z);
+    mesh(g,m.deckLo,0,LO_Y,0,lower);
+  });
+
+  // ---- upper deck: smaller pink acrylic canopy with the printed lettering ----
+  const upper=part('Upper deck','Upper deck');
+  const top=hexShape(2.6); for(const [x,y] of [[-1.5,0],[1.5,0],[0,1.6],[0,-1.6]]) hole(top,x,y,0.18);
+  mesh(flat(top,DECK_T),m.deckHi,0,HI_Y,0,upper);
+  const dec=mesh(new T.PlaneGeometry(5.2,5.2),m.decal,0,HI_Y+DECK_T+0.01,0,upper); dec.rotation.x=-Math.PI/2; dec.castShadow=false;
+
+  // ---- brass standoffs + hex screws between the decks ----
+  const stand=part('Standoffs','Standoffs');
+  for(const [x,z] of [[-1.5,0],[1.5,0],[0,1.6],[0,-1.6]]){
+    mesh(cyl(0.2,0.2,HI_Y-LO_Y-DECK_T,6),m.brass,x,(HI_Y+LO_Y+DECK_T)/2,z,stand);
+    mesh(cyl(0.17,0.17,0.16,20),m.screw,x,HI_Y+DECK_T+0.08,z,stand);
+    mesh(cyl(0.17,0.17,0.16,20),m.screw,x,LO_Y-0.08,z,stand);
+  }
+
+  // ---- per arm: motor pod, brushless motor, prop, ring guard, leg ----
+  MOTORS.forEach((p,i)=>{
+    const cw=(i%2===0), d=p.clone().normalize(), ang=Math.atan2(d.x,-d.z);
+    const pod=part('Pod',i===0?'Motor pods':null,false,{dir:d});
+    const pb=mesh(new T.BoxGeometry(1.6,0.7,2.1),m.print,p.x,POD_Y+0.35,p.z,pod); pb.rotation.y=ang;
+    mesh(cyl(0.95,0.95,0.5,32),m.print,p.x,POD_Y+0.95,p.z,pod);
+    mesh(cyl(0.62,0.62,0.08,32),m.printAcc,p.x,POD_Y+1.24,p.z,pod);
+    for(const s of [-1,1]){ const o=d.clone().multiplyScalar(s*0.7); mesh(cyl(0.12,0.12,0.1,6),m.screw,p.x+o.x,POD_Y+0.75,p.z+o.z,pod); }
+    const leg=mesh(cyl(0.22,0.3,1.9,12),m.print,p.x,POD_Y-0.95,p.z,pod);
+    mesh(new T.SphereGeometry(0.34,16,12),m.rubber,p.x,POD_Y-1.9,p.z,pod).scale.y=0.6;
+
+    const mo=part('Motor',i===0?'Brushless motors':null,false,{dir:d});
+    const MY=POD_Y+1.28;
+    mesh(cyl(0.72,0.72,0.3,32),m.bell,p.x,MY+0.15,p.z,mo);                       // base
+    mesh(cyl(0.6,0.6,0.55,32),m.stator,p.x,MY+0.5,p.z,mo);                      // windings
+    for(let k=0;k<9;k++){ const seg=new T.CylinderGeometry(0.74,0.74,0.65,6,1,true,k*Math.PI*2/9,Math.PI*2/9*0.7);
+      const sm=mesh(seg,m.bell,p.x,MY+0.55,p.z,mo); sm.material=m.bell; }
+    mesh(cyl(0.74,0.74,0.18,32),m.bellTop,p.x,MY+0.95,p.z,mo);
+    mesh(cyl(0.06,0.06,0.9,12),m.shaft,p.x,MY+1.4,p.z,mo);
+    const side=new T.Vector3(d.z,0,-d.x);
+    [m.wireR,m.wireK,m.wireC].forEach((wm,k)=>{                                  // three-phase leads back to the Core
+      const o=side.clone().multiplyScalar((k-1)*0.11);
+      const a=p.clone().multiplyScalar(0.86).add(o), b=p.clone().multiplyScalar(0.55).add(o), c=p.clone().multiplyScalar(0.42).add(o);
+      tube([[a.x,MY+0.05,a.z],[a.x,POD_Y+0.3,a.z],[b.x,LO_Y+DECK_T+0.15,b.z],[c.x,LO_Y+DECK_T+0.45,c.z]],0.035,wm,mo);
+    });
+
+    const pr=part('Propeller',i===0?'Props (CW cyan · CCW pink)':null,false,{dir:d});
+    const h=propeller(m,cw,pr); h.position.set(p.x,PROP_Y+0.75,p.z); h.rotation.y=0.5+i*0.9;
+
+    const gd=part('Guard',i===0?'Ring guards':null,false,{dir:d});
+    const R=3.05;
+    const ring=mesh(new T.TorusGeometry(R,0.11,10,72),m.print,p.x,PROP_Y+0.75,p.z,gd); ring.rotation.x=Math.PI/2;
+    const ring2=mesh(new T.TorusGeometry(R,0.05,8,72),m.printAcc,p.x,PROP_Y+0.95,p.z,gd); ring2.rotation.x=Math.PI/2;
+    for(let k=0;k<3;k++){                                                         // three spokes down to the pod collar
+      const a=ang+Math.PI+(k-1)*Math.PI*0.55, ex=p.x+Math.sin(a)*R, ez=p.z-Math.cos(a)*R;
+      tube([[ex,PROP_Y+0.75,ez],[p.x+Math.sin(a)*1.6,POD_Y+1.9,p.z-Math.cos(a)*1.6],[p.x+Math.sin(a)*0.9,POD_Y+1.25,p.z-Math.cos(a)*0.9]],0.08,m.print,gd);
+    }
+  });
+
+  // ---- the Courier Core: round controller on the lower deck, under the canopy ----
+  const core=part('Core','Courier Core');
+  const CY=LO_Y+DECK_T+0.5;
+  for(const [x,z] of [[-1.5,0],[1.5,0],[0,1.6],[0,-1.6]]) mesh(cyl(0.16,0.16,0.5,12),m.print,x,LO_Y+DECK_T+0.25,z,core);
+  const disc=mesh(new T.CylinderGeometry(2.3,2.3,0.12,64),[m.pcbEdge,m.core,m.pcbEdge],0,CY,0,core);
+  mesh(new T.BoxGeometry(0.9,0.14,0.9),m.chip,0,CY+0.12,0.5,core);                // main processor
+  mesh(new T.BoxGeometry(0.4,0.1,0.4),m.chip,-1.1,CY+0.1,-0.6,core);               // gyro
+  mesh(new T.BoxGeometry(0.3,0.1,0.3),m.chip,1.2,CY+0.1,-0.5,core);                // barometer
+  mesh(new T.BoxGeometry(1.5,0.1,0.8),[m.pcbEdge,m.pcbEdge,m.oled,m.pcbEdge,m.pcbEdge,m.pcbEdge],0,CY+0.1,-1.2,core);   // OLED
+  mesh(new T.BoxGeometry(0.9,0.3,0.6),m.usb,0,CY+0.2,1.95,core);                   // USB-C
+  for(let k=0;k<12;k++){ const a=k/12*Math.PI*2; mesh(new T.BoxGeometry(0.18,0.1,0.18),k%3?m.ledRing:m.ledPink,Math.cos(a)*1.95,CY+0.1,Math.sin(a)*1.95,core); }
+  MOTORS.forEach(p=>{ const d=p.clone().normalize().multiplyScalar(1.55); const j=mesh(new T.BoxGeometry(0.5,0.3,0.4),m.jst,d.x,CY+0.2,d.z,core); j.rotation.y=Math.atan2(d.x,d.z); });
+  const ant=tube([[1.6,CY+0.1,1.2],[2.4,CY+0.5,1.8],[3.0,CY+0.9,2.3]],0.05,m.wireK,core);
+  mesh(cyl(0.11,0.11,1.3,8),m.jst,3.4,CY+1.15,2.6,core).rotation.z=-0.8;            // radio antenna
+
+  // ---- 2S LiPo in a printed cradle under the lower deck, velcro strap ----
+  const cradle=part('Cradle','Cradle');
+  mesh(new T.BoxGeometry(3.2,0.2,4.6),m.print,0,LO_Y-0.1,0.2,cradle);
+  for(const sx of [-1,1]) mesh(new T.BoxGeometry(0.2,0.9,4.6),m.print,sx*1.6,LO_Y-0.55,0.2,cradle);
+  const bt=part('Battery','2S LiPo battery');
+  mesh(new T.BoxGeometry(2.8,0.8,4.0),[m.batt,m.batt,m.battEnd,m.battEnd,m.battEnd,m.battEnd],0,LO_Y-0.62,0.2,bt);
+  const lead=[[0.5,-0.6,2.2],[0.6,-0.4,2.7],[0.5,0.2,2.75],[0.3,CY+0.15,2.1]];
+  tube(lead,0.045,m.wireR,bt); tube(lead.map(q=>[q[0]-0.16,q[1],q[2]]),0.045,m.wireK,bt);
+  const strapP=part('Strap','Strap');
+  const sp=[]; for(let k=0;k<28;k++){ const a=k/28*Math.PI*2; sp.push([Math.cos(a)*1.9,LO_Y-0.45+Math.sin(a)*0.75,0.2]); }
+  const st=tube(sp,0.1,m.strap,strapP,true); st.scale.z=4;                        // a wide flat band
+
+  // ---- kit-only: gamepad remote, spare props, tools, cable ----
+  const rem=part('Remote','Remote',true);
+  const shellS=rr(9.0,5.2,1.6); const shG=new T.ExtrudeGeometry(shellS,{depth:1.3,bevelEnabled:true,bevelThickness:0.25,bevelSize:0.25,bevelSegments:4,curveSegments:24});
+  shG.rotateX(Math.PI/2); shG.translate(0,1.55,0); mesh(shG,m.shell,0,0,0,rem);
+  mesh(new T.BoxGeometry(2.9,0.08,1.9),[m.pcbEdge,m.pcbEdge,m.screen,m.pcbEdge,m.pcbEdge,m.pcbEdge],0,1.6,-0.1,rem);
+  for(const sx of [-1,1]){
+    mesh(cyl(0.75,0.75,0.12,32),m.shellAcc,sx*3.0,1.62,0.3,rem);
+    mesh(cyl(0.28,0.28,0.7,16),m.stickCap,sx*3.0,1.95,0.3,rem);
+    mesh(new T.SphereGeometry(0.42,20,14),m.stickCap,sx*3.0,2.35,0.3,rem).scale.y=0.55;
+  }
+  for(let k=0;k<4;k++) mesh(cyl(0.22,0.22,0.15,16),k%2?m.shellAcc:m.printAcc,-1.0+k*0.66,1.63,1.7,rem);
+  for(const sx of [-1,1]) mesh(new T.BoxGeometry(1.6,0.3,0.4),m.shellAcc,sx*2.8,1.25,-2.75,rem);          // shoulder buttons
+  mesh(cyl(0.12,0.12,2.6,8),m.jst,3.6,1.6,-3.2,rem).rotation.x=Math.PI/2;                                   // antenna
+  mesh(new T.BoxGeometry(0.9,0.3,0.6),m.usb,0,0.5,-2.7,rem);
+
+  for(let k=0;k<4;k++){ const s2=part('Spare',k===0?'Spare props':null,true); propeller(m,k%2===0,s2); }
+  const tool=part('Tool','Hex key',true);
+  tube([[0,0.12,0],[3.6,0.12,0],[3.6,0.12,1.2]],0.12,m.hexKey,tool);
+  mesh(cyl(0.3,0.3,2.4,20),m.shellAcc,0,0.3,2.1,tool).rotation.z=Math.PI/2;
+  mesh(cyl(0.08,0.08,2.2,8),m.hexKey,2.2,0.3,2.1,tool).rotation.z=Math.PI/2;
+  const bag=part('Hardware','Screws + nuts',true);
+  seed=21;
+  for(let k=0;k<15;k++){ const x=(k%5-2)*0.7+(rnd()-0.5)*0.15, z=(Math.floor(k/5)-1)*0.75+(rnd()-0.5)*0.15;
+    if(k%3===0) mesh(cyl(0.17,0.17,0.12,6),m.brass,x,0.06,z,bag);
+    else if(k%3===1){ const s=mesh(cyl(0.09,0.09,0.7,10),m.screw,x,0.09,z,bag); s.rotation.z=Math.PI/2; s.rotation.y=rnd()*3; }
+    else mesh(cyl(0.17,0.17,0.16,20),m.screw,x,0.08,z,bag); }
+  const cab=part('Cable','USB-C cable',true);
+  const cp=[]; for(let k=0;k<40;k++){ const a=k/40*Math.PI*2; cp.push([Math.cos(a)*1.5+Math.cos(a*3)*0.15,0.1,Math.sin(a)*1.5]); }
+  tube(cp,0.09,m.cable,cab,true);
+  mesh(new T.BoxGeometry(0.9,0.3,0.6),m.usb,1.6,0.15,0.4,cab);
+  return parts;
+}
+
+// ---------------- kit layout (flat-lay photo of every part) ----------------
+const KNOLL={
+  'Lower deck':[[-13,-7]],'Upper deck':[[-4.5,-7.5]],'Core':[[3.5,-7.5]],'Remote':[[13.5,-7]],
+  'Propeller':[[-16,2.5],[-10.6,2.5],[-16,7.8],[-10.6,7.8]],'Spare':[[-4.5,2.5],[0.9,2.5],[-4.5,7.8],[0.9,7.8]],
+  'Battery':[[6.8,3.6]],'Cradle':[[12.6,3.6]],'Strap':[[17.6,3.6]],'Cable':[[9.5,8.8]],'Tool':[[16,8.8]],
+  'Motor':[[-16,12.5],[-11.2,12.5],[-6.4,12.5],[-1.6,12.5]],'Pod':[[2.5,12.5],[5.5,12.5],[8.5,12.5],[11.5,12.5]],
+  'Standoffs':[[14.6,12.5]],'Hardware':[[18.6,12.5]],
+  'Guard':[[-14,19.5],[-4.6,19.5],[4.8,19.5],[14.2,19.5]]
+};
+function knoll(parts){
+  const seen={};
+  for(const p of parts){
+    const n=p.userData.name, k=seen[n]=(seen[n]||0)+1, spot=(KNOLL[n]||[[0,0]])[k-1]||[0,0];
+    let rotY=0, rotX=0; const d=p.userData.dir;
+    if(n==='Motor'&&d){ rotY=Math.atan2(-d.z,-d.x); }                            // leads trail to the right
+    if(n==='Pod'&&d){ rotY=-Math.atan2(d.x,-d.z); }
+    if(n==='Guard'&&d){ rotY=-Math.atan2(d.x,-d.z); }
+    if(n==='Propeller'||n==='Spare'){ const h=p.children[0]; h.rotation.y=0.08*k; h.position.set(0,0,0); }
+    if(n==='Standoffs') p.children.forEach((c,j)=>{ const col=Math.floor(j/3); c.position.set(col*0.7,c.position.y,0); });
+    if(n==='Battery') rotY=Math.PI/2;
+    if(n==='Cradle') rotY=Math.PI/2;
+    if(n==='Strap') rotX=Math.PI/2;
+    p.rotation.set(rotX,rotY,0); p.position.set(0,0,0); p.updateMatrixWorld(true);
+    const b=new T.Box3().setFromObject(p), c=b.getCenter(new T.Vector3());
+    p.position.set(spot[0]-c.x,-b.min.y,spot[1]-c.z); p.updateMatrixWorld(true);
+  }
+}
+function fitDist(size,cam){ const r=size.length()/2, vf=cam.fov*Math.PI/360, hf=Math.atan(Math.tan(vf)*cam.aspect); return r/Math.sin(Math.min(vf,hf)); }
+
+// ---------------- viewer ----------------
+function viewer(el,kit){
+  let renderer;
+  try{ renderer=new T.WebGLRenderer({antialias:true,alpha:true}); }
+  catch(e){ const f=el.querySelector('.d3fallback'); if(f) f.style.display='block'; return; }
+  renderer.setPixelRatio(Math.min(2,window.devicePixelRatio||1));
+  renderer.outputEncoding=T.sRGBEncoding; renderer.toneMapping=T.ACESFilmicToneMapping; renderer.toneMappingExposure=1.08;
+  renderer.shadowMap.enabled=true; renderer.shadowMap.type=T.PCFSoftShadowMap;
+  el.insertBefore(renderer.domElement,el.firstChild);
+  const scene=new T.Scene();
+  const studio=new T.Scene();                                        // softbox studio, reflections only
+  studio.add(new T.Mesh(new T.SphereGeometry(200,32,16),new T.MeshBasicMaterial({color:0x8a8f96,side:T.BackSide})));
+  const sb=(w,h,x,y,z,k)=>{ const p=new T.Mesh(new T.PlaneGeometry(w,h),new T.MeshBasicMaterial({color:new T.Color(k,k,k),side:T.DoubleSide})); p.position.set(x,y,z); p.lookAt(0,0,0); studio.add(p); };
+  sb(120,60,0,150,0,7); sb(80,120,-150,40,60,4); sb(80,120,150,30,-60,3); sb(200,20,0,-10,-170,2);
+  const pm=new T.PMREMGenerator(renderer); scene.environment=pm.fromScene(studio,0.03).texture;
+  const key=new T.DirectionalLight(0xffffff,1.55); key.position.set(18,40,24); key.castShadow=true;
+  key.shadow.mapSize.set(2048,2048); const sc=key.shadow.camera; sc.left=sc.bottom=-26; sc.right=sc.top=26; sc.near=5; sc.far=120;
+  key.shadow.bias=-0.0003; key.shadow.normalBias=0.02;
+  scene.add(key); scene.add(new T.HemisphereLight(0xffffff,0x8a8278,0.4));
+  const root=new T.Group(); scene.add(root);
+  const parts=buildKit(root);
+  if(kit) knoll(parts); else for(const p of parts) if(p.userData.kitOnly) p.visible=false;
+  const box=new T.Box3(); parts.forEach(p=>{ if(p.visible) box.expandByObject(p); });
+  const ground=new T.Mesh(new T.PlaneGeometry(400,400),new T.ShadowMaterial({opacity:kit?0.22:0.3}));
+  ground.rotation.x=-Math.PI/2; ground.position.y=box.min.y-0.02; ground.receiveShadow=true; scene.add(ground);
+  const ctr=box.getCenter(new T.Vector3()), size=box.getSize(new T.Vector3());
+  const cam=new T.PerspectiveCamera(30,1,0.1,800);
+  let yaw=kit?0:-0.75, pitch=kit?1.0:0.42, dist=0, dragging=false, lx=0, ly=0, idleT=0;
+  const labels=[];
+  if(kit) for(const p of parts){ if(!p.userData.label) continue;
+    const b=new T.Box3().setFromObject(p), c=b.getCenter(new T.Vector3()); c.y=box.min.y; c.z=b.max.z+0.3;
+    const d=document.createElement('div'); d.className='d3lbl'; d.innerHTML='<i></i><span>'+p.userData.label+'</span>'; el.appendChild(d);
+    labels.push({el:d,p:c}); }
+  function resize(){ const w=el.clientWidth, h=el.clientHeight; renderer.setSize(w,h,false); renderer.domElement.style.width=w+'px'; renderer.domElement.style.height=h+'px'; cam.aspect=w/h; cam.updateProjectionMatrix(); }
+  resize(); dist=fitDist(size,cam)*(kit?0.74:0.6); addEventListener('resize',resize);
+  const v=new T.Vector3();
+  function draw(){
+    cam.position.set(ctr.x+dist*Math.cos(pitch)*Math.sin(yaw), ctr.y+dist*Math.sin(pitch), ctr.z+dist*Math.cos(pitch)*Math.cos(yaw));
+    cam.lookAt(ctr); renderer.render(scene,cam);
+    const w=el.clientWidth, h=el.clientHeight;
+    for(const L of labels){ v.copy(L.p).project(cam); L.el.style.transform='translate('+((v.x*0.5+0.5)*w).toFixed(1)+'px,'+((-v.y*0.5+0.5)*h).toFixed(1)+'px)'; }
+  }
+  el.__draw=(a,b,c)=>{ if(a!==undefined) yaw=a; if(b!==undefined) pitch=b; if(c) dist=c; draw(); return dist; };
+  let visible=true, last=performance.now();
+  if('IntersectionObserver' in window) new IntersectionObserver(es=>{ visible=es[0].isIntersecting; }).observe(el);
+  function loop(t){
+    requestAnimationFrame(loop);
+    const dt=Math.min(0.05,(t-last)/1000); last=t;
+    if(!visible) return;
+    if(!dragging&&!kit){ idleT+=dt; if(idleT>2.5) yaw+=dt*0.18; }
+    draw();
+  }
+  const cvEl=renderer.domElement;
+  cvEl.addEventListener('pointerdown',e=>{ dragging=true; lx=e.clientX; ly=e.clientY; if(cvEl.setPointerCapture) cvEl.setPointerCapture(e.pointerId); });
+  cvEl.addEventListener('pointermove',e=>{ if(!dragging) return; yaw-=(e.clientX-lx)*0.008; pitch=Math.max(-0.1,Math.min(1.4,pitch+(e.clientY-ly)*0.006)); lx=e.clientX; ly=e.clientY; idleT=0; });
+  cvEl.addEventListener('pointerup',()=>{ dragging=false; idleT=0; });
+  cvEl.addEventListener('wheel',e=>{ e.preventDefault(); dist=Math.max(4,Math.min(200,dist*(1+Math.sign(e.deltaY)*0.08))); idleT=0; },{passive:false});
+  requestAnimationFrame(loop);
+}
+window.__droneKit={buildKit,knoll};
+document.querySelectorAll('.d3view').forEach(el=>viewer(el,el.dataset.mode==='exploded'));
+})();
+
+</script>
+</body></html>
