@@ -189,7 +189,12 @@ export default async (req)=>{
       const board=getStore('missions');
       const cur=await board.get(code,{type:'json'});
       if(cur&&cur.byEmail!==a.email) return json(409,{error:'Someone already posted that exact mission — fly it from the board instead.'});
-      const mi=Object.assign({code,flights:0,best:null,bestBy:null,at:Date.now()},cur||{},{name,brief,by:a.user,byEmail:a.email});
+      const pt=o=>{ if(!o||typeof o!=='object') return null; const lat=+o.lat, lon=+o.lon;
+        if(!isFinite(lat)||!isFinite(lon)||Math.abs(lat)>90||Math.abs(lon)>180) return null;
+        return {name:clean(o.name).slice(0,60)||'Pin',lat:+lat.toFixed(5),lon:+lon.toFixed(5)}; };
+      const from=pt(b.from), to=pt(b.to);
+      let miles=+b.miles; miles=(from&&isFinite(miles)&&miles>=0.1&&miles<=60)?+miles.toFixed(1):null;
+      const mi=Object.assign({code,flights:0,best:null,bestBy:null,at:Date.now()},cur||{},{name,brief,from,to,miles,by:a.user,byEmail:a.email});
       await board.setJSON(code,mi);
       const pub=Object.assign({},mi); delete pub.byEmail;
       return json(200,{mission:pub});

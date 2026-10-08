@@ -438,6 +438,12 @@
   #mbMake,#mbPlay{margin-top:10px;padding:9px 14px;border-radius:9px;border:1px solid #ff2d95;
     background:rgba(255,45,149,.16);color:#ff8ec6;font-size:11px;font-weight:700;letter-spacing:1.5px;cursor:pointer;
     font-family:ui-monospace,'Courier New',monospace}
+  .mbAddr{display:flex;gap:6px;margin-top:3px}
+  .mbAddr input{flex:1;margin-top:0!important}
+  .mbAddr button{padding:0 10px;border-radius:8px;border:1px solid #4dffd2;background:rgba(77,255,210,.12);color:#d8fff4;font-size:10px;font-weight:700;letter-spacing:1px;cursor:pointer;white-space:nowrap}
+  .mbAddr button:hover{background:rgba(77,255,210,.3)}
+  #mbRouteLine{font-size:11px;color:#ffd66b;margin:8px 0 2px;line-height:1.5;min-height:14px}
+  #mbRouteLine .err{color:#ff8a8a}
   #mbBtns{display:flex;gap:8px}
   #mbBtns button{flex:1}
   #mbPost{border-color:#4dffd2!important;color:#d8fff4!important;background:rgba(77,255,210,.12)!important}
@@ -648,6 +654,11 @@
         <select id="mbWind"><option value="0">Calm</option><option value="1" selected>Breezy</option><option value="2">Strong</option><option value="3">Gale</option></select>
       </label>
       <label class="mbChk"><input id="mbDusk" type="checkbox"> Fly at dusk (harder to see)</label>
+      <div id="mbRoute">
+        <label>FROM<div class="mbAddr"><input id="mbFrom" placeholder="Your home base (leave blank)" autocomplete="off"><button id="mbFromSet">📍 SET</button></div></label>
+        <label>TO<div class="mbAddr"><input id="mbTo" placeholder="Harmony Montessori, Tiburon (leave blank)" autocomplete="off"><button id="mbToSet">📍 SET</button></div></label>
+        <div id="mbRouteLine"></div>
+      </div>
       <label>BRIEFING (optional)<input id="mbBrief" maxlength="140" placeholder="Rush the vaccines over before dusk…"></label>
       <div id="mbBtns"><button id="mbMake">GET A CODE</button><button id="mbPost">📌 POST TO THE BOARD</button></div>
       <div id="mbOut"></div>
@@ -2138,16 +2149,80 @@ $('flyBtn').textContent='🏠 ▲ GO HOME & FLY ▲';
 // ---------- mission builder ----------
 function readBuilder(){
   return {name:($('mbName').value||'').trim().slice(0,22),
-          miles:homeMiles(),
+          miles:builderMiles(), from:builderFrom, to:builderTo,
           cargo:+$('mbCargo').value||0, birds:+$('mbBirds').value||0,
           wind:+$('mbWind').value||0, dusk:!!$('mbDusk').checked};
 }
 function homeMiles(){ return (routeInfo&&routeInfo.miles)?routeInfo.miles:4; }                   // distance is always your real home → Harmony
-function syncBuilderMiles(){ if($('mbMiV')) $('mbMiV').textContent=homeMiles().toFixed(1); }
+function missionMiles(m){
+  if(m&&m.fixedMiles) return m.fixedMiles;                                       // the poster fixed the start: same distance for everyone
+  if(m&&m.to&&routeInfo) return Math.max(0.1,+haversineMi(routeInfo.lat,routeInfo.lon,m.to.lat,m.to.lon).toFixed(1));   // your home → their destination
+  return homeMiles();
+}
+function destLabel(){ return (custom&&custom.to&&custom.to.name)||'Harmony'; }
+function startLabel(){ return (custom&&custom.from&&custom.from.name)||baseLabel(); }
+function boardMission(b){
+  const m=decodeMission(b.code); if(!m) return null;
+  m.name=b.name; m.board=true;
+  if(b.to&&isFinite(+b.to.lat)) m.to={name:String(b.to.name||'Destination').slice(0,60),lat:+b.to.lat,lon:+b.to.lon};
+  if(b.from&&isFinite(+b.from.lat)) m.from={name:String(b.from.name||'Start').slice(0,60),lat:+b.from.lat,lon:+b.from.lon};
+  if(m.from&&+b.miles>0) m.fixedMiles=+b.miles;
+  return m;
+}
+function routeText(b){
+  const from=(b.from&&b.from.name)||'your home base', to=(b.to&&b.to.name)||'Harmony Montessori';
+  const m=boardMission(b); const mi=m?missionMiles(m):homeMiles();
+  return from+' → '+to+' · '+mi.toFixed(1)+' mi'+(b.from?'':' on your route');
+}
+const HARMONY_PT={name:'Harmony Montessori',lat:HARMONY_GEO.lat,lon:HARMONY_GEO.lon};
+let builderFrom=null, builderTo=null;                 // null = your home base / Harmony
+function builderMiles(){
+  const to=builderTo||HARMONY_PT;
+  if(builderFrom) return Math.max(0.1,+haversineMi(builderFrom.lat,builderFrom.lon,to.lat,to.lon).toFixed(1));
+  if(routeInfo) return Math.max(0.1,+haversineMi(routeInfo.lat,routeInfo.lon,to.lat,to.lon).toFixed(1));
+  return 4;
+}
+function syncBuilderMiles(){
+  if($('mbMiV')) $('mbMiV').textContent=builderMiles().toFixed(1);
+  if($('mbRouteLine')&&!$('mbRouteLine').dataset.busy){
+    const from=builderFrom?builderFrom.name:'your home base', to=(builderTo||HARMONY_PT).name;
+    $('mbRouteLine').textContent='ROUTE: '+from+' → '+to+' · '+builderMiles().toFixed(1)+' mi'+(builderFrom?' for every pilot':' (each pilot flies from their own home)');
+  }
+}
+async function lookupAddr(q){
+  const r=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&addressdetails=1&countrycodes=us&q='+encodeURIComponent(q));
+  const js=await r.json();
+  if(!js.length) return {err:'Not found — include the town, e.g. “…, Mill Valley, CA”.'};
+  const hit=js[0];
+  const inMarin=(((hit.address&&hit.address.county)||'').indexOf('Marin')>=0)||((hit.display_name||'').indexOf('Marin County')>=0);
+  if(!inMarin) return {err:'That place isn’t in Marin County — missions have to stay in Marin.'};
+  return {name:(hit.display_name||q).split(',').slice(0,2).join(',').slice(0,60),lat:+hit.lat,lon:+hit.lon};
+}
+async function setBuilderEnd(which){
+  const inp=$(which==='from'?'mbFrom':'mbTo'), q=inp.value.trim(), line=$('mbRouteLine');
+  if(!q){ if(which==='from') builderFrom=null; else builderTo=null; syncBuilderMiles(); return; }
+  line.dataset.busy='1'; line.textContent='Looking up '+q+'…';
+  try{
+    const r=await lookupAddr(q);
+    delete line.dataset.busy;
+    if(r.err){ line.innerHTML='<span class="err">'+r.err.replace(/[<>]/g,'')+'</span>'; return; }
+    if(which==='from') builderFrom=r; else builderTo=r;
+    inp.value=r.name; syncBuilderMiles();
+  }catch(e){ delete line.dataset.busy; line.innerHTML='<span class="err">Lookup failed — check your connection.</span>'; }
+}
+if($('mbFromSet')){
+  $('mbFromSet').addEventListener('click',()=>setBuilderEnd('from'));
+  $('mbToSet').addEventListener('click',()=>setBuilderEnd('to'));
+  $('mbFrom').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); setBuilderEnd('from'); } });
+  $('mbTo').addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); setBuilderEnd('to'); } });
+  $('mbFrom').addEventListener('input',()=>{ if(!$('mbFrom').value.trim()){ builderFrom=null; syncBuilderMiles(); } });
+  $('mbTo').addEventListener('input',()=>{ if(!$('mbTo').value.trim()){ builderTo=null; syncBuilderMiles(); } });
+}
 if($('mbMake')) $('mbMake').addEventListener('click',()=>{
   const m=readBuilder();
   const code=encodeMission(m);
   try{ const names=JSON.parse(localStorage.getItem('coveMissionNames')||'{}'); names[code]=m.name||'Custom run'; localStorage.setItem('coveMissionNames',JSON.stringify(names)); }catch(e){}
+  if(m.from||m.to){ try{ const rts=JSON.parse(localStorage.getItem('coveMissionRoutes')||'{}'); rts[code]={from:m.from||null,to:m.to||null,miles:m.from?m.miles:null}; localStorage.setItem('coveMissionRoutes',JSON.stringify(rts)); }catch(e){} }
   $('mbOut').innerHTML='📋 '+code+'<div style="font-size:10px;color:#9a8ab8;letter-spacing:1px;margin-top:4px">'
     +(m.name||'Custom run')+' · '+m.miles.toFixed(1)+' mi · '+CARGO_TYPES[m.cargo].n
     +' · pays ≈🪙'+missionPayout(m,0)+'<br>share this code — anyone can fly it</div>';
@@ -2157,8 +2232,10 @@ if($('mbPlay')) $('mbPlay').addEventListener('click',()=>{
   const m=decodeMission($('mbCode').value);
   if(!m){ $('mbMsg').textContent='That code isn\'t valid — they look like MRN-3K9F.'; return; }
   const onBoard=board.find(b=>b.code===m.code);
-  if(onBoard) m.name=onBoard.name;
-  else { try{ const names=JSON.parse(localStorage.getItem('coveMissionNames')||'{}'); m.name=names[m.code]||'Custom run'; }catch(e){ m.name='Custom run'; } }
+  if(onBoard){ startCustomMission(boardMission(onBoard)); return; }
+  try{ const names=JSON.parse(localStorage.getItem('coveMissionNames')||'{}'); m.name=names[m.code]||'Custom run'; }catch(e){ m.name='Custom run'; }
+  try{ const rts=JSON.parse(localStorage.getItem('coveMissionRoutes')||'{}'); const r=rts[m.code]; if(r){ const bm=boardMission(Object.assign({code:m.code,name:m.name},r)); if(bm){ bm.board=false; startCustomMission(bm); return; } } }catch(e){}
+  m.fixedMiles=m.miles;                              // a bare code from somewhere else: fly the distance baked into it
   startCustomMission(m);
 });
 // ---------- public mission board ----------
@@ -2179,7 +2256,7 @@ async function postMission(){
   $('mbMsg').textContent='Posting…';
   if(REMOTE&&account.token){
     try{
-      const r=await api('postmission',{code,name,brief},account.token);
+      const r=await api('postmission',{code,name,brief,from:m.from||null,to:m.to||null,miles:m.from?m.miles:null},account.token);
       if(r.error){ $('mbMsg').textContent=r.error; return; }
       $('mbMsg').textContent='📌 Posted! "'+name+'" is on the board for every pilot.';
       banner('📌 MISSION POSTED — '+name.toUpperCase());
@@ -2188,7 +2265,7 @@ async function postMission(){
     }catch(e){ $('mbMsg').textContent='Could not reach the server — try again in a moment.'; return; }
   }
   const i=board.findIndex(b=>b.code===code);
-  const mi={code,name,brief,by:account.user,at:Date.now(),flights:0,best:null,bestBy:null,mine:true};
+  const mi={code,name,brief,from:m.from||null,to:m.to||null,miles:m.from?m.miles:null,by:account.user,at:Date.now(),flights:0,best:null,bestBy:null,mine:true};
   if(i>=0) board[i]=Object.assign(board[i],mi); else board.unshift(mi);
   saveLocalBoard(); renderBoard();
   $('mbMsg').textContent='📌 Posted to your local board (this browser only — go online to share it with everyone).';
@@ -2206,23 +2283,23 @@ function renderBoard(){
     const safe=t=>String(t||'').replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
     row.innerHTML='<div class="t">'+safe(b.name)+'<small>'+b.code+'</small></div>'
       +'<button>▶ FLY IT</button>'
-      +'<div class="c">'+CARGO_TYPES[m.cargo].n+' · '+BIRD_N[m.birds]+' · '+WIND_N[m.wind]+(m.dusk?' · dusk':'')+' · pays ≈<b>🪙'+missionPayout(Object.assign({},m,{miles:homeMiles()}),0)+'</b> on your route</div>'
+      +'<div class="c">'+safe(routeText(b))+'<br>'+CARGO_TYPES[m.cargo].n+' · '+BIRD_N[m.birds]+' · '+WIND_N[m.wind]+(m.dusk?' · dusk':'')+' · pays ≈<b>🪙'+missionPayout(Object.assign({},m,{miles:missionMiles(boardMission(b))}),0)+'</b></div>'
       +(b.brief?'<div class="brief">“'+safe(b.brief)+'”</div>':'')
       +'<div class="s">posted by '+safe(b.by)+' · flown '+(b.flights||0)+'×'+(b.best?' · record '+fmtT(b.best)+' by '+safe(b.bestBy):'')+'</div>';
-    row.querySelector('button').addEventListener('click',()=>{ const mm=decodeMission(b.code); mm.name=b.name; mm.board=true; startCustomMission(mm); });
+    row.querySelector('button').addEventListener('click',()=>{ const mm=boardMission(b); if(mm) startCustomMission(mm); });
     L.appendChild(row);
   }
 }
 if($('mbPost')) $('mbPost').addEventListener('click',postMission);
 if($('boardRefresh')) $('boardRefresh').addEventListener('click',loadBoard);
 function startCustomMission(m){
-  m.miles=homeMiles();                              // every mission flies YOUR real route
+  m.miles=missionMiles(m);                          // your own real route unless the poster fixed the start
   if(!m.board&&board.some(b=>b.code===m.code)) m.board=true;
   custom=m; missionClock=0; phase=1;
   applyMissionConditions(m);
   setRouteWorld(m.miles);
   resetPlayer(); resetBattPickup();
-  $('mission').textContent=(m.name||'CUSTOM RUN').toUpperCase()+' — FLY TO HARMONY';
+  $('mission').textContent=(m.name||'CUSTOM RUN').toUpperCase()+' — FLY TO '+destLabel().toUpperCase();
   $('home').style.display='none';
   for(const k in keys) keys[k]=false;
   if(document.activeElement&&document.activeElement.blur) document.activeElement.blur();
@@ -3667,7 +3744,7 @@ function loop(){
     tmpV.copy(target); tmpV.y=P.pos.y;
     const d=P.pos.distanceTo(tmpV);
     const mi=(d/MILE).toFixed(1);
-    $('miles').textContent=mi+' mi to '+(phase===1?'Harmony':baseLabel());
+    $('miles').textContent=mi+' mi to '+(phase===1?destLabel():startLabel());
     const bp=P.batt/maxBattF();
     $('battbar').style.width=(bp*100)+'%';
     $('battbar').style.background=bp>0.25?'linear-gradient(90deg,#4db8ff,#9fdcff)':'linear-gradient(90deg,#ff4d4d,#ff8a8a)';
