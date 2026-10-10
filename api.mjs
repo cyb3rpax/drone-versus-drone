@@ -7,6 +7,51 @@ const token=()=>crypto.randomBytes(24).toString('hex');
 const EMAIL_RE=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const json=(code,obj)=>new Response(JSON.stringify(obj),{status:code,headers:{'content-type':'application/json'}});
 
+const R_EARTH_MI=3958.8;
+export function haversineMi(la1,lo1,la2,lo2){
+  const rad=x=>x*Math.PI/180, dLa=rad(la2-la1), dLo=rad(lo2-lo1);
+  const h=Math.sin(dLa/2)**2+Math.cos(rad(la1))*Math.cos(rad(la2))*Math.sin(dLo/2)**2;
+  return 2*R_EARTH_MI*Math.asin(Math.sqrt(h));
+}
+// A real flight is a GPS track: start near FROM, reach TO, come back to FROM. Speeds must be drone-plausible.
+export function checkTrack(points,from,to){
+  const NEAR=0.06;                                            // ~100 m — GPS on a phone is not surgical
+  if(!Array.isArray(points)||points.length<6) return {error:'Not enough GPS points — keep the Fly page open for the whole flight.'};
+  const pts=[];
+  for(const p of points.slice(0,5000)){
+    const lat=+p.lat, lon=+p.lon, t=+p.t;
+    if(!isFinite(lat)||!isFinite(lon)||!isFinite(t)||Math.abs(lat)>90||Math.abs(lon)>180) return {error:'Bad GPS point in the track.'};
+    pts.push({lat,lon,t});
+  }
+  pts.sort((x,y)=>x.t-y.t);
+  const secs=Math.round((pts[pts.length-1].t-pts[0].t)/1000);
+  if(secs<20) return {error:'That flight was too short to count.'};
+  if(secs>3*3600) return {error:'That flight was too long to count (over 3 hours).'};
+  const d=(p,q)=>haversineMi(p.lat,p.lon,q.lat,q.lon);
+  if(d(pts[0],from)>NEAR) return {error:'The track doesn’t start at the mission’s start point.'};
+  let reached=-1;
+  for(let i=0;i<pts.length;i++){ if(d(pts[i],to)<=NEAR){ reached=i; break; } }
+  if(reached<0) return {error:'The track never reached the destination.'};
+  let back=false; for(let i=reached;i<pts.length;i++){ if(d(pts[i],from)<=NEAR){ back=true; break; } }
+  if(!back) return {error:'You reached the destination but the track never came back to the start.'};
+  let dist=0;
+  for(let i=1;i<pts.length;i++){
+    const leg=d(pts[i-1],pts[i]), dt=(pts[i].t-pts[i-1].t)/1000;
+    if(dt>0&&leg/(dt/3600)>70) return {error:'Part of the track moved faster than any small drone (over 70 mph).'};
+    dist+=leg;
+  }
+  const miles=+Math.max(d(from,to)*2,dist*0.9).toFixed(2);
+  if(d(from,to)<0.03) return {error:'Start and destination are too close together for a real mission.'};
+  return {secs,miles};
+}
+export function realPayout(mi,v){
+  const CARGO=[1,1.15,1.45,1.6,1.75,2.2];
+  const m=/^MRN-?([0-9A-Z]{1,6})$/.exec(String(mi.code||'').toUpperCase()); const val=m?parseInt(m[1],36):0;
+  const cargo=(val>>5)&7, birds=(val>>3)&3, wind=(val>>1)&3, dusk=val&1;
+  const hazard=1+birds*0.09+wind*0.08+(dusk?0.18:0);
+  const base=60+v.miles/2*22;                                // same formula as the game, one-way miles
+  return Math.min(5000,Math.round(base*(CARGO[cargo]||1)*hazard*10));   // real flights pay 10× the game
+}
 export default async (req)=>{
   const accounts=getStore('accounts');
   const sessions=getStore('sessions');
@@ -105,6 +150,20 @@ export default async (req)=>{
       const expected=crypto.createHmac('sha256',secret).update(t+'.'+payload).digest('hex');
       if(expected!==v1) return json(400,{error:'bad signature'});
       let ev; try{ ev=JSON.parse(payload); }catch(e){ return json(400,{error:'bad json'}); }
+      if(ev.type==='checkout.session.completed'&&/^K-[0-9A-Z]{6}$/.test(String(((ev.data||{}).object||{}).client_reference_id||''))){
+        const s=ev.data.object, id=s.client_reference_id;
+        const orders=getStore('orders');
+        const o=(await orders.get(id,{type:'json'}))||{id,qty:1,created:Date.now()};
+        const ship=(s.collected_information&&s.collected_information.shipping_details)||s.shipping_details||{};
+        const cd=s.customer_details||{};
+        const unit=parseInt(process.env.KIT_PRICE_CENTS||'14900',10)||14900;
+        const qty=Math.max(1,Math.round((s.amount_subtotal||s.amount_total||unit)/unit));
+        Object.assign(o,{status:'paid',paidAt:Date.now(),amount:s.amount_total||0,qty,
+          email:String(cd.email||o.email||'').toLowerCase(),name:ship.name||cd.name||o.name||'',
+          address:ship.address||cd.address||null,phone:cd.phone||'',stripeSession:s.id||''});
+        await orders.setJSON(id,o);
+        return json(200,{received:true,order:id});
+      }
       if(ev.type==='checkout.session.completed'){
         const s=(ev.data&&ev.data.object)||{};
         let email='';
@@ -221,6 +280,165 @@ export default async (req)=>{
       const board=getStore('missions'); const mi=await board.get(code,{type:'json'});
       if(mi){ mi.hidden=true; await board.setJSON(code,mi); }
       return json(200,{ok:true,hidden:code});
+    }
+    // --- kit shop: order → pay → we ship → it arrives ---
+    const newOrderId=()=>'K-'+crypto.randomBytes(4).readUInt32BE(0).toString(36).toUpperCase().padStart(6,'0').slice(-6);
+    if(route==='order'&&req.method==='POST'){
+      const link=process.env.KIT_PAYMENT_LINK||'';
+      if(!link) return json(503,{error:'Checkout isn’t switched on yet — the shop owner needs to add the payment link.'});
+      const b=await req.json();
+      const qty=Math.max(1,Math.min(10,parseInt(b.qty||'1',10)||1));
+      const email=String(b.email||'').trim().toLowerCase();
+      if(email&&!EMAIL_RE.test(email)) return json(400,{error:'That doesn’t look like a valid email.'});
+      const orders=getStore('orders');
+      let id=newOrderId(); for(let k=0;k<4&&(await orders.get(id));k++) id=newOrderId();
+      await orders.setJSON(id,{id,qty,email,status:'awaiting payment',created:Date.now()});
+      const u=new URL(link); u.searchParams.set('client_reference_id',id); if(email) u.searchParams.set('prefilled_email',email);
+      return json(200,{id,url:u.toString()});
+    }
+    if(route==='orderstatus'&&req.method==='GET'){
+      const id=String(url.searchParams.get('id')||'').trim().toUpperCase(), email=String(url.searchParams.get('email')||'').trim().toLowerCase();
+      const o=/^K-[0-9A-Z]{6}$/.test(id)?await getStore('orders').get(id,{type:'json'}):null;
+      if(!o) return json(404,{error:'No order with that number.'});
+      if(o.email&&email&&o.email!==email) return json(404,{error:'No order with that number and email.'});
+      return json(200,{id:o.id,status:o.status,qty:o.qty,created:o.created,paidAt:o.paidAt||null,shippedAt:o.shippedAt||null,deliveredAt:o.deliveredAt||null,carrier:o.carrier||'',tracking:o.tracking||'',city:o.address?o.address.city:''});
+    }
+    if(route==='orders'&&req.method==='GET'){
+      if(!(await isAdmin())) return json(403,{error:'Admins only.'});
+      const orders=getStore('orders'); const out=[];
+      try{ const {blobs}=await orders.list(); for(const bl of blobs||[]){ const o=await orders.get(bl.key,{type:'json'}); if(o) out.push(o); } }catch(e){}
+      const rank={'paid':0,'shipped':1,'delivered':2,'awaiting payment':3};
+      out.sort((x,y)=>(rank[x.status]??9)-(rank[y.status]??9)||(x.created||0)-(y.created||0));
+      return json(200,{orders:out.filter(o=>o.status!=='awaiting payment'||Date.now()-o.created<7*864e5)});
+    }
+    if(route==='orderupdate'&&req.method==='POST'){
+      if(!(await isAdmin())) return json(403,{error:'Admins only.'});
+      const b=await req.json(); const orders=getStore('orders');
+      const o=await orders.get(String(b.id||''),{type:'json'}); if(!o) return json(404,{error:'No such order.'});
+      if(b.action==='ship'){ o.status='shipped'; o.shippedAt=Date.now(); o.carrier=clean(b.carrier).slice(0,20)||'USPS'; o.tracking=clean(b.tracking).replace(/\s+/g,'').slice(0,40); }
+      else if(b.action==='deliver'){ o.status='delivered'; o.deliveredAt=Date.now(); }
+      else if(b.action==='paid'){ o.status='paid'; o.paidAt=o.paidAt||Date.now(); }
+      else return json(400,{error:'bad action'});
+      await orders.setJSON(o.id,o); return json(200,{order:o});
+    }
+    // --- kit shop: pre-orders / waitlist (name + email + how many) ---
+    if(route==='preorder'&&req.method==='POST'){
+      const b=await req.json();
+      const email=String(b.email||'').trim().toLowerCase(), name=clean(b.name).slice(0,60), qty=Math.max(1,Math.min(20,parseInt(b.qty||'1',10)||1));
+      if(!EMAIL_RE.test(email)) return json(400,{error:'That doesn’t look like a valid email.'});
+      const pre=getStore('preorders');
+      const cur=(await pre.get(email,{type:'json'}))||{email,created:Date.now()};
+      Object.assign(cur,{name,qty,note:clean(b.note).slice(0,200),updated:Date.now()});
+      await pre.setJSON(email,cur);
+      let count=0; try{ const {blobs}=await pre.list(); count=(blobs||[]).length; }catch(e){}
+      return json(200,{ok:true,position:count});
+    }
+    if(route==='preorders'&&req.method==='GET'){
+      const secret=url.searchParams.get('secret')||'';
+      if(!process.env.ADMIN_SECRET||secret!==process.env.ADMIN_SECRET) return json(403,{error:'Owner only. Call /api/preorders?secret=YOURSECRET'});
+      const pre=getStore('preorders'); const out=[];
+      try{ const {blobs}=await pre.list(); for(const bl of blobs||[]){ const o=await pre.get(bl.key,{type:'json'}); if(o) out.push(o); } }catch(e){}
+      out.sort((x,y)=>(x.created||0)-(y.created||0));
+      return json(200,{count:out.length,units:out.reduce((n,o)=>n+(o.qty||1),0),preorders:out});
+    }
+    // --- real-world missions: a phone logs a GPS track, the server checks it and pays coins into the game ---
+    if(route==='realflight'&&req.method==='POST'){
+      const a=await authed();
+      if(!a) return json(401,{error:'Not logged in.'});
+      const b=await req.json();
+      const code=validCode(b.code); if(!code) return json(400,{error:'bad code'});
+      const board=getStore('missions'); const mi=await board.get(code,{type:'json'});
+      if(!mi||mi.hidden) return json(404,{error:'That mission isn’t on the board.'});
+      const home=(a.save&&a.save.route&&isFinite(+a.save.route.lat))?{lat:+a.save.route.lat,lon:+a.save.route.lon}:null;
+      const from=mi.from||home, to=mi.to||{lat:37.89431,lon:-122.49288};
+      if(!from) return json(400,{error:'Set your home base in the game first — that’s where this mission starts.'});
+      const v=checkTrack(b.points,from,to);
+      if(v.error) return json(400,{error:v.error});
+      const pay=realPayout(mi,v);
+      a.pending=(a.pending||0)+pay;
+      a.real=(a.real||0)+1;
+      await accounts.setJSON(a.email,a);
+      mi.real=(mi.real||0)+1;
+      let record=false;
+      if(!mi.realBest||v.secs<mi.realBest){ mi.realBest=v.secs; mi.realBestBy=a.user; record=true; }
+      await board.setJSON(code,mi);
+      const flights=getStore('realflights');
+      await flights.setJSON(a.email+'·'+code+'·'+Date.now(),{user:a.user,code,secs:v.secs,miles:v.miles,pay,at:Date.now(),n:(b.points||[]).length});
+      return json(200,{ok:true,pay,secs:v.secs,miles:v.miles,record,real:mi.real});
+    }
+    // --- global chat: anyone logged in can say anything, everyone sees it with their name ---
+    if(route==='chat'&&req.method==='GET'){
+      const chat=getStore('chat');
+      const log=(await chat.get('log',{type:'json'}))||[];
+      const since=parseInt(url.searchParams.get('since')||'0',10)||0;
+      return json(200,{messages:log.filter(m=>m.id>since&&m.kind!=='event').slice(-120), latest:log.length?log[log.length-1].id:0});
+    }
+    if(route==='chatsend'&&req.method==='POST'){
+      const a=await authed();
+      if(!a) return json(401,{error:'Log in to chat.'});
+      const b=await req.json();
+      const text=clean(b.text).replace(/\s+/g,' ').slice(0,200);
+      if(!text) return json(400,{error:'Say something first.'});
+      if(a.muted) return json(403,{error:'You’ve been muted by the owner.'});
+      const now=Date.now();
+      if(a.lastChat&&now-a.lastChat<1500) return json(429,{error:'Slow down a little.'});
+      a.lastChat=now; await accounts.setJSON(a.email,a);
+      const chat=getStore('chat');
+      const log=(await chat.get('log',{type:'json'}))||[];
+      const id=(log.length?log[log.length-1].id:0)+1;
+      const msg={id,user:a.user,text,at:now};
+      log.push(msg); while(log.length>300) log.shift();
+      await chat.setJSON('log',log);
+      return json(200,{ok:true,message:msg});
+    }
+    // --- admin sign-in (password = ADMIN_SECRET env var) + bulletin board everyone sees ---
+    async function isAdmin(){
+      const m=(req.headers.get('authorization')||'').match(/^Bearer\s+(\w+)$/);
+      if(!m) return false;
+      return (await sessions.get('admin:'+m[1]))==='1';
+    }
+    if(route==='adminlogin'&&req.method==='POST'){
+      const b=await req.json();
+      if(!process.env.ADMIN_SECRET) return json(503,{error:'Set ADMIN_SECRET in Netlify environment variables first.'});
+      if(String(b.secret||'')!==process.env.ADMIN_SECRET){ await new Promise(r=>setTimeout(r,800)); return json(403,{error:'Wrong admin password.'}); }
+      const t=token(); await sessions.set('admin:'+t,'1');
+      return json(200,{token:t});
+    }
+    if(route==='bulletin'&&req.method==='GET'){
+      const bb=getStore('bulletin');
+      const posts=(await bb.get('posts',{type:'json'}))||[];
+      return json(200,{posts:posts.slice().sort((x,y)=>(y.pinned?1:0)-(x.pinned?1:0)||y.id-x.id)});
+    }
+    if(route==='bulletinpost'&&req.method==='POST'){
+      if(!(await isAdmin())) return json(403,{error:'Admins only — sign in as admin.'});
+      const b=await req.json();
+      const title=clean(b.title).slice(0,80), text=clean(b.text).slice(0,1200);
+      if(!title&&!text) return json(400,{error:'Write something first.'});
+      const bb=getStore('bulletin');
+      const posts=(await bb.get('posts',{type:'json'}))||[];
+      const id=(posts.reduce((n,p)=>Math.max(n,p.id),0))+1;
+      const post={id,title,text,pinned:!!b.pinned,at:Date.now()};
+      posts.push(post); while(posts.length>60) posts.shift();
+      await bb.setJSON('posts',posts);
+      return json(200,{post});
+    }
+    if(route==='bulletindel'&&req.method==='POST'){
+      if(!(await isAdmin())) return json(403,{error:'Admins only.'});
+      const b=await req.json(); const id=parseInt(b.id,10);
+      const bb=getStore('bulletin');
+      const posts=((await bb.get('posts',{type:'json'}))||[]).filter(p=>p.id!==id);
+      await bb.setJSON('posts',posts);
+      return json(200,{ok:true});
+    }
+    if(route==='chatmod'&&req.method==='GET'){
+      const secret=url.searchParams.get('secret')||'';
+      if(!process.env.ADMIN_SECRET||secret!==process.env.ADMIN_SECRET) return json(403,{error:'Owner only. /api/chatmod?secret=S&clear=1  or  &mute=EMAIL  or  &unmute=EMAIL  or  &del=ID'});
+      const chat=getStore('chat');
+      if(url.searchParams.get('clear')){ await chat.setJSON('log',[]); return json(200,{ok:true,cleared:true}); }
+      const del=parseInt(url.searchParams.get('del')||'0',10);
+      if(del){ const log=(await chat.get('log',{type:'json'}))||[]; await chat.setJSON('log',log.filter(m=>m.id!==del)); return json(200,{ok:true,deleted:del}); }
+      for(const k of ['mute','unmute']){ const em=(url.searchParams.get(k)||'').toLowerCase(); if(em){ const acc=await accounts.get(em,{type:'json'}); if(!acc) return json(404,{error:'no such pilot'}); acc.muted=(k==='mute'); await accounts.setJSON(em,acc); return json(200,{ok:true,[k]:em}); } }
+      return json(400,{error:'nothing to do'});
     }
     return json(404,{error:'Not found.'});
   }catch(e){

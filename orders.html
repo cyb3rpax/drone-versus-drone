@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Support — Drone Courier: Marin</title>
-<meta name="description" content="Drone Courier: Marin — fly a delivery drone the real distance from your Marin County home to Harmony Montessori and back. Free browser game.">
+<meta name="robots" content="noindex">
+<title>Orders — Drone Courier admin</title>
 <style>
 :root{--bg:#08060f;--ink:#f2e9ff;--dim:#9a8ab8;--line:rgba(255,45,149,.28);--teal:#00f0ff;--teal2:#5cffe4;--gold:#faff4d;--coral:#ff2d95;--card:#120c1f}
 *{box-sizing:border-box}
@@ -105,31 +105,86 @@ kbd{border:1px solid rgba(0,240,255,.4);background:rgba(0,240,255,.08);color:#bf
 a{color:var(--teal)}
 footer{border-top:1px solid var(--line);color:#6a5b85}
 footer a{color:#6a5b85}
-</style></head><body>
-<nav><div class="wrap">
-  <a class="logo" href="index.html">DRONE COURIER<span>: MARIN</span></a>
-  <div class="links"><a href="index.html">Play</a><a href="guide.html">How It Works</a><a href="fleet.html">Fleet</a><a href="kit.html">Kit</a><a href="fly.html">Fly for Real</a><a href="leaderboard.html">Leaderboard</a><a href="news.html">News</a><a href="support.html" class="on">Support</a></div>
-</div></nav>
 
-<header class="page"><div class="wrap"><h1>Support</h1>
-<p>Answers to the questions pilots ask most.</p></div></header>
+.login{max-width:380px;margin:40px auto}
+.login input{width:100%;box-sizing:border-box;padding:11px 12px;border-radius:9px;border:1px solid rgba(0,240,255,.35);background:rgba(8,6,15,.9);color:var(--ink);font-size:15px;margin:8px 0}
+.btn.w{display:block;width:100%;text-align:center;border:none;cursor:pointer}
+.msg{font-size:13px;color:#ffb3d9;min-height:16px;margin-top:8px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 14px}
+.tabs button{padding:7px 14px;border-radius:8px;border:1px solid rgba(0,240,255,.3);background:none;color:var(--dim);cursor:pointer;font-family:ui-monospace,monospace;font-size:12px}
+.tabs button.on{border-color:#ff2d95;color:#fff;background:rgba(255,45,149,.15)}
+.ord{background:var(--card);border:1px solid rgba(0,240,255,.25);border-radius:12px;padding:14px 16px;margin-bottom:10px;display:grid;grid-template-columns:1fr auto;gap:8px 18px}
+.ord.paid{border-color:#ff2d95;box-shadow:0 0 14px rgba(255,45,149,.15)}
+.ord h3{margin:0;font-size:15px} .ord h3 small{color:var(--dim);font-weight:400;margin-left:8px;font-size:12px}
+.ord .addr{font-size:13.5px;line-height:1.5;color:var(--ink);white-space:pre-line}
+.ord .meta{font-size:12px;color:var(--dim)}
+.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:11px;font-weight:700;letter-spacing:1px}
+.pill.paid{background:#ff2d95;color:#fff} .pill.shipped{background:#2b62c9;color:#fff} .pill.delivered{background:#2f9e6a;color:#fff} .pill.awaiting{background:#444;color:#ddd}
+.act{display:flex;flex-direction:column;gap:6px;min-width:220px}
+.act input,.act select{padding:7px 9px;border-radius:7px;border:1px solid rgba(0,240,255,.3);background:rgba(8,6,15,.9);color:var(--ink);font-size:13px}
+.act button{padding:7px 10px;border-radius:7px;border:1px solid #4dffd2;background:rgba(77,255,210,.12);color:#d8fff4;font-weight:700;font-size:12px;cursor:pointer}
+.copy{font-size:11px;color:var(--teal);cursor:pointer;margin-left:6px}
+.sum{font-size:13px;color:var(--dim)} .sum b{color:var(--gold)}
+@media(max-width:640px){.ord{grid-template-columns:1fr}}
+</style></head><body>
+<nav><div class="wrap"><a class="logo" href="index.html">DRONE COURIER<span>: ORDERS</span></a><div class="links"><a href="kit.html">Kit page</a><a href="#" id="out" style="display:none">Sign out</a></div></div></nav>
 <section class="wrap">
-  <h2>Frequently asked</h2>
-  <div class="grid">
-    <div class="card"><h3>Do I need an account?</h3><p>Yes. It takes ten seconds and it's what keeps your coins, drones, paint jobs and trip record safe — you can log in from any browser and pick up where you left off.</p></div>
-    <div class="card"><h3>Why must my address be in Marin County?</h3><p>The game measures the real distance from your home to Harmony Montessori in Tiburon. Addresses outside Marin are too far for the route to make sense.</p></div>
-    <div class="card"><h3>Is my address stored?</h3><p>Only the distance and a short label for your home base are saved to your pilot account so your route can be rebuilt. It isn't shown to other players or shared.</p></div>
-    <div class="card"><h3>I bought coins — where are they?</h3><p>They land automatically within a few seconds of checkout. Leave the hangar open and watch for the confirmation. If they don't appear, the coin code box in the hangar is the backup.</p></div>
-    <div class="card"><h3>My drone is broken and I'm out of coins.</h3><p>The parts shop will sell you the part on credit. Your balance goes negative and pays itself off with your next deliveries.</p></div>
-    <div class="card"><h3>The game runs slowly.</h3><p>Close other tabs and try a different browser — the game is fully 3D and likes a bit of headroom. A hard refresh (⌘⇧R) also clears an old cached version.</p></div>
+  <div class="login" id="login">
+    <h2>Admin sign-in</h2>
+    <input id="pw" type="password" placeholder="Admin password" autocomplete="current-password">
+    <button class="btn coral w" id="go">SIGN IN</button>
+    <div class="msg" id="lmsg"></div>
+  </div>
+  <div id="panel" style="display:none">
+    <h2>Kit orders</h2>
+    <div class="sum" id="sum"></div>
+    <div class="tabs" id="tabs"><button data-f="paid" class="on">TO SHIP</button><button data-f="shipped">SHIPPED</button><button data-f="delivered">DELIVERED</button><button data-f="all">ALL</button><button id="refresh">↻ REFRESH</button></div>
+    <div id="list"></div>
   </div>
 </section>
-<section class="wrap">
-  <h2>Still stuck?</h2>
-  <div class="note">Payments are handled by Stripe — refund and billing questions go to the email address on your receipt. For anything else, use the contact address listed on your receipt or wherever you found this game.</div>
-</section>
-
-<footer><div class="wrap">
-  <a href="index.html">Play</a>·<a href="guide.html">How It Works</a>·<a href="fleet.html">Fleet</a>·<a href="kit.html">Kit</a>·<a href="fly.html">Fly for Real</a>·<a href="leaderboard.html">Leaderboard</a>·<a href="news.html">News</a>·<a href="support.html">Support</a>
-  <div style="margin-top:10px">Drone Courier: Marin — a free browser drone-delivery game. Fly safe. 🚁</div>
-</div></footer></body></html>
+<script>
+const $=id=>document.getElementById(id);
+let tok=null, orders=[], filter='paid';
+try{ tok=localStorage.getItem('coveAdminToken'); }catch(e){}
+const api=async(path,body)=>(await fetch('/api/'+path,{method:body?'POST':'GET',headers:Object.assign({'Content-Type':'application/json'},tok?{'Authorization':'Bearer '+tok}:{}),body:body?JSON.stringify(body):undefined})).json();
+const esc=t=>String(t||'').replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
+const fd=t=>t?new Date(t).toLocaleString([],{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'';
+function addr(o){ const a=o.address||{}; return [o.name,a.line1,a.line2,[a.city,a.state,a.postal_code].filter(Boolean).join(' '),a.country&&a.country!=='US'?a.country:''].filter(Boolean).join('\n'); }
+async function load(){
+  const r=await api('orders');
+  if(r.error){ tok=null; try{ localStorage.removeItem('coveAdminToken'); }catch(e){} $('panel').style.display='none'; $('login').style.display='block'; $('lmsg').textContent=r.error; return; }
+  orders=r.orders||[]; $('login').style.display='none'; $('panel').style.display='block'; $('out').style.display='inline'; render();
+}
+function render(){
+  const n=s=>orders.filter(o=>o.status===s).length, kits=orders.filter(o=>o.status==='paid').reduce((k,o)=>k+(o.qty||1),0);
+  $('sum').innerHTML='<b>'+n('paid')+'</b> order'+(n('paid')===1?'':'s')+' to ship ('+kits+' kit'+(kits===1?'':'s')+') · '+n('shipped')+' on the way · '+n('delivered')+' delivered';
+  const list=orders.filter(o=>filter==='all'||o.status===filter);
+  $('list').innerHTML=list.length?list.map(o=>{
+    const st=o.status==='awaiting payment'?'awaiting':o.status;
+    let act='';
+    if(o.status==='paid') act='<select data-c="'+o.id+'"><option>USPS</option><option>UPS</option><option>FedEx</option></select><input data-t="'+o.id+'" placeholder="Tracking number"><button data-ship="'+o.id+'">📦 MARK SHIPPED</button>';
+    else if(o.status==='shipped') act='<div class="meta">'+esc(o.carrier)+' '+esc(o.tracking)+'</div><button data-del="'+o.id+'">✅ MARK DELIVERED</button>';
+    else if(o.status==='awaiting payment') act='<div class="meta">Not paid yet</div><button data-paid="'+o.id+'">mark paid manually</button>';
+    else act='<div class="meta">Delivered '+fd(o.deliveredAt)+'</div>';
+    return '<div class="ord '+st+'"><div><h3>'+o.id+' <span class="pill '+st+'">'+o.status.toUpperCase()+'</span><small>'+(o.qty||1)+' kit'+((o.qty||1)>1?'s':'')+(o.amount?' · $'+(o.amount/100).toFixed(2):'')+'</small></h3>'
+      +'<div class="addr">'+esc(addr(o))+(o.address?'<span class="copy" data-copy="'+o.id+'">copy address</span>':'')+'</div>'
+      +'<div class="meta">'+esc(o.email)+(o.phone?' · '+esc(o.phone):'')+' · ordered '+fd(o.created)+(o.paidAt?' · paid '+fd(o.paidAt):'')+(o.shippedAt?' · shipped '+fd(o.shippedAt):'')+'</div></div>'
+      +'<div class="act">'+act+'</div></div>';
+  }).join(''):'<p class="sum">Nothing here.</p>';
+  document.querySelectorAll('[data-ship]').forEach(b=>b.onclick=async()=>{ const id=b.dataset.ship, t=document.querySelector('[data-t="'+id+'"]').value.trim(); if(!t){ alert('Paste the tracking number from your shipping label first.'); return; } await api('orderupdate',{id,action:'ship',carrier:document.querySelector('[data-c="'+id+'"]').value,tracking:t}); load(); });
+  document.querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{ await api('orderupdate',{id:b.dataset.del,action:'deliver'}); load(); });
+  document.querySelectorAll('[data-paid]').forEach(b=>b.onclick=async()=>{ if(confirm('Only do this if you can see the payment in Stripe. Mark paid?')){ await api('orderupdate',{id:b.dataset.paid,action:'paid'}); load(); } });
+  document.querySelectorAll('[data-copy]').forEach(b=>b.onclick=()=>{ const o=orders.find(x=>x.id===b.dataset.copy); navigator.clipboard&&navigator.clipboard.writeText(addr(o)); b.textContent='copied ✓'; });
+}
+document.querySelectorAll('#tabs [data-f]').forEach(b=>b.onclick=()=>{ filter=b.dataset.f; document.querySelectorAll('#tabs [data-f]').forEach(x=>x.classList.toggle('on',x===b)); render(); });
+$('refresh').onclick=load;
+$('go').onclick=async()=>{
+  $('lmsg').textContent='Signing in…';
+  try{ const r=await api('adminlogin',{secret:$('pw').value}); if(r.error){ $('lmsg').textContent=r.error; return; } tok=r.token; try{ localStorage.setItem('coveAdminToken',tok); }catch(e){} $('pw').value=''; load(); }
+  catch(e){ $('lmsg').textContent='Could not reach the server — this page only works on the online site.'; }
+};
+$('pw').addEventListener('keydown',e=>{ if(e.key==='Enter') $('go').click(); });
+$('out').onclick=e=>{ e.preventDefault(); tok=null; try{ localStorage.removeItem('coveAdminToken'); }catch(e){} location.reload(); };
+if(tok) load();
+</script>
+</body></html>

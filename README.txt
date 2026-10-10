@@ -29,13 +29,26 @@ _redirects      One line of text that tells Netlify:
                 "Page not found" errors for good.
 
 
+kit.html        The Courier Kit shop page: 3D renders, what's in
+                the box, specs, and a PRE-ORDER form. To take card
+                payments, paste a Stripe Payment Link into the
+                STRIPE_KIT_LINK line near the bottom of the file.
+                See "/api/preorders?secret=YOURSECRET" for the list.
+
+fly.html        FLY FOR REAL — open on a phone. Pilots log in, tick
+                the safety checklist, pick a board mission, and the
+                phone's GPS tracks the round trip. The server checks
+                the track and pays coins into their game account.
+
 ------- optional: real online accounts -------
 
 api.mjs         The account server. Handles sign-up,
                 login, saving progress, the leaderboard,
                 announcements, coin purchases, and the
                 MISSION BOARD (pilots post missions, everyone
-                can fly them). To hide a bad mission:
+                can fly them), and the PILOT CHAT. Moderate the
+                chat with /api/chatmod?secret=YOURSECRET&clear=1
+                or &mute=EMAIL / &unmute=EMAIL / &del=MESSAGEID. To hide a bad mission:
                 /api/delmission?secret=YOURSECRET&code=MRN-XXXX
                 WITHOUT this file the game still works —
                 accounts just save in each player's own
@@ -93,3 +106,45 @@ mission — same distance, same weather, same hazards.
 
 The game times every run and remembers your best.
 Nastier conditions and heavier cargo pay more coins.
+
+
+------------------------------------------------
+ADMIN + BULLETIN BOARD
+------------------------------------------------
+1. In Netlify: Site configuration → Environment variables →
+   add  ADMIN_SECRET  = a long password only you know.
+2. In the game hangar, scroll to BULLETIN BOARD and press
+   🔑 ADMIN SIGN-IN. Type that password.
+3. A box appears: write a headline + message, tick "Pin"
+   if it should stay on top, press POST TO EVERYONE.
+   Every pilot sees it on the board and gets a pop-up.
+4. As admin you also get a "delete" button on each post.
+
+
+------------------------------------------------
+SELLING KITS:  order → we ship → it comes
+------------------------------------------------
+ONE-TIME SETUP (10 minutes)
+1. Stripe → Payment Links → New. Product "Courier Kit",
+   $149, let customers adjust quantity (1–10).
+   Turn ON "Collect customers' addresses" → Shipping, US.
+   After payment → "Don't show confirmation page" →
+   redirect to:  https://YOURSITE.netlify.app/kit.html?paid=1
+2. Copy the link (https://buy.stripe.com/...).
+3. Netlify → Environment variables → add
+      KIT_PAYMENT_LINK = that link
+   (STRIPE_WEBHOOK_SECRET and ADMIN_SECRET you already have.)
+4. Stripe → Webhooks: make sure the endpoint
+   /api/stripe-webhook listens to checkout.session.completed.
+
+EVERY DAY
+1. Open  YOURSITE/orders.html  → sign in with ADMIN_SECRET.
+2. "TO SHIP" lists paid orders with the address.
+   Click "copy address", paste it into Pirate Ship,
+   buy the label (tick "contains lithium batteries").
+3. Pack the box, paste the tracking number into the order,
+   press MARK SHIPPED. The customer's tracker updates.
+4. When USPS says delivered, press MARK DELIVERED.
+
+Customers track their order on kit.html with their
+order number (K-XXXXXX) + email.

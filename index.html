@@ -53,6 +53,8 @@
   .skinBtn .price{color:#ffd66b;display:block;margin-top:2px}
   .skinBtn .own{color:#7bffb8;display:block;margin-top:2px}
   #droneRow{display:flex;gap:12px}
+  #kitLink{display:none;margin-top:10px;padding:9px 14px;border-radius:9px;border:1px solid #4dffd2;background:rgba(77,255,210,.1);color:#d8fff4;font-size:11px;font-weight:700;letter-spacing:1px;text-decoration:none;text-align:center}
+  #kitLink:hover{background:rgba(77,255,210,.28)}
   #hbAddrRow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12px;color:#e8dcf8;margin-bottom:8px}
   #hbAddr{flex:1;min-width:160px}
   #hbChange{padding:6px 12px;border-radius:8px;border:1px solid #ff2d95;background:rgba(255,45,149,.15);color:#ffd0ea;font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer}
@@ -85,6 +87,29 @@
   #decoTools button.on{border-color:#ff2d95;color:#ff9bd0}
   #decoMsg{font-size:11px;color:#ffb3d9;min-height:14px;margin-top:6px}
   #fade{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .3s;z-index:60}
+  #chatBox{position:fixed;right:14px;bottom:14px;z-index:50;font-family:'Segoe UI',Arial,sans-serif;display:none}
+  #chatToggle{position:relative;padding:9px 14px;border-radius:10px;border:1px solid #ff2d95;background:rgba(14,8,28,.9);color:#ffd0ea;font-size:12px;font-weight:700;letter-spacing:1px;cursor:pointer;box-shadow:0 0 16px rgba(255,45,149,.35)}
+  #chatToggle:hover{background:rgba(255,45,149,.3);color:#fff}
+  #chatBadge{display:none;position:absolute;top:-7px;right:-7px;min-width:18px;height:18px;line-height:18px;border-radius:9px;background:#ff2d95;color:#fff;font-size:10px;text-align:center;padding:0 5px}
+  #chatPanel{display:none;position:absolute;right:0;bottom:44px;width:300px;height:380px;background:rgba(10,6,22,.96);border:1px solid rgba(255,45,149,.5);border-radius:14px;box-shadow:0 0 30px rgba(255,45,149,.25);flex-direction:column;overflow:hidden}
+  #chatBox.open #chatPanel{display:flex}
+  #chatHead{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;font-size:10px;letter-spacing:2px;color:#ff8ec6;border-bottom:1px solid rgba(255,45,149,.3)}
+  #chatHead button{background:none;border:none;color:#9a8ab8;font-size:14px;cursor:pointer}
+  #chatHead button:hover{color:#fff}
+  #chatLog{flex:1;overflow-y:auto;padding:8px 10px;display:flex;flex-direction:column;gap:5px;font-size:12.5px;color:#e8dcf8}
+  #chatLog .m{line-height:1.4;word-break:break-word}
+  #chatLog .m b{color:#00f0ff;margin-right:5px}
+  #chatLog .m.me b{color:#4dffd2}
+  #chatLog .m small{color:#5a5078;font-size:10px;margin-left:5px}
+  #chatLog .sys{color:#9a8ab8;font-size:11px;text-align:center;font-style:italic}
+  #chatForm{display:flex;gap:6px;padding:8px;border-top:1px solid rgba(255,45,149,.3)}
+  #chatIn{flex:1;min-width:0;padding:8px 10px;border-radius:8px;border:1px solid rgba(180,140,255,.4);background:rgba(10,6,20,.8);color:#f3ecff;font-size:13px}
+  #chatForm button{padding:8px 12px;border-radius:8px;border:1px solid #ff2d95;background:rgba(255,45,149,.15);color:#ffd0ea;font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer}
+  #chatNote{font-size:10px;color:#9a8ab8;padding:0 10px 6px;min-height:12px}
+  #chatLog .m.cont{padding-left:14px}
+  #chatLog .m.cont b{display:none}
+  #chatLog .m.mention{background:rgba(255,45,149,.12);border-radius:6px;padding:2px 4px;margin:0 -4px}
+  #chatLog .day{color:#5a5078;font-size:10px;text-align:center;letter-spacing:2px;margin:4px 0 2px}
   .droneCard{flex:1;padding:10px 8px;border-radius:10px;border:1px solid rgba(180,140,255,.4);background:rgba(50,35,90,.4);text-align:center;cursor:pointer;font-size:10.5px;color:#c8bce0;line-height:1.5}
   .droneCard b{display:block;font-size:13px;color:#fff;margin-bottom:2px;letter-spacing:1px}
   .droneCard.equipped{border-color:#7bffb8;box-shadow:0 0 10px rgba(123,255,184,.45)}
@@ -448,6 +473,25 @@
   #mbBtns button{flex:1}
   #mbPost{border-color:#4dffd2!important;color:#d8fff4!important;background:rgba(77,255,210,.12)!important}
   #mbPost:hover{background:rgba(77,255,210,.3)!important}
+  #bbList{display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto;padding-right:4px}
+  .bb{padding:10px 12px;border-radius:10px;border:1px solid rgba(250,255,77,.3);background:rgba(250,255,77,.05)}
+  .bb.pin{border-color:#faff4d;box-shadow:0 0 12px rgba(250,255,77,.18)}
+  .bb .pinT{font-size:9px;letter-spacing:2px;color:#faff4d}
+  .bb .bt{font-size:14px;font-weight:700;color:#fff;margin:2px 0}
+  .bb .bx{font-size:12.5px;color:#e0d4f4;line-height:1.5}
+  .bb .bd{font-size:10px;color:#8a7aa8;margin-top:5px;letter-spacing:.5px}
+  .bdel{margin-left:8px;padding:1px 7px;border-radius:5px;border:1px solid #ff6a6a;background:none;color:#ff9a9a;font-size:10px;cursor:pointer}
+  #bbList .empty{font-size:12px;color:#9a8ab8;padding:8px;text-align:center}
+  #bbAdmin{display:none;margin-top:10px;padding:10px;border-radius:10px;border:1px dashed rgba(250,255,77,.45)}
+  #bbAdmin input,#bbAdmin textarea,#bbPw{width:100%;box-sizing:border-box;margin-bottom:6px;padding:8px 10px;border-radius:8px;border:1px solid rgba(180,140,255,.4);background:rgba(10,6,20,.8);color:#f3ecff;font-size:13px;font-family:inherit}
+  #bbAdmin textarea{min-height:70px;resize:vertical}
+  .bbRow{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
+  .bbRow label{font-size:11px;color:#c8b8e8;flex:1}
+  #bbLoginRow{display:none}
+  #bbLoginRow #bbPw{flex:1;margin:0}
+  #bbPost,#bbPwGo{padding:7px 12px;border-radius:8px;border:1px solid #faff4d;background:rgba(250,255,77,.12);color:#fbffc8;font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer}
+  #bbSignIn{padding:5px 10px;border-radius:7px;border:1px solid rgba(180,140,255,.4);background:none;color:#9a8ab8;font-size:10px;letter-spacing:1px;cursor:pointer}
+  #bbMsg{font-size:11px;color:#ffd66b}
   #boardTop{display:flex;align-items:center;justify-content:space-between;margin:6px 0 8px;font-size:11px;color:#9a8ab8;letter-spacing:1px}
   #boardRefresh{padding:5px 10px;border-radius:7px;border:1px solid rgba(180,140,255,.4);background:rgba(50,35,90,.45);color:#e8dcf8;font-size:10px;letter-spacing:1px;cursor:pointer}
   #boardList{display:flex;flex-direction:column;gap:8px;max-height:330px;overflow-y:auto;padding-right:4px}
@@ -626,7 +670,7 @@
   <div id="homeTrips"></div>
   <div id="newsBox"></div>
   <button id="flyBtn">🚁 ▲ FLY THE MISSION ▲</button>
-  <div class="hSect"><h2>DRONES</h2><div id="droneRow"></div></div>
+  <div class="hSect"><h2>DRONES</h2><div id="droneRow"></div><a id="kitLink" href="kit.html" target="_blank" rel="noopener">🛒 GET THE REAL COURIER KIT — build it, then fly these missions for real</a></div>
   <div class="hSect"><h2>HOME BASE 🏠</h2>
     <div id="hbAddrRow"><span id="hbAddr">📍 The Cove</span><button id="hbChange">CHANGE ADDRESS</button></div>
     <label class="hbLbl">BASE NAME <input id="hbName" maxlength="18" placeholder="The Cove"></label>
@@ -669,6 +713,16 @@
     </div>
     <div id="mbMsg"></div>
   </div>
+  <div class="hSect"><h2>BULLETIN BOARD 📋</h2>
+    <div id="bbList"></div>
+    <div id="bbAdmin">
+      <input id="bbTitle" maxlength="80" placeholder="Headline">
+      <textarea id="bbText" maxlength="1200" placeholder="Write to every pilot…"></textarea>
+      <div class="bbRow"><label><input id="bbPin" type="checkbox"> Pin to the top</label><button id="bbPost">📋 POST TO EVERYONE</button></div>
+    </div>
+    <div class="bbRow"><button id="bbSignIn">🔑 ADMIN SIGN-IN</button><span id="bbMsg"></span></div>
+    <div class="bbRow" id="bbLoginRow"><input id="bbPw" type="password" placeholder="Admin password" autocomplete="off"><button id="bbPwGo">SIGN IN</button></div>
+  </div>
   <div class="hSect"><h2>MISSION BOARD 📌</h2>
     <div class="hbNote">Missions posted by pilots everywhere. Anyone can fly any of them — each pilot flies their own real route, and the fastest time holds the record.</div>
     <div id="boardTop"><span id="boardCount"></span><button id="boardRefresh">↻ REFRESH</button></div>
@@ -691,6 +745,15 @@
     <div id="storeNote"></div>
   </div>
 </div></div>
+<div id="chatBox">
+  <button id="chatToggle">💬 CHAT<span id="chatBadge"></span></button>
+  <div id="chatPanel">
+    <div id="chatHead"><span>PILOT CHAT · everyone</span><button id="chatClose" title="close">✕</button></div>
+    <div id="chatLog"></div>
+    <form id="chatForm"><input id="chatIn" maxlength="200" placeholder="Say something to every pilot…" autocomplete="off"><button type="submit">SEND</button></form>
+    <div id="chatNote"></div>
+  </div>
+</div>
 <div id="walkUI">
   <div id="walkTop"><button id="wHangar">⬅ HANGAR</button><button id="wDeco">🛠 DECORATE</button><span id="walkCoins"></span></div>
   <div id="walkHint"></div>
@@ -1767,6 +1830,7 @@ resetPlayer();
 const keys={};
 addEventListener('keydown',e=>{
   if(e.target&&e.target.tagName==='INPUT') return;   // let the signup form type freely
+  if(e.code==='KeyT'&&account&&!chatOpen&&$('overlay').style.display!=='flex'&&$('signup').style.display!=='flex'){ e.preventDefault(); setChat(true); return; }
   if(walk && !(typeof screwing!=='undefined'&&screwing)){ walkKey(e); keys[e.code]=true; if(['Space','ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.code)) e.preventDefault(); return; }
   if(typeof screwing!=='undefined' && screwing){
     if(['ArrowUp','ArrowRight','ArrowDown','ArrowLeft'].includes(e.code)){ e.preventDefault(); screwInput(e.code); }
@@ -2132,7 +2196,7 @@ async function geocodeAddr(){
 $('addrBtn').addEventListener('click',geocodeAddr);
 $('addrIn').addEventListener('keydown',e=>{ if(e.key==='Enter') geocodeAddr(); });
 
-function openHome(){ renderHome(); $('home').style.display='flex'; claimPending(); loadNews(); loadBoard(); }
+function openHome(){ renderHome(); $('home').style.display='flex'; claimPending(); loadNews(); loadBoard(); loadBulletin(); chatShow(); if($('kitLink')) $('kitLink').style.display=REMOTE?'block':'none'; }
 let ctrlT=null;
 function closeHome(){
   if(!account){ initAccount(); return; }            // no account, no flying
@@ -2958,6 +3022,144 @@ addEventListener('mousedown',e=>{
   decoGhost.visible=!!decoSel&&decoGhost.visible;
 });
 
+// ---------- pilot chat (global, open/close, live presence) ----------
+let chatOpen=false, chatLast=0, chatSeen=0, chatTimer=null, chatMsgs=[];
+function chatLocal(){ try{ return JSON.parse(localStorage.getItem('coveChat')||'[]'); }catch(e){ return []; } }
+function chatSaveLocal(){ try{ localStorage.setItem('coveChat',JSON.stringify(chatMsgs.slice(-200))); }catch(e){} }
+function chatPing(){
+  if(!AC) return;
+  try{ const o=AC.createOscillator(), g=AC.createGain(); o.type='sine'; o.frequency.setValueAtTime(880,AC.currentTime); o.frequency.exponentialRampToValueAtTime(1320,AC.currentTime+0.08);
+    g.gain.setValueAtTime(0.0001,AC.currentTime); g.gain.exponentialRampToValueAtTime(0.05,AC.currentTime+0.01); g.gain.exponentialRampToValueAtTime(0.0001,AC.currentTime+0.25);
+    o.connect(g); g.connect(AC.destination); o.start(); o.stop(AC.currentTime+0.26); }catch(e){}
+}
+const esc=t=>String(t||'').replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
+function chatRender(){
+  const L=$('chatLog'); if(!L) return;
+  const atBottom=L.scrollHeight-L.scrollTop-L.clientHeight<40;
+  const me=account?account.user:null, mention=me?new RegExp('@'+me.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','i'):null;
+  let html='', prev=null, prevDay='';
+  for(const m of chatMsgs){
+    if(m.kind==='event') continue;
+    const day=new Date(m.at).toDateString();
+    if(day!==prevDay){ html+='<div class="day">'+(day===new Date().toDateString()?'TODAY':esc(day.slice(0,10)))+'</div>'; prevDay=day; prev=null; }
+    const t=new Date(m.at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+    const cont=prev&&prev.user===m.user&&m.at-prev.at<120000;
+    const cls='m'+(me&&m.user===me?' me':'')+(cont?' cont':'')+(mention&&mention.test(m.text)?' mention':'');
+    html+='<div class="'+cls+'"><b>'+esc(m.user)+'</b>'+esc(m.text)+'<small>'+t+'</small></div>';
+    prev=m;
+  }
+  L.innerHTML=html||'<div class="sys">Nobody has said anything yet. Say hi!</div>';
+  if(atBottom||chatOpen) L.scrollTop=L.scrollHeight;
+  if(chatMsgs.length) chatLast=chatMsgs[chatMsgs.length-1].id;
+  const unread=chatMsgs.filter(m=>m.id>chatSeen&&m.kind!=='event'&&!(me&&m.user===me)).length;
+  const B=$('chatBadge'); B.textContent=unread>99?'99+':unread; B.style.display=(unread&&!chatOpen)?'block':'none';
+  if(chatOpen) chatSeen=chatLast;
+}
+async function chatPoll(){
+  if(!account) return;
+  if(REMOTE){
+    try{
+      const r=await (await fetch('/api/chat?since='+chatLast)).json();
+      if(r&&r.messages){
+        const before=chatLast;
+        if(before===0) chatMsgs=r.messages;
+        else for(const m of r.messages) if(!chatMsgs.some(x=>x.id===m.id)) chatMsgs.push(m);
+        chatMsgs=chatMsgs.slice(-200);
+        const fresh=before>0?r.messages.filter(m=>m.id>before&&m.user!==account.user):[];
+        chatRender();
+        if(fresh.length&&!chatOpen){ chatPing(); const last=fresh[fresh.length-1]; banner('💬 '+last.user+': '+last.text.slice(0,60)); }
+      }
+    }catch(e){}
+    return;
+  }
+  chatMsgs=chatLocal(); chatRender();
+}
+function chatSchedule(){ clearInterval(chatTimer); chatTimer=setInterval(chatPoll, chatOpen?2000:12000); }
+function setChat(open){
+  chatOpen=!!open; $('chatBox').classList.toggle('open',chatOpen);
+  if(chatOpen){ chatSeen=chatLast; chatRender(); chatPoll(); setTimeout(()=>{ try{ $('chatIn').focus(); }catch(e){} },30); }
+  else { try{ $('chatIn').blur(); }catch(e){} }
+  chatSchedule();
+}
+async function chatSend(text){
+  text=String(text||'').replace(/\s+/g,' ').trim().slice(0,200);
+  if(!text||!account) return false;
+  if(REMOTE&&account.token){
+    try{ const r=await api('chatsend',{text},account.token); if(r.error){ $('chatNote').textContent=r.error; return false; } $('chatNote').textContent=''; if(!chatMsgs.some(x=>x.id===r.message.id)) chatMsgs.push(r.message); chatRender(); return true; }
+    catch(e){ $('chatNote').textContent='Could not reach the server.'; return false; }
+  }
+  chatMsgs=chatLocal(); chatMsgs.push({id:(chatMsgs.length?chatMsgs[chatMsgs.length-1].id:0)+1,user:account.user,text,at:Date.now()}); chatSaveLocal(); chatRender();
+  $('chatNote').textContent='Local only — on the online site every pilot sees this.';
+  return true;
+}
+function chatShow(){ if($('chatBox')) $('chatBox').style.display=account?'block':'none'; if(account){ chatSchedule(); chatPoll(); } }
+if($('chatToggle')){
+  $('chatToggle').addEventListener('click',()=>setChat(!chatOpen));
+  $('chatClose').addEventListener('click',()=>setChat(false));
+  $('chatForm').addEventListener('submit',e=>{ e.preventDefault(); const v=$('chatIn').value; chatSend(v).then(ok=>{ if(ok) $('chatIn').value=''; }); });
+  $('chatIn').addEventListener('keydown',e=>{ if(e.key==='Escape'){ setChat(false); } e.stopPropagation(); });
+}
+// ---------- bulletin board (admins write, everybody reads) ----------
+let bulletin=[], adminToken=null, bulletinSeen=0;
+try{ adminToken=localStorage.getItem('coveAdminToken'); bulletinSeen=+(localStorage.getItem('coveBulletinSeen')||0); }catch(e){}
+function localBulletin(){ try{ return JSON.parse(localStorage.getItem('coveBulletin')||'[]'); }catch(e){ return []; } }
+async function loadBulletin(){
+  if(REMOTE){ try{ const r=await (await fetch('/api/bulletin')).json(); if(r&&r.posts) bulletin=r.posts; }catch(e){} }
+  else bulletin=localBulletin().slice().sort((x,y)=>(y.pinned?1:0)-(x.pinned?1:0)||y.id-x.id);
+  renderBulletin();
+  const newest=bulletin.reduce((n,p)=>Math.max(n,p.id),0);
+  if(newest>bulletinSeen){
+    const p=bulletin.find(x=>x.id===newest);
+    if(p&&bulletinSeen>0) banner('📋 BULLETIN: '+(p.title||p.text).slice(0,70));
+    bulletinSeen=newest; try{ localStorage.setItem('coveBulletinSeen',String(newest)); }catch(e){}
+  }
+}
+function renderBulletin(){
+  const L=$('bbList'); if(!L) return;
+  const admin=!!adminToken;
+  $('bbAdmin').style.display=admin?'block':'none';
+  $('bbLoginRow').style.display='none';
+  $('bbSignIn').textContent=admin?'🔓 SIGN OUT OF ADMIN':'🔑 ADMIN SIGN-IN';
+  L.innerHTML=bulletin.length?bulletin.map(p=>'<div class="bb'+(p.pinned?' pin':'')+'">'+(p.pinned?'<span class="pinT">📌 PINNED</span>':'')
+    +(p.title?'<div class="bt">'+esc(p.title)+'</div>':'')+(p.text?'<div class="bx">'+esc(p.text).replace(/\n/g,'<br>')+'</div>':'')
+    +'<div class="bd">'+new Date(p.at).toLocaleDateString([],{month:'short',day:'numeric'})+' · '+new Date(p.at).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+' · from the hangar crew'
+    +(admin?' <button class="bdel" data-id="'+p.id+'">delete</button>':'')+'</div></div>').join('')
+    :'<div class="empty">Nothing on the board yet.</div>';
+  L.querySelectorAll('.bdel').forEach(b=>b.addEventListener('click',()=>delBulletin(+b.dataset.id)));
+}
+async function adminSignIn(pw){
+  if(!REMOTE){ $('bbMsg').textContent='Admin sign-in only works on the online site.'; return false; }
+  try{
+    const r=await api('adminlogin',{secret:pw});
+    if(r.error){ $('bbMsg').textContent=r.error; return false; }
+    adminToken=r.token; try{ localStorage.setItem('coveAdminToken',adminToken); }catch(e){}
+    $('bbMsg').textContent='✅ Signed in as admin.'; renderBulletin(); return true;
+  }catch(e){ $('bbMsg').textContent='Could not reach the server.'; return false; }
+}
+function adminSignOut(){ adminToken=null; try{ localStorage.removeItem('coveAdminToken'); }catch(e){} $('bbMsg').textContent='Signed out of admin.'; renderBulletin(); }
+async function postBulletin(title,text,pinned){
+  title=String(title||'').trim().slice(0,80); text=String(text||'').trim().slice(0,1200);
+  if(!title&&!text){ $('bbMsg').textContent='Write something first.'; return false; }
+  if(REMOTE){
+    try{ const r=await api('bulletinpost',{title,text,pinned},adminToken); if(r.error){ $('bbMsg').textContent=r.error; if(/Admins only/.test(r.error)) adminSignOut(); return false; } }
+    catch(e){ $('bbMsg').textContent='Could not reach the server.'; return false; }
+  } else {
+    const loc=localBulletin(); loc.push({id:loc.reduce((n,p)=>Math.max(n,p.id),0)+1,title,text,pinned:!!pinned,at:Date.now()});
+    try{ localStorage.setItem('coveBulletin',JSON.stringify(loc.slice(-60))); }catch(e){}
+  }
+  $('bbMsg').textContent='📋 Posted — every pilot will see it.'; await loadBulletin(); return true;
+}
+async function delBulletin(id){
+  if(REMOTE){ try{ await api('bulletindel',{id},adminToken); }catch(e){} }
+  else { try{ localStorage.setItem('coveBulletin',JSON.stringify(localBulletin().filter(p=>p.id!==id))); }catch(e){} }
+  await loadBulletin();
+}
+if($('bbSignIn')){
+  $('bbSignIn').addEventListener('click',()=>{ if(adminToken) adminSignOut(); else { $('bbLoginRow').style.display='flex'; $('bbPw').focus(); } });
+  $('bbPwGo').addEventListener('click',()=>{ adminSignIn($('bbPw').value).then(ok=>{ if(ok) $('bbPw').value=''; }); });
+  $('bbPw').addEventListener('keydown',e=>{ if(e.key==='Enter') $('bbPwGo').click(); });
+  $('bbPost').addEventListener('click',()=>{ postBulletin($('bbTitle').value,$('bbText').value,$('bbPin').checked).then(ok=>{ if(ok){ $('bbTitle').value=''; $('bbText').value=''; $('bbPin').checked=false; } }); });
+}
 let skinCat='color';
 document.querySelectorAll('.skinTab').forEach(t=>t.addEventListener('click',()=>{ skinCat=t.dataset.cat; renderHome(); }));
 // ---------- game-wide announcements from the owner ----------

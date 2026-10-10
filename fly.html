@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fly for Real — Drone Courier: Marin</title>
+<meta name="description" content="Fly Drone Courier missions with a real drone. Your phone's GPS logs the flight and pays Drone Coins into your game account.">
+<style>
+:root{--bg:#08060f;--ink:#f2e9ff;--dim:#9a8ab8;--line:rgba(255,45,149,.28);--teal:#00f0ff;--teal2:#5cffe4;--gold:#faff4d;--coral:#ff2d95;--card:#120c1f}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;line-height:1.6}
+a{color:var(--teal);text-decoration:none}
+.wrap{max-width:1060px;margin:0 auto;padding:0 24px}
+nav{position:sticky;top:0;z-index:20;background:rgba(238,246,248,.88);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;height:62px;gap:16px}
+.logo{font-weight:800;letter-spacing:1.5px;color:var(--ink);font-size:15px;white-space:nowrap}
+.logo span{color:var(--teal)}
+.links{display:flex;align-items:center;gap:20px;font-size:13.5px;flex-wrap:wrap}
+.links a{color:var(--dim)}
+.links a:hover,.links a.on{color:var(--teal)}
+.btn{display:inline-block;background:var(--teal);color:#fff;padding:9px 20px;border-radius:9px;font-weight:700;font-size:13.5px;
+box-shadow:0 4px 16px rgba(15,157,132,.3);transition:transform .12s,box-shadow .15s}
+.btn:hover{transform:translateY(-1px);box-shadow:0 7px 22px rgba(15,157,132,.4);color:#fff}
+.btn.coral{background:var(--coral);box-shadow:0 4px 16px rgba(239,99,56,.32)}
+.btn.big{padding:15px 40px;font-size:17px;border-radius:12px;letter-spacing:1px}
+header.page{padding:52px 0 30px;text-align:center}
+header.page h1{font-size:34px;margin:0 0 8px;letter-spacing:.5px}
+header.page p{color:var(--dim);max-width:640px;margin:0 auto;font-size:15px}
+section{padding:34px 0}
+h2{font-size:13px;letter-spacing:3px;color:var(--teal);margin:0 0 6px;text-transform:uppercase}
+.lead{color:var(--dim);font-size:14.5px;max-width:660px;margin:0 0 22px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 4px 18px rgba(30,60,70,.05)}
+.card .ico{font-size:26px}
+.card h3{margin:9px 0 6px;font-size:15.5px}
+.card p{margin:0;font-size:13.5px;color:var(--dim)}
+.card .price{color:var(--gold);font-weight:700;font-size:13px}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+th,td{padding:13px 16px;text-align:left;font-size:14px;border-bottom:1px solid var(--line)}
+th{background:rgba(15,157,132,.08);color:var(--teal);font-size:11px;letter-spacing:1.5px;text-transform:uppercase}
+tr:last-child td{border-bottom:none}
+td.rank{font-weight:800;color:var(--dim);width:56px}
+td.rank.top{color:var(--gold)}
+.pill{display:inline-block;background:rgba(15,157,132,.1);color:var(--teal);padding:3px 10px;border-radius:99px;font-size:11.5px;font-weight:700}
+.strip{background:rgba(15,157,132,.08);border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:30px 0}
+.strip .wrap{display:flex;flex-wrap:wrap;gap:26px;justify-content:center;padding:24px;text-align:center}
+.stat b{display:block;font-size:24px;color:var(--gold)}
+.stat span{font-size:11px;color:var(--dim);letter-spacing:1px}
+ol.steps{counter-reset:s;list-style:none;padding:0;margin:0;display:grid;gap:12px}
+ol.steps li{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px 16px 60px;position:relative;font-size:14px;color:var(--dim)}
+ol.steps li:before{counter-increment:s;content:counter(s);position:absolute;left:18px;top:50%;transform:translateY(-50%);
+width:28px;height:28px;line-height:28px;text-align:center;border-radius:50%;background:var(--teal);color:#fff;font-weight:800;font-size:13px}
+ol.steps b{color:var(--ink)}
+.hero{background:linear-gradient(180deg,#8fd0e8 0%,#c2e6f2 55%,var(--bg) 100%);padding:70px 0 46px;text-align:center}
+.hero h1{font-size:46px;margin:0;letter-spacing:2px;color:#0e4a56}
+.hero .tag{font-size:18px;color:#2c5560;max-width:660px;margin:14px auto 6px}
+.hero .sub{font-size:13px;color:#4a6b76;margin-bottom:24px}
+.keys{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+kbd{background:#fff;border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:3px 9px;font-size:12px;font-family:ui-monospace,Menlo,monospace;color:var(--ink)}
+.note{background:rgba(199,138,0,.1);border:1px solid rgba(199,138,0,.3);border-radius:12px;padding:14px 16px;font-size:13.5px;color:#6d5210}
+footer{border-top:1px solid var(--line);margin-top:40px;padding:26px 0 40px;text-align:center;font-size:12px;color:#8aa0a8}
+footer a{color:#8aa0a8;margin:0 8px}
+@media(max-width:640px){.hero h1{font-size:30px}header.page h1{font-size:26px}.links{gap:12px;font-size:12.5px}}
+
+
+/* ---- NEON: black night, hot pink, cyan, lime ---- */
+body{background:
+  radial-gradient(ellipse at 20% 0%,rgba(255,45,149,.14),transparent 55%),
+  radial-gradient(ellipse at 85% 25%,rgba(0,240,255,.12),transparent 55%),
+  var(--bg)}
+.logo,h2,.stat b,.stat span,th,kbd,.btn,nav .links a{font-family:ui-monospace,'Courier New',Menlo,monospace}
+.logo{letter-spacing:2px;color:#fff;text-shadow:0 0 10px rgba(255,45,149,.9)}
+.logo span{color:var(--coral)}
+nav{background:rgba(8,6,15,.9);border-bottom:1px solid var(--line);backdrop-filter:blur(10px)}
+nav .links a{color:var(--dim)}
+nav .links a:hover,nav .links a.on{color:var(--teal);text-shadow:0 0 9px rgba(0,240,255,.8)}
+.btn{border-radius:6px;border:1.5px solid var(--coral);background:rgba(255,45,149,.14);color:#ff8ec6;
+  text-transform:uppercase;letter-spacing:2px;font-weight:700;box-shadow:0 0 18px rgba(255,45,149,.4),inset 0 0 14px rgba(255,45,149,.12)}
+.btn:hover{background:rgba(255,45,149,.28);color:#fff;box-shadow:0 0 28px rgba(255,45,149,.75);transform:translateY(-1px)}
+.btn.coral{border-color:var(--coral);color:#ffa8d4}
+.card{border-radius:10px;border:1px solid rgba(0,240,255,.28);background:var(--card);
+  box-shadow:0 0 22px rgba(0,240,255,.09),inset 0 0 20px rgba(0,240,255,.04)}
+.card:hover{border-color:rgba(0,240,255,.55);box-shadow:0 0 28px rgba(0,240,255,.22)}
+.card h3{color:#fff}
+.hero{background:
+  radial-gradient(ellipse at 50% 120%,rgba(255,45,149,.45),transparent 62%),
+  linear-gradient(180deg,#0a0716 0%,#1a0a2e 55%,var(--bg) 100%);
+  border-bottom:1px solid var(--line)}
+.hero h1{font-family:ui-monospace,'Courier New',Menlo,monospace;letter-spacing:5px;color:#fff;
+  text-shadow:0 0 12px #ff2d95,0 0 32px rgba(255,45,149,.8),0 0 60px rgba(0,240,255,.35)}
+.hero .tag{color:#e8dcff}
+.hero .sub{color:var(--dim)}
+h2{color:var(--teal);letter-spacing:3px;text-shadow:0 0 12px rgba(0,240,255,.55)}
+.strip{background:rgba(255,45,149,.07);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.stat b{color:var(--gold);text-shadow:0 0 14px rgba(250,255,77,.6)}
+table{border:1px solid rgba(0,240,255,.28);border-radius:10px;background:var(--card);box-shadow:0 0 22px rgba(0,240,255,.09)}
+th{background:rgba(0,240,255,.1);color:var(--teal);border-bottom:1px solid rgba(0,240,255,.28)}
+td{border-bottom:1px solid rgba(255,255,255,.07)}
+td.rank.top{color:var(--gold);text-shadow:0 0 10px rgba(250,255,77,.6)}
+ol.steps li{border-radius:10px;border:1px solid rgba(0,240,255,.22);background:var(--card);color:var(--dim)}
+ol.steps li b{color:#fff}
+ol.steps li:before{background:var(--coral);color:#fff;box-shadow:0 0 14px rgba(255,45,149,.8)}
+.note{border-radius:10px;border:1px solid rgba(250,255,77,.4);background:rgba(250,255,77,.07);color:#f0edb0}
+.pill{border:1px solid var(--teal);background:rgba(0,240,255,.1);color:var(--teal)}
+kbd{border:1px solid rgba(0,240,255,.4);background:rgba(0,240,255,.08);color:#bff8ff;box-shadow:0 0 10px rgba(0,240,255,.18)}
+a{color:var(--teal)}
+footer{border-top:1px solid var(--line);color:#6a5b85}
+footer a{color:#6a5b85}
+
+.panel{display:none;background:var(--card);border:1px solid rgba(0,240,255,.28);border-radius:14px;padding:18px;margin-top:14px}
+.panel.on{display:block}
+.form label{display:block;font-size:10px;letter-spacing:2px;color:var(--teal);margin:12px 0 4px;font-family:ui-monospace,monospace}
+.form input{width:100%;box-sizing:border-box;padding:11px 12px;border-radius:9px;border:1px solid rgba(0,240,255,.35);background:rgba(8,6,15,.9);color:var(--ink);font-size:15px}
+.btn.w{display:block;width:100%;text-align:center;border:none;cursor:pointer;margin-top:12px;font-size:15px;padding:13px}
+.btn.w:disabled{opacity:.4;cursor:default;transform:none}
+.msg{font-size:13px;color:#ffb3d9;min-height:16px;margin-top:8px}
+.chk{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:13.5px;color:var(--dim)}
+.chk input{margin-top:3px;width:18px;height:18px;accent-color:#ff2d95}
+.chk b{color:var(--ink)}
+.ml{display:flex;flex-direction:column;gap:8px}
+.mi{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;padding:10px 12px;border-radius:10px;border:1px solid rgba(0,240,255,.22);background:rgba(10,6,22,.6)}
+.mi .t{font-weight:700;color:#fff}.mi .c{font-size:11px;color:var(--dim);line-height:1.5}.mi .c b{color:var(--gold)}
+.mi button{grid-row:1/3;padding:9px 12px;border-radius:9px;border:1px solid #ff2d95;background:rgba(255,45,149,.15);color:#ffd0ea;font-weight:700;letter-spacing:1px;cursor:pointer;font-size:12px}
+.big{font-family:ui-monospace,'Courier New',monospace;font-size:44px;color:var(--teal);text-shadow:0 0 14px rgba(0,240,255,.5);text-align:center;margin:8px 0}
+.stat{display:flex;justify-content:space-between;font-size:13px;color:var(--dim);padding:6px 0;border-bottom:1px solid rgba(255,255,255,.07)}
+.stat b{color:var(--ink);font-family:ui-monospace,monospace}
+.phase{text-align:center;font-size:12px;letter-spacing:3px;color:var(--coral);margin-top:6px;font-family:ui-monospace,monospace}
+.bar{height:8px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden;margin:10px 0}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,#ff2d95,#00f0ff);width:0%;transition:width .4s}
+.user{font-size:12px;color:var(--dim);text-align:right}
+</style></head><body>
+<nav><div class="wrap">
+  <a class="logo" href="index.html">DRONE COURIER<span>: MARIN</span></a>
+  <div class="links"><a href="index.html">Play</a><a href="guide.html">How It Works</a><a href="fleet.html">Fleet</a><a href="kit.html">Kit</a><a href="fly.html" class="on">Fly for Real</a><a href="leaderboard.html">Leaderboard</a><a href="news.html">News</a><a href="support.html">Support</a></div>
+</div></nav>
+<header class="page"><div class="wrap"><h1>Fly for Real</h1>
+<p>Open this on your phone, pick a mission from the board, and fly it with your real drone. Your phone’s GPS is the proof — finish the round trip and the coins land in your game account at 10× the game rate.</p></div></header>
+
+<section class="wrap" style="padding-top:0">
+  <div class="panel form on" id="pLogin">
+    <h3 style="margin:0 0 4px">Pilot log-in</h3>
+    <p style="margin:0;font-size:12.5px;color:var(--dim)">Same account as the game.</p>
+    <label>EMAIL</label><input id="lEmail" type="email" autocomplete="email">
+    <label>PASSWORD</label><input id="lPass" type="password" autocomplete="current-password">
+    <button class="btn coral w" id="lBtn">LOG IN</button>
+    <div class="msg" id="lMsg"></div>
+  </div>
+
+  <div class="panel" id="pCheck">
+    <div class="user" id="who"></div>
+    <h3 style="margin:0 0 6px">Before every flight</h3>
+    <label class="chk"><input type="checkbox" class="c"><span><b>I’ve done the free FAA TRUST test</b> and I’m flying for fun under the recreational rules.</span></label>
+    <label class="chk"><input type="checkbox" class="c"><span><b>My drone is under 250 g</b> as it takes off (or it’s registered and broadcasting Remote ID).</span></label>
+    <label class="chk"><input type="checkbox" class="c"><span><b>I’ll keep it in sight</b> the whole time, under 400 ft, in daylight.</span></label>
+    <label class="chk"><input type="checkbox" class="c"><span><b>Not over people, roads, or schools in session,</b> and away from airports — Gnoss Field in Novato and Hamilton Field have their own airspace.</span></label>
+    <label class="chk"><input type="checkbox" class="c"><span><b>A grown-up is with me</b> if I’m under 16.</span></label>
+    <button class="btn coral w" id="cBtn" disabled>SHOW ME THE MISSIONS</button>
+    <div class="msg" style="color:var(--dim)">Rules change — check <a href="https://www.faa.gov/uas/recreational_flyers">faa.gov/uas/recreational_flyers</a>.</div>
+  </div>
+
+  <div class="panel" id="pList">
+    <h3 style="margin:0 0 8px">Pick a mission</h3>
+    <div id="homeNote" class="msg" style="color:var(--dim)"></div>
+    <div class="ml" id="list">Loading…</div>
+  </div>
+
+  <div class="panel" id="pFly">
+    <div class="phase" id="phase">GET TO THE START</div>
+    <div class="big" id="clock">0:00</div>
+    <div class="bar"><i id="bar"></i></div>
+    <div class="stat"><span>Mission</span><b id="fName"></b></div>
+    <div class="stat"><span>To start point</span><b id="dStart">—</b></div>
+    <div class="stat"><span>To destination</span><b id="dDest">—</b></div>
+    <div class="stat"><span>GPS accuracy</span><b id="acc">—</b></div>
+    <div class="stat"><span>Track points</span><b id="npts">0</b></div>
+    <button class="btn coral w" id="armBtn" disabled>WALK TO THE START POINT</button>
+    <button class="btn w" id="landBtn" disabled>LAND &amp; SUBMIT</button>
+    <button class="btn w" id="quitBtn" style="background:none;border:1px solid rgba(255,255,255,.2);color:var(--dim)">ABORT</button>
+    <div class="msg" id="fMsg"></div>
+  </div>
+
+  <div class="panel" id="pDone">
+    <h3 style="margin:0">🏆 Mission flown for real</h3>
+    <div class="big" id="payBig"></div>
+    <div class="msg" id="doneMsg" style="color:var(--dim)"></div>
+    <p style="font-size:13px;color:var(--dim)">Open the game and the coins are added the next time you visit the hangar.</p>
+    <button class="btn coral w" id="againBtn">ANOTHER MISSION</button>
+  </div>
+</section>
+<footer><div class="wrap">
+  <a href="index.html">Play</a>·<a href="guide.html">How It Works</a>·<a href="fleet.html">Fleet</a>·<a href="kit.html">Kit</a>·<a href="fly.html">Fly for Real</a>·<a href="leaderboard.html">Leaderboard</a>·<a href="news.html">News</a>·<a href="support.html">Support</a>
+  <div style="margin-top:10px">Drone Courier: Marin — a free browser drone-delivery game. Fly safe. 🚁</div>
+</div></footer>
+<script>
+const $=id=>document.getElementById(id);
+const show=id=>{ document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on',p.id===id)); window.scrollTo(0,0); };
+const api=async(path,body,token)=>(await fetch('/api/'+path,{method:body?'POST':'GET',headers:Object.assign({'Content-Type':'application/json'},token?{'Authorization':'Bearer '+token}:{}),body:body?JSON.stringify(body):undefined})).json();
+const HARMONY={name:'Harmony Montessori',lat:37.89431,lon:-122.49288};
+const CARGO=['Mail','Groceries','Machine parts','Medical supplies','Aquarium fish','Gold bullion'];
+const BIRD=['no birds','normal birds','heavy birds','a swarm'], WIND=['calm','breezy','strong wind','a gale'];
+function hav(a,b){ const R=3958.8, r=x=>x*Math.PI/180, dLa=r(b.lat-a.lat), dLo=r(b.lon-a.lon); const h=Math.sin(dLa/2)**2+Math.cos(r(a.lat))*Math.cos(r(b.lat))*Math.sin(dLo/2)**2; return 2*R*Math.asin(Math.sqrt(h)); }
+function decode(code){ const m=/^(?:MRN-?)?([0-9A-Z]{1,6})$/.exec(String(code||'').toUpperCase()); if(!m) return null; const v=parseInt(m[1],36); return {cargo:(v>>5)&7,birds:(v>>3)&3,wind:(v>>1)&3,dusk:v&1}; }
+function payout(m,miles){ const CP=[1,1.15,1.45,1.6,1.75,2.2]; const hz=1+m.birds*0.09+m.wind*0.08+(m.dusk?0.18:0); return Math.min(5000,Math.round((60+miles*22)*CP[m.cargo]*hz*10)); }
+const ft=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
+const fmi=d=>d<0.19?Math.round(d*1609)+' m':d.toFixed(2)+' mi';
+let token=null, user=null, home=null, mission=null, pts=[], watch=null, armed=false, reached=false, t0=0, tick=null;
+try{ token=localStorage.getItem('coveToken'); }catch(e){}
+async function boot(){
+  if(!token) return;
+  try{ const me=await api('me',null,token); if(me&&me.user){ user=me.user; home=(me.save&&me.save.route&&isFinite(+me.save.route.lat))?{name:'your home base',lat:+me.save.route.lat,lon:+me.save.route.lon}:null; $('who').textContent='Pilot '+user; show('pCheck'); } }catch(e){}
+}
+$('lBtn').addEventListener('click',async()=>{
+  $('lMsg').textContent='Logging in…';
+  try{
+    const r=await api('login',{email:$('lEmail').value.trim(),pass:$('lPass').value});
+    if(r.error){ $('lMsg').textContent=r.error; return; }
+    token=r.token; user=r.user; try{ localStorage.setItem('coveToken',token); }catch(e){}
+    home=(r.save&&r.save.route&&isFinite(+r.save.route.lat))?{name:'your home base',lat:+r.save.route.lat,lon:+r.save.route.lon}:null;
+    $('who').textContent='Pilot '+user; show('pCheck');
+  }catch(e){ $('lMsg').textContent='Could not reach the server — this page only works on the online site.'; }
+});
+document.querySelectorAll('#pCheck .c').forEach(c=>c.addEventListener('change',()=>{ $('cBtn').disabled=![...document.querySelectorAll('#pCheck .c')].every(x=>x.checked); }));
+$('cBtn').addEventListener('click',async()=>{ show('pList'); loadList(); });
+async function loadList(){
+  $('homeNote').textContent=home?'Missions that start at “your home base” start at the address you set in the game.':'⚠ You haven’t set a home base in the game yet — only missions with a fixed start point can be flown.';
+  let r; try{ r=await api('missions'); }catch(e){ $('list').textContent='Could not load the board.'; return; }
+  const L=$('list'); L.innerHTML='';
+  for(const b of (r.missions||[])){
+    const m=decode(b.code); if(!m) continue;
+    const from=b.from||home, to=b.to||HARMONY;
+    if(!from) continue;
+    const miles=hav(from,to);
+    const row=document.createElement('div'); row.className='mi';
+    row.innerHTML='<div class="t">'+b.name+'</div><button>FLY</button><div class="c">'+from.name+' → '+to.name+' · '+miles.toFixed(1)+' mi each way<br>'+CARGO[m.cargo]+' · '+BIRD[m.birds]+' · '+WIND[m.wind]+(m.dusk?' · dusk':'')+' · pays <b>🪙'+payout(m,miles)+'</b> for real'+(b.real?' · flown for real '+b.real+'×':'')+(b.realBest?' · record '+ft(b.realBest)+' by '+b.realBestBy:'')+'</div>';
+    row.querySelector('button').addEventListener('click',()=>startFlight(Object.assign({},b,{from,to,m})));
+    L.appendChild(row);
+  }
+  if(!L.children.length) L.innerHTML='<div class="msg">No flyable missions yet — post one from the game’s Mission Builder.</div>';
+}
+function startFlight(b){
+  mission=b; pts=[]; armed=false; reached=false; t0=0;
+  $('fName').textContent=b.name; $('phase').textContent='GET TO THE START'; $('clock').textContent='0:00'; $('bar').style.width='0%';
+  $('armBtn').disabled=true; $('armBtn').textContent='WALK TO THE START POINT'; $('landBtn').disabled=true; $('fMsg').textContent='';
+  show('pFly');
+  if(!navigator.geolocation){ $('fMsg').textContent='This phone has no GPS access.'; return; }
+  if(watch!==null) navigator.geolocation.clearWatch(watch);
+  watch=navigator.geolocation.watchPosition(onPos,e=>{ $('fMsg').textContent='GPS: '+e.message+' — allow location access and go outside.'; },{enableHighAccuracy:true,maximumAge:1000,timeout:15000});
+  clearInterval(tick); tick=setInterval(()=>{ if(armed) $('clock').textContent=ft((Date.now()-t0)/1000); },500);
+}
+let last=null;
+function onPos(p){
+  const c=p.coords, here={lat:c.latitude,lon:c.longitude}; last=here;
+  const ds=hav(here,mission.from), dd=hav(here,mission.to);
+  $('dStart').textContent=fmi(ds); $('dDest').textContent=fmi(dd); $('acc').textContent=Math.round(c.accuracy)+' m';
+  if(!armed){
+    const ok=ds<=0.06&&c.accuracy<=60;
+    $('armBtn').disabled=!ok; $('armBtn').textContent=ok?'🚁 TAKE OFF — START THE CLOCK':(c.accuracy>60?'WAITING FOR A BETTER GPS FIX…':'WALK TO THE START POINT ('+fmi(ds)+')');
+    return;
+  }
+  pts.push({lat:here.lat,lon:here.lon,t:Date.now()}); $('npts').textContent=pts.length;
+  const total=hav(mission.from,mission.to)*2;
+  if(!reached){
+    if(dd<=0.06){ reached=true; $('phase').textContent='DELIVERED — NOW FLY HOME'; if(navigator.vibrate) navigator.vibrate(200); }
+    $('bar').style.width=Math.min(50,50*(1-dd/hav(mission.from,mission.to)))+'%';
+  } else {
+    $('bar').style.width=Math.min(100,50+50*(1-ds/hav(mission.from,mission.to)))+'%';
+    $('landBtn').disabled=!(ds<=0.06);
+  }
+}
+$('armBtn').addEventListener('click',()=>{ if($('armBtn').disabled) return; armed=true; t0=Date.now(); pts=[{lat:last.lat,lon:last.lon,t:t0}]; $('phase').textContent='FLY TO '+mission.to.name.toUpperCase(); $('armBtn').style.display='none'; });
+$('landBtn').addEventListener('click',async()=>{
+  $('landBtn').disabled=true; $('fMsg').textContent='Checking your track…';
+  try{
+    const r=await api('realflight',{code:mission.code,points:pts},token);
+    if(r.error){ $('fMsg').textContent=r.error; $('landBtn').disabled=false; return; }
+    navigator.geolocation.clearWatch(watch); watch=null; clearInterval(tick);
+    $('payBig').textContent='+🪙'+r.pay; $('doneMsg').textContent=(r.record?'🏆 New real-world record! ':'')+ft(r.secs)+' · '+r.miles+' mi flown · this mission has now been flown for real '+r.real+'×';
+    show('pDone');
+  }catch(e){ $('fMsg').textContent='Could not reach the server — stay here and try again.'; $('landBtn').disabled=false; }
+});
+$('quitBtn').addEventListener('click',()=>{ if(watch!==null) navigator.geolocation.clearWatch(watch); watch=null; clearInterval(tick); $('armBtn').style.display=''; show('pList'); });
+$('againBtn').addEventListener('click',()=>{ $('armBtn').style.display=''; show('pList'); loadList(); });
+boot();
+</script>
+</body></html>
