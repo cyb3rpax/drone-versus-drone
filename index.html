@@ -2902,6 +2902,11 @@ const roomPerson=makePerson(); roomScene.add(roomPerson);
 const roofPerson=makePerson(); roofPerson.visible=false; scene.add(roofPerson);
 const carryDrone=makeMiniDrone(); carryDrone.visible=false;
 let carrying=false, decorating=false, decoSel=null, decoRot=0, pickMode=false, walkHintT='';
+let decoHistory=[]; // Undo history for placed items
+let decoRotDegrees=0; // Fine rotation in degrees (0-360)
+let decoSnapToGrid=true; // Grid snapping enabled by default
+let decoSnapToWalls=true; // Wall snapping enabled
+let touchStartPos=null, touchStartTime=0;
 const rp={x:0,z:0,y:0,h:Math.PI};        // room pilot
 const fp2={x:0,z:0,h:Math.PI};          // roof pilot (offsets from COVE)
 const decoGhost=new THREE.Mesh(new THREE.BoxGeometry(1,0.3,1),new THREE.MeshBasicMaterial({color:0x4dffd2,transparent:true,opacity:0.45,depthWrite:false}));
@@ -3070,7 +3075,14 @@ function walkKey(e){
   }
   if(walk==='room'){
     if(e.code==='KeyE'||(e.code==='Space'&&!decorating)){ pickUpDrone(); return; }
-    if(e.code==='KeyR'&&decorating){ decoRot^=1; renderDeco(); return; }
+    if(e.code==='KeyR'&&decorating){ decoRotDegrees=(decoRotDegrees+45)%360; decoRot=Math.floor(decoRotDegrees/90); renderDeco(); return; }
+    if(e.code==='KeyQ'&&decorating){ decoRotDegrees=(decoRotDegrees-15+360)%360; decoRot=Math.floor(decoRotDegrees/90); renderDeco(); return; }
+    if(e.code==='KeyE'&&decorating){ decoRotDegrees=(decoRotDegrees+15)%360; decoRot=Math.floor(decoRotDegrees/90); renderDeco(); return; }
+    if(e.code==='ArrowLeft'&&decorating&&e.shiftKey){ decoRotDegrees=(decoRotDegrees-15+360)%360; decoRot=Math.floor(decoRotDegrees/90); renderDeco(); return; }
+    if(e.code==='ArrowRight'&&decorating&&e.shiftKey){ decoRotDegrees=(decoRotDegrees+15)%360; decoRot=Math.floor(decoRotDegrees/90); renderDeco(); return; }
+    if((e.code==='KeyZ'||e.code==='Backspace')&&decorating&&(e.ctrlKey||e.metaKey)){ undoDeco(); return; }
+    if(e.code==='KeyG'&&decorating){ decoSnapToGrid=!decoSnapToGrid; $('decoMsg').textContent='Grid snap: '+(decoSnapToGrid?'ON':'OFF'); return; }
+    if(e.code==='Escape'&&decorating){ decoSel=null; pickMode=false; renderDeco(); return; }
   } else if(walk==='roof'){
     if(e.code==='Space'||e.code==='KeyE'){ launchFromRoof(); return; }
   }
@@ -3094,7 +3106,7 @@ function stepWalk(dt,t){
       else if(a.type==='spin') a.obj.rotation.y+=dt*1.2;
     }
     if(benchDrone&&benchDrone.visible) benchDrone.rotation.y=Math.sin(t*0.6)*0.2;
-    if(decorating) hint=pickMode?'✋ Click a piece of furniture to put it back in storage':(decoSel?'Click the floor to place · R rotate · Esc cancel':'🛠 Pick something from the panel · Esc when done');
+    if(decorating) hint=pickMode?'✋ Click furniture to pick up · Ctrl+Z undo · Esc done':(decoSel?('Click to place · R +45° · Q/E ±15° · '+decoRotDegrees+'° · Ctrl+Z undo · Esc cancel'):'🛠 Pick an item · R rotate · Q/E fine rotate · Ctrl+Z undo · Esc done');
     else if(broken&&carrying) hint=nearBench()?'Press E to put your broken drone down on the repair desk':'🔧 Your drone is wrecked — carry it to the repair desk (back-left)';
     else if(broken) hint=nearBench()?'Press E to order the part and repair it':'🔧 Walk to the repair desk to fix your drone';
     else if(!carrying) hint=nearBench()?'Press E to grab your drone':'Walk to the repair desk (back-left) and grab your drone · WASD / arrows to walk · Right-click + drag to rotate camera · Scroll to zoom';
@@ -3128,10 +3140,23 @@ function stepWalk(dt,t){
 }
 // ---------- decorating ----------
 function toggleDeco(){
-  decorating=!decorating; decoSel=null; pickMode=false;
+  decorating=!decorating; decoSel=null; pickMode=false; decoRotDegrees=0; decoRot=0;
   $('decoPanel').style.display=decorating?'block':'none';
   $('wDeco').classList.toggle('on',decorating);
   renderDeco();
+}
+function undoDeco(){
+  if(decoHistory.length===0){ $('decoMsg').textContent='Nothing to undo.'; return; }
+  const last=decoHistory.pop();
+  const R=room();
+  if(last.action==='place'){
+    const idx=R.placed.findIndex(it=>it.id===last.item.id&&it.c===last.item.c&&it.r===last.item.r);
+    if(idx>=0){ R.placed.splice(idx,1); R.inv[last.item.id]=(R.inv[last.item.id]||0)+1; }
+  } else if(last.action==='pick'){
+    R.placed.push(last.item); R.inv[last.item.id]=(R.inv[last.item.id]||0)-1;
+  }
+  buildFurniture(); saveGame(); renderDeco();
+  $('decoMsg').textContent='Undone! (Ctrl+Z to undo more)';
 }
 function decoPlaceAt(id,c,r,rot){
   const R=room();
@@ -3145,6 +3170,8 @@ function decoPlaceAt(id,c,r,rot){
   }
   if(msg) return msg;
   R.inv[id]--; R.placed.push(it);
+  decoHistory.push({action:'place',item:Object.assign({},it)});
+  if(decoHistory.length>20) decoHistory.shift();
   buildFurniture(); saveGame();
   if(!(R.inv[id]>0)) decoSel=null;
   renderDeco(); return '';
@@ -3153,6 +3180,8 @@ function decoPickAt(c,r){
   const R=room(), g=roomGrid(R.placed,-1), k=g[c]&&g[c][r];
   if(!k) return false;
   const it=R.placed.splice(k.i,1)[0];
+  decoHistory.push({action:'pick',item:Object.assign({},it)});
+  if(decoHistory.length>20) decoHistory.shift();
   R.inv[it.id]=(R.inv[it.id]||0)+1;
   buildFurniture(); saveGame(); renderDeco(); return true;
 }
@@ -3172,7 +3201,7 @@ function renderDeco(){
     b.innerHTML='<span class="ic">'+f.ic+'</span>'+f.n+(have?'<span class="ow">×'+have+' · PLACE</span>':'<span class="pr">🪙 '+f.cost+'</span>');
     b.addEventListener('click',()=>{
       if(!(R.inv[id]>0)&&!buyFurn(id)) return;
-      decoSel=id; pickMode=false; $('decoMsg').textContent='Click the floor to place your '+f.n.toLowerCase()+'.'; renderDeco();
+      decoSel=id; pickMode=false; decoRotDegrees=0; decoRot=0; $('decoMsg').textContent='Click/tap to place · R +45° · Q/E ±15° · Ctrl+Z undo'; renderDeco();
     });
     panel.appendChild(b);
   });
@@ -3201,12 +3230,13 @@ function renderDeco(){
     or.appendChild(b);
   });
   $('dRot').classList.toggle('on',!!decoRot);
+  $('dRot').textContent='↻ ROTATE '+(decoRotDegrees||0)+'° (R/Q/E)';
   $('dPick').classList.toggle('on',pickMode);
   if(!decorating) decoGhost.visible=false;
 }
 $('wDeco').addEventListener('click',()=>{ if(walk==='room') toggleDeco(); });
 $('wHangar').addEventListener('click',()=>exitToHangar());
-$('dRot').addEventListener('click',()=>{ decoRot^=1; renderDeco(); });
+$('dRot').addEventListener('click',()=>{ decoRotDegrees=(decoRotDegrees+45)%360; decoRot=Math.floor(decoRotDegrees/90); renderDeco(); });
 $('dPick').addEventListener('click',()=>{ pickMode=!pickMode; decoSel=null; renderDeco(); });
 const rayc=new THREE.Raycaster(), mouseV=new THREE.Vector2(), floorPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0), hitV=new THREE.Vector3();
 function cellFromMouse(e){
@@ -3283,6 +3313,75 @@ addEventListener('wheel',e=>{
 addEventListener('contextmenu',e=>{
   if(e.target===renderer.domElement) e.preventDefault();
 });
+// Touch support for furniture placement and camera
+addEventListener('touchstart',e=>{
+  if(walk!=='room'||e.target!==renderer.domElement) return;
+  touchStartPos={x:e.touches[0].clientX,y:e.touches[0].clientY};
+  touchStartTime=Date.now();
+  if(decorating&&decoSel&&e.touches.length===1){
+    // Single touch for placing
+    const cf=cellFromMouse({clientX:e.touches[0].clientX,clientY:e.touches[0].clientY,target:e.target});
+    if(cf){ ghostCell=cf; }
+  } else if(e.touches.length===2){
+    // Two-finger for camera
+    isDraggingCam=true;
+    lastMouseX=(e.touches[0].clientX+e.touches[1].clientX)/2;
+    lastMouseY=(e.touches[0].clientX+e.touches[1].clientY)/2;
+  }
+},false);
+addEventListener('touchmove',e=>{
+  if(walk!=='room'||e.target!==renderer.domElement) return;
+  if(decorating&&decoSel&&e.touches.length===1){
+    // Update ghost preview
+    const cf=cellFromMouse({clientX:e.touches[0].clientX,clientY:e.touches[0].clientY,target:e.target});
+    if(cf){
+      ghostCell=cf;
+      const it=ghostItem(cf), [w,d]=fp(it);
+      const bad=canPlace(room(),it);
+      decoGhost.visible=true; decoGhost.scale.set(w*CELL,1,d*CELL);
+      decoGhost.position.set(RX0+(it.c+w/2)*CELL,0.15,RZ0+(it.r+d/2)*CELL);
+      decoGhost.material.color.set(bad?0xff4a4a:0x4dffd2);
+    }
+    e.preventDefault();
+  } else if(isDraggingCam&&e.touches.length===2){
+    // Two-finger camera control
+    const midX=(e.touches[0].clientX+e.touches[1].clientX)/2;
+    const midY=(e.touches[0].clientY+e.touches[1].clientY)/2;
+    const dx=midX-lastMouseX, dy=midY-lastMouseY;
+    roomCamAngle+=dx*0.008;
+    roomCamHeight=Math.max(0.4,Math.min(1.2,roomCamHeight-dy*0.003));
+    lastMouseX=midX; lastMouseY=midY;
+    // Pinch to zoom
+    const dist=Math.hypot(e.touches[1].clientX-e.touches[0].clientX,e.touches[1].clientY-e.touches[0].clientY);
+    if(touchStartPos.dist) roomCamDist=Math.max(10,Math.min(30,roomCamDist-(dist-touchStartPos.dist)*0.05));
+    touchStartPos.dist=dist;
+    e.preventDefault();
+  }
+},false);
+addEventListener('touchend',e=>{
+  if(walk!=='room'||e.target!==renderer.domElement) return;
+  if(decorating&&e.touches.length===0&&touchStartPos){
+    const dur=Date.now()-touchStartTime;
+    const dist=e.changedTouches.length?Math.hypot(e.changedTouches[0].clientX-touchStartPos.x,e.changedTouches[0].clientY-touchStartPos.y):0;
+    if(dur<500&&dist<20){ // Quick tap
+      if(pickMode){
+        const cf=cellFromMouse({clientX:touchStartPos.x,clientY:touchStartPos.y,target:e.target});
+        if(cf&&!decoPickAt(Math.floor(cf.fx),Math.floor(cf.fz))) $('decoMsg').textContent='Nothing there to pick up.';
+        else $('decoMsg').textContent='Put back in storage.';
+      } else if(decoSel){
+        const cf=cellFromMouse({clientX:touchStartPos.x,clientY:touchStartPos.y,target:e.target});
+        if(cf){
+          const it=ghostItem(cf);
+          const msg=decoPlaceAt(it.id,it.c,it.r,it.rot);
+          $('decoMsg').textContent=msg||('Placed! '+(decoSel?'Tap again to place another.':''));
+          decoGhost.visible=!!decoSel&&decoGhost.visible;
+        }
+      }
+    }
+  }
+  isDraggingCam=false;
+  touchStartPos=null;
+},false);
 
 // ---------- pilot chat (global, open/close, live presence) ----------
 let chatOpen=false, chatLast=0, chatSeen=0, chatTimer=null, chatMsgs=[];
