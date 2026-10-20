@@ -2750,6 +2750,22 @@ function buildFurniture(){
   roomGridCache=roomGrid(R.placed,-1);
 }
 // ---------- the pilot (improved realistic model) ----------
+// Helper function to create capsule-like geometry using cylinders and spheres
+function makeCapsule(radius,height,segments){
+  const g=new THREE.Group();
+  const cyl=new THREE.Mesh(new THREE.CylinderGeometry(radius,radius,height,segments));
+  g.add(cyl);
+  const top=new THREE.Mesh(new THREE.SphereGeometry(radius,segments,Math.ceil(segments/2)));
+  top.position.y=height/2;
+  top.scale.y=0.7;
+  g.add(top);
+  const bottom=new THREE.Mesh(new THREE.SphereGeometry(radius,segments,Math.ceil(segments/2)));
+  bottom.position.y=-height/2;
+  bottom.scale.y=0.7;
+  g.add(bottom);
+  return g;
+}
+
 function makePerson(){
   const g=new THREE.Group();
   const skin=new THREE.MeshStandardMaterial({color:0xf4c4a0,roughness:0.6,metalness:0.05});
@@ -2757,22 +2773,31 @@ function makePerson(){
   const dark=new THREE.MeshStandardMaterial({color:0x1a1a1a,roughness:0.9});
   const hair=new THREE.MeshStandardMaterial({color:0x3a2618,roughness:0.85});
   
-  // More realistic limb function using capsules (cylinders with rounded ends)
+  // More realistic limb function using cylinders with rounded ends
   const limb=(mat,w,h,px,py,isShoulder)=>{ 
     const piv=new THREE.Group(); 
     piv.position.set(px,py,0);
     const upperH=h*0.55, lowerH=h*0.48;
-    const upper=new THREE.Mesh(new THREE.CapsuleGeometry(w/2,upperH,8,12),mat);
+    
+    // Upper limb segment
+    const upper=new THREE.Mesh(new THREE.CylinderGeometry(w/2,w*0.95/2,upperH,12));
+    upper.material=mat;
     upper.position.y=-upperH/2-w/2;
     upper.castShadow=true;
     piv.add(upper);
+    
+    // Joint
     const joint=new THREE.Group();
     joint.position.y=-upperH-w/2;
-    const lower=new THREE.Mesh(new THREE.CapsuleGeometry(w*0.85/2,lowerH,8,12),mat);
+    
+    // Lower limb segment - slightly thinner
+    const lower=new THREE.Mesh(new THREE.CylinderGeometry(w*0.8/2,w*0.7/2,lowerH,12));
+    lower.material=mat;
     lower.position.y=-lowerH/2-w*0.4;
     lower.castShadow=true;
     joint.add(lower);
     piv.add(joint);
+    
     piv.userData={upper,joint,lower};
     g.add(piv); 
     return piv; 
@@ -2807,8 +2832,9 @@ function makePerson(){
   // Arms with better proportions
   const armL=limb(shirtMat,0.16,1.05,-0.58,2.35,true), armR=limb(shirtMat,0.16,1.05,0.58,2.35,true);
   for(const Ar of [armL,armR]){ 
-    const hnd=new THREE.Mesh(new THREE.CapsuleGeometry(0.09,0.16,6,8),skin); 
-    hnd.position.y=-1.2; 
+    const hnd=new THREE.Mesh(new THREE.SphereGeometry(0.09,10,8),skin); 
+    hnd.position.y=-1.2;
+    hnd.scale.set(1,1.3,1.3);
     hnd.castShadow=true;
     Ar.add(hnd); 
   }
