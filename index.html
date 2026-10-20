@@ -830,7 +830,7 @@ let custom=null, missionClock=0, birdMul=1, windMul=0, duskOn=false, bestTimes={
 // ---------- Scene: dusk over open water ----------
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0xa9bfc4);
-scene.fog=new THREE.Fog(0xb4c6c8,240,1000);
+scene.fog=new THREE.Fog(0xb8cad0,200,850);
 const camera=new THREE.PerspectiveCamera(62,innerWidth/innerHeight,0.1,1300);
 const renderer=new THREE.WebGLRenderer({antialias:true});
 renderer.setSize(innerWidth,innerHeight);
@@ -842,16 +842,16 @@ renderer.toneMapping=THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure=0.95;
 document.body.appendChild(renderer.domElement);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
-const hemi=new THREE.HemisphereLight(0xe8f2f6,0x7fa090,0.72); scene.add(hemi);
-const sun=new THREE.DirectionalLight(0xfff2dc,1.0);
+const hemi=new THREE.HemisphereLight(0xeaf4f8,0x8a9ca8,0.82); scene.add(hemi);
+const sun=new THREE.DirectionalLight(0xfff8e8,1.15);
 sun.position.set(-160,180,240);
 sun.castShadow=true;
 sun.shadow.mapSize.set(2048,2048);
 sun.shadow.camera.left=-230; sun.shadow.camera.right=230;
 sun.shadow.camera.top=230; sun.shadow.camera.bottom=-230;
 sun.shadow.camera.near=10; sun.shadow.camera.far=800;
-sun.shadow.bias=-0.0005;
-sun.shadow.radius=2.5;
+sun.shadow.bias=-0.0004;
+sun.shadow.radius=2.2;
 scene.add(sun); scene.add(sun.target);
 
 // ---- dusk sky dome, sun disk, stars & clouds ----
@@ -980,11 +980,11 @@ function buildBase(){
   for(const so of baseSolids){ const k=solids.indexOf(so); if(k>=0) solids.splice(k,1); }
   baseSolids.length=0;
   const H=HOUSE_HALF, wallH=ROOF_Y-3;
-  const wall=new THREE.MeshStandardMaterial({color:0xcfc6b8,roughness:0.9});
+  const wall=new THREE.MeshStandardMaterial({color:0xd4cec2,roughness:0.85,metalness:0.02});
   bMesh(new THREE.BoxGeometry(H*2,wallH,H*2),wall,0,3+wallH/2,0);
   // storey band + windows on all four sides
-  bMesh(new THREE.BoxGeometry(H*2+0.6,0.6,H*2+0.6),new THREE.MeshStandardMaterial({color:0x6b6f76}),0,3+wallH/2,0);
-  const winM=new THREE.MeshStandardMaterial({color:0x2a3a48,emissive:0xffc978,emissiveIntensity:0.35,roughness:0.2,metalness:0.4});
+  bMesh(new THREE.BoxGeometry(H*2+0.6,0.6,H*2+0.6),new THREE.MeshStandardMaterial({color:0x6b6f76,roughness:0.8,metalness:0.1}),0,3+wallH/2,0);
+  const winM=new THREE.MeshStandardMaterial({color:0x2a3a48,emissive:0xffcd88,emissiveIntensity:0.4,roughness:0.15,metalness:0.5});
   for(const fl of [0,1]) for(let k=-2;k<=2;k++){
     const y=3+3.4+fl*(wallH/2);
     bMesh(new THREE.BoxGeometry(3.2,2.6,0.3),winM,k*5.4,y,H+0.05);
@@ -2541,17 +2541,28 @@ function sanitizeRoom(r){
 }
 function room(){ if(!baseCfg.room) baseCfg.room=defaultRoom(); return baseCfg.room; }
 
-// ---------- 3D: room scene ----------
+// ---------- 3D: room scene (improved lighting) ----------
 const roomScene=new THREE.Scene();
 roomScene.background=new THREE.Color(0x0d0a18);
-roomScene.add(new THREE.HemisphereLight(0xfff4e6,0x3a3448,0.75));
-roomScene.add(new THREE.AmbientLight(0xffffff,0.22));
-const rLamp=new THREE.PointLight(0xffe2b8,0.75,40); rLamp.position.set(0,RWALL-0.4,0); roomScene.add(rLamp);
-const rSun=new THREE.DirectionalLight(0xffffff,0.45); rSun.position.set(-6,14,12); roomScene.add(rSun);
+roomScene.fog=new THREE.Fog(0x0d0a18,30,50);
+roomScene.add(new THREE.HemisphereLight(0xfff8ee,0x3a3448,0.85));
+roomScene.add(new THREE.AmbientLight(0xffeedd,0.35));
+const rLamp=new THREE.PointLight(0xffeacc,0.95,40); rLamp.position.set(0,RWALL-0.4,0); rLamp.castShadow=true; 
+rLamp.shadow.mapSize.width=1024; rLamp.shadow.mapSize.height=1024;
+roomScene.add(rLamp);
+const rSun=new THREE.DirectionalLight(0xffffff,0.6); rSun.position.set(-6,14,12); rSun.castShadow=true;
+rSun.shadow.mapSize.width=2048; rSun.shadow.mapSize.height=2048;
+rSun.shadow.camera.left=-15; rSun.shadow.camera.right=15;
+rSun.shadow.camera.top=15; rSun.shadow.camera.bottom=-15;
+rSun.shadow.bias=-0.0003;
+roomScene.add(rSun);
 const roomCam=new THREE.PerspectiveCamera(56,innerWidth/innerHeight,0.1,200);
 const roomStatic=new THREE.Group(), furnGroup=new THREE.Group();
 roomScene.add(roomStatic); roomScene.add(furnGroup);
 const furnAnims=[];
+// Camera control state
+let roomCamDist=20, roomCamAngle=0.8, roomCamHeight=0.75, roomCamTargetX=0;
+let isDraggingCam=false, lastMouseX=0, lastMouseY=0;
 const shirtMat=new THREE.MeshStandardMaterial({color:OUTFITS.pink,roughness:0.8});
 function rb(g,w,h,d,col,x,y,z,opt){
   const o=opt||{};
@@ -2738,25 +2749,126 @@ function buildFurniture(){
   }
   roomGridCache=roomGrid(R.placed,-1);
 }
-// ---------- the pilot ----------
+// ---------- the pilot (improved realistic model) ----------
 function makePerson(){
   const g=new THREE.Group();
-  const skin=new THREE.MeshStandardMaterial({color:0xe0b08a,roughness:0.8});
-  const pants=new THREE.MeshStandardMaterial({color:0x2b3348,roughness:0.9});
+  const skin=new THREE.MeshStandardMaterial({color:0xf4c4a0,roughness:0.6,metalness:0.05});
+  const pants=new THREE.MeshStandardMaterial({color:0x2b3348,roughness:0.85});
   const dark=new THREE.MeshStandardMaterial({color:0x1a1a1a,roughness:0.9});
-  const hair=new THREE.MeshStandardMaterial({color:0x3a2618,roughness:0.9});
-  const limb=(mat,w,h,d,px,py)=>{ const piv=new THREE.Group(); piv.position.set(px,py,0);
-    const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat); m.position.y=-h/2; m.castShadow=true; piv.add(m); g.add(piv); return piv; };
-  const legL=limb(pants,0.3,1.15,0.34,-0.2,1.2), legR=limb(pants,0.3,1.15,0.34,0.2,1.2);
-  for(const L of [legL,legR]){ const sh=new THREE.Mesh(new THREE.BoxGeometry(0.32,0.16,0.48),dark); sh.position.set(0,-1.18,0.07); L.add(sh); }
-  const torso=new THREE.Mesh(new THREE.BoxGeometry(0.85,1.0,0.48),shirtMat); torso.position.y=1.7; torso.castShadow=true; g.add(torso);
-  const armL=limb(shirtMat,0.24,0.95,0.26,-0.56,2.15), armR=limb(shirtMat,0.24,0.95,0.26,0.56,2.15);
-  for(const Ar of [armL,armR]){ const hnd=new THREE.Mesh(new THREE.SphereGeometry(0.13,8,6),skin); hnd.position.y=-1.0; Ar.add(hnd); }
-  const head=new THREE.Mesh(new THREE.SphereGeometry(0.33,16,12),skin); head.position.y=2.55; head.castShadow=true; g.add(head);
-  const hr=new THREE.Mesh(new THREE.SphereGeometry(0.35,16,10,0,Math.PI*2,0,Math.PI/2),hair); hr.position.y=2.6; g.add(hr);
-  for(const ex of [-0.12,0.12]){ const e=new THREE.Mesh(new THREE.SphereGeometry(0.045,6,5),dark); e.position.set(ex,2.58,0.3); g.add(e); }
-  const vis=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.1,0.25),new THREE.MeshStandardMaterial({color:0x2de0ff,metalness:0.5,roughness:0.2}));
-  vis.position.set(0,2.62,0.2); g.add(vis);                       // pilot goggles
+  const hair=new THREE.MeshStandardMaterial({color:0x3a2618,roughness:0.85});
+  
+  // More realistic limb function using capsules (cylinders with rounded ends)
+  const limb=(mat,w,h,px,py,isShoulder)=>{ 
+    const piv=new THREE.Group(); 
+    piv.position.set(px,py,0);
+    const upperH=h*0.55, lowerH=h*0.48;
+    const upper=new THREE.Mesh(new THREE.CapsuleGeometry(w/2,upperH,8,12),mat);
+    upper.position.y=-upperH/2-w/2;
+    upper.castShadow=true;
+    piv.add(upper);
+    const joint=new THREE.Group();
+    joint.position.y=-upperH-w/2;
+    const lower=new THREE.Mesh(new THREE.CapsuleGeometry(w*0.85/2,lowerH,8,12),mat);
+    lower.position.y=-lowerH/2-w*0.4;
+    lower.castShadow=true;
+    joint.add(lower);
+    piv.add(joint);
+    piv.userData={upper,joint,lower};
+    g.add(piv); 
+    return piv; 
+  };
+  
+  // Legs with better proportions (height 1.65 total)
+  const legL=limb(pants,0.22,1.65,-0.24,1.05), legR=limb(pants,0.22,1.65,0.24,1.05);
+  for(const L of [legL,legR]){ 
+    const sh=new THREE.Mesh(new THREE.BoxGeometry(0.3,0.12,0.38),dark); 
+    sh.position.set(0,-1.7,0.08); 
+    sh.castShadow=true;
+    L.add(sh); 
+  }
+  
+  // Torso - more anatomically correct
+  const torsoG=new THREE.Group();
+  torsoG.position.y=1.7;
+  const torsoUpper=new THREE.Mesh(
+    new THREE.CylinderGeometry(0.38,0.45,0.72,16),shirtMat
+  );
+  torsoUpper.position.y=0.36;
+  torsoUpper.castShadow=true;
+  torsoG.add(torsoUpper);
+  const torsoLower=new THREE.Mesh(
+    new THREE.CylinderGeometry(0.45,0.42,0.36,16),pants
+  );
+  torsoLower.position.y=-0.18;
+  torsoLower.castShadow=true;
+  torsoG.add(torsoLower);
+  g.add(torsoG);
+  
+  // Arms with better proportions
+  const armL=limb(shirtMat,0.16,1.05,-0.58,2.35,true), armR=limb(shirtMat,0.16,1.05,0.58,2.35,true);
+  for(const Ar of [armL,armR]){ 
+    const hnd=new THREE.Mesh(new THREE.CapsuleGeometry(0.09,0.16,6,8),skin); 
+    hnd.position.y=-1.2; 
+    hnd.castShadow=true;
+    Ar.add(hnd); 
+  }
+  
+  // Neck
+  const neck=new THREE.Mesh(new THREE.CylinderGeometry(0.14,0.16,0.28,12),skin);
+  neck.position.y=2.86;
+  neck.castShadow=true;
+  g.add(neck);
+  
+  // Head - more proportional
+  const head=new THREE.Mesh(new THREE.SphereGeometry(0.36,20,16),skin); 
+  head.position.y=3.2; 
+  head.castShadow=true; 
+  g.add(head);
+  
+  // Hair - more natural looking
+  const hr=new THREE.Mesh(new THREE.SphereGeometry(0.38,20,14,0,Math.PI*2,0,Math.PI*0.6),hair); 
+  hr.position.y=3.28; 
+  g.add(hr);
+  
+  // Eyes - more defined
+  for(const ex of [-0.14,0.14]){ 
+    const e=new THREE.Mesh(new THREE.SphereGeometry(0.05,8,6),new THREE.MeshBasicMaterial({color:0x0a0a0a})); 
+    e.position.set(ex,3.24,0.32); 
+    g.add(e); 
+  }
+  
+  // Pilot goggles - sleeker design
+  const goggleFrame=new THREE.Mesh(
+    new THREE.TorusGeometry(0.16,0.04,8,16),
+    new THREE.MeshStandardMaterial({color:0x2a2d33,metalness:0.7,roughness:0.3})
+  );
+  goggleFrame.position.set(-0.14,3.22,0.28);
+  goggleFrame.rotation.y=Math.PI/2;
+  g.add(goggleFrame);
+  
+  const goggleFrame2=goggleFrame.clone();
+  goggleFrame2.position.x=0.14;
+  g.add(goggleFrame2);
+  
+  const goggleLens=new THREE.Mesh(
+    new THREE.CircleGeometry(0.14,16),
+    new THREE.MeshStandardMaterial({color:0x2de0ff,metalness:0.6,roughness:0.15,transparent:true,opacity:0.6})
+  );
+  goggleLens.position.set(-0.14,3.22,0.34);
+  g.add(goggleLens);
+  
+  const goggleLens2=goggleLens.clone();
+  goggleLens2.position.x=0.14;
+  g.add(goggleLens2);
+  
+  const goggleBridge=new THREE.Mesh(
+    new THREE.CylinderGeometry(0.03,0.03,0.28,8),
+    new THREE.MeshStandardMaterial({color:0x2a2d33,metalness:0.7,roughness:0.3})
+  );
+  goggleBridge.rotation.z=Math.PI/2;
+  goggleBridge.position.set(0,3.22,0.3);
+  g.add(goggleBridge);
+  
   g.userData={legL,legR,armL,armR,ph:0};
   return g;
 }
@@ -2783,11 +2895,32 @@ function dropCarry(){ if(carryDrone.parent) carryDrone.parent.remove(carryDrone)
 function animPerson(pr,moving,dt,t){
   const u=pr.userData;
   if(moving) u.ph+=dt*9; else u.ph*=0.8;
-  const sw=Math.sin(u.ph)*(moving?0.65:0);
-  u.legL.rotation.x=sw; u.legR.rotation.x=-sw;
-  if(carrying&&pr===(walk==='roof'?roofPerson:roomPerson)){ u.armL.rotation.x=u.armR.rotation.x=-1.25; u.armL.rotation.z=u.armR.rotation.z=0; }
-  else if(u.waving){ u.armR.rotation.x=0; u.armR.rotation.z=2.6+Math.sin(t*8)*0.35; u.armL.rotation.x=0; u.armL.rotation.z=0; }
-  else { u.armL.rotation.x=-sw*0.8; u.armR.rotation.x=sw*0.8; u.armL.rotation.z=u.armR.rotation.z=0; }
+  const sw=Math.sin(u.ph)*(moving?0.55:0);
+  
+  // Natural walking animation with knee bends
+  u.legL.rotation.x=sw*0.8; 
+  u.legR.rotation.x=-sw*0.8;
+  if(u.legL.userData.joint) u.legL.userData.joint.rotation.x=Math.max(0,-sw*1.2);
+  if(u.legR.userData.joint) u.legR.userData.joint.rotation.x=Math.max(0,sw*1.2);
+  
+  if(carrying&&pr===(walk==='roof'?roofPerson:roomPerson)){ 
+    u.armL.rotation.x=u.armR.rotation.x=-1.1; 
+    u.armL.rotation.z=u.armR.rotation.z=0; 
+    if(u.armL.userData.joint){ u.armL.userData.joint.rotation.x=-0.4; u.armR.userData.joint.rotation.x=-0.4; }
+  }
+  else if(u.waving){ 
+    u.armR.rotation.x=-0.1; 
+    u.armR.rotation.z=2.4+Math.sin(t*8)*0.4; 
+    u.armL.rotation.x=0; 
+    u.armL.rotation.z=0; 
+    if(u.armR.userData.joint) u.armR.userData.joint.rotation.x=0.2;
+  }
+  else { 
+    u.armL.rotation.x=-sw*0.6; 
+    u.armR.rotation.x=sw*0.6; 
+    u.armL.rotation.z=u.armR.rotation.z=0; 
+    if(u.armL.userData.joint){ u.armL.userData.joint.rotation.x=-0.15; u.armR.userData.joint.rotation.x=-0.15; }
+  }
 }
 function wavePilot(t){ animPerson(roofPerson,false,0.016,t); }
 // ---------- collisions ----------
@@ -2938,11 +3071,19 @@ function stepWalk(dt,t){
     if(decorating) hint=pickMode?'✋ Click a piece of furniture to put it back in storage':(decoSel?'Click the floor to place · R rotate · Esc cancel':'🛠 Pick something from the panel · Esc when done');
     else if(broken&&carrying) hint=nearBench()?'Press E to put your broken drone down on the repair desk':'🔧 Your drone is wrecked — carry it to the repair desk (back-left)';
     else if(broken) hint=nearBench()?'Press E to order the part and repair it':'🔧 Walk to the repair desk to fix your drone';
-    else if(!carrying) hint=nearBench()?'Press E to grab your drone':'Walk to the repair desk (back-left) and grab your drone · WASD / arrows to walk';
-    else hint=(rp.x>STAIR_X0&&rp.z<STAIR_Z1)?'Keep climbing ↑':'Take the stairs (back-right) up to the roof ↑';
-    const cx=decorating?0:Math.max(-4,Math.min(4,rp.x*0.35));
+    else if(!carrying) hint=nearBench()?'Press E to grab your drone':'Walk to the repair desk (back-left) and grab your drone · WASD / arrows to walk · Right-click + drag to rotate camera · Scroll to zoom';
+    else hint=(rp.x>STAIR_X0&&rp.z<STAIR_Z1)?'Keep climbing ↑':'Take the stairs (back-right) up to the roof ↑ · Right-click + drag to rotate camera';
+    const cx=decorating?0:roomCamTargetX;
+    // Smooth orbit camera controls
+    roomCamTargetX=Math.max(-4,Math.min(4,rp.x*0.35));
+    const targetCamX=cx+Math.sin(roomCamAngle)*roomCamDist;
+    const targetCamZ=Math.cos(roomCamAngle)*roomCamDist;
+    const targetCamY=roomCamDist*roomCamHeight;
     roomCam.aspect=innerWidth/innerHeight; roomCam.updateProjectionMatrix();
-    roomCam.position.set(cx,16,17.5); roomCam.lookAt(cx,0.5,-0.8);
+    roomCam.position.x+=(targetCamX-roomCam.position.x)*0.15;
+    roomCam.position.y+=(targetCamY-roomCam.position.y)*0.15;
+    roomCam.position.z+=(targetCamZ-roomCam.position.z)*0.15;
+    roomCam.lookAt(cx,2,-0.8);
     $('walkCoins').textContent='🪙 '+money;
     renderer.render(roomScene,roomCam);
   } else if(walk==='roof'){
@@ -3082,6 +3223,39 @@ addEventListener('mousedown',e=>{
   const msg=decoPlaceAt(it.id,it.c,it.r,it.rot);
   $('decoMsg').textContent=msg||('Placed! '+(decoSel?'Click again to place another.':''));
   decoGhost.visible=!!decoSel&&decoGhost.visible;
+});
+// Camera controls for room mode
+addEventListener('mousedown',e=>{
+  if(walk!=='room'||e.target!==renderer.domElement) return;
+  if(e.button===2||e.button===1||(e.button===0&&e.shiftKey)){ // Right click, middle click, or shift+left
+    isDraggingCam=true;
+    lastMouseX=e.clientX;
+    lastMouseY=e.clientY;
+    e.preventDefault();
+  }
+});
+addEventListener('mouseup',e=>{
+  isDraggingCam=false;
+});
+addEventListener('mousemove',e=>{
+  if(isDraggingCam&&walk==='room'){
+    const dx=e.clientX-lastMouseX;
+    const dy=e.clientY-lastMouseY;
+    roomCamAngle+=dx*0.005;
+    roomCamHeight=Math.max(0.4,Math.min(1.2,roomCamHeight-dy*0.002));
+    lastMouseX=e.clientX;
+    lastMouseY=e.clientY;
+    e.preventDefault();
+  }
+});
+addEventListener('wheel',e=>{
+  if(walk==='room'&&e.target===renderer.domElement){
+    roomCamDist=Math.max(10,Math.min(30,roomCamDist+e.deltaY*0.02));
+    e.preventDefault();
+  }
+});
+addEventListener('contextmenu',e=>{
+  if(e.target===renderer.domElement) e.preventDefault();
 });
 
 // ---------- pilot chat (global, open/close, live presence) ----------
