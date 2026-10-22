@@ -94,6 +94,20 @@
   #decoTools button.on{border-color:#ff2d95;color:#ff9bd0}
   #decoMsg{font-size:11px;color:#ffb3d9;min-height:14px;margin-top:6px}
   #fade{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .3s;z-index:60}
+  #avatarCustomizer{display:none;position:fixed;z-index:45;top:0;right:0;bottom:0;width:min(400px,100%);overflow:auto;background:rgba(16,10,28,.94);border-left:2px solid #6a5088;color:#f3ecff;font-family:'Segoe UI',Arial,sans-serif;padding:18px 16px 28px;box-sizing:border-box}
+  #avatarCustomizer h2{margin:0 0 6px;font-size:20px;letter-spacing:.4px}
+  #avatarCustomizer .avNote{font-size:12px;color:#b8a8d8;margin:0 0 14px;line-height:1.45}
+  #avCustomControls{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px}
+  #avCustomControls label{display:flex;flex-direction:column;gap:6px;font-size:11px;letter-spacing:.4px;color:#cbbbe4;font-weight:700}
+  #avCustomControls input[type=color]{width:100%;height:36px;border:2px solid #4a3f58;border-radius:6px;background:#2a1f38;padding:0;cursor:pointer}
+  #avCustomControls select{padding:8px;background:#2a1f38;color:#e8d8ff;border:2px solid #4a3f58;border-radius:6px;font-size:14px}
+  #avActions{margin-top:16px;display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+  #avActions button{padding:10px 16px;border:none;border-radius:6px;cursor:pointer;font-weight:700;color:#fff;font-family:inherit}
+  #avResetBtn{background:#6a3030}
+  #avSaveBtn{background:#5a3f78}
+  @media(max-width:700px){
+    #avatarCustomizer{top:auto;left:0;width:100%;max-height:54vh;border-left:none;border-top:2px solid #6a5088}
+  }
   #chatBox{position:fixed;right:14px;bottom:14px;z-index:50;font-family:'Segoe UI',Arial,sans-serif;display:none}
   #chatToggle{position:relative;padding:9px 14px;border-radius:10px;border:1px solid #ff2d95;background:rgba(14,8,28,.9);color:#ffd0ea;font-size:12px;font-weight:700;letter-spacing:1px;cursor:pointer;box-shadow:0 0 16px rgba(255,45,149,.35)}
   #chatToggle:hover{background:rgba(255,45,149,.3);color:#fff}
@@ -568,14 +582,13 @@
 </style>
 </head>
 <body>
-<div id="avatarCustomizer" style="display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;overflow:auto;background:rgba(10,5,18,0.92)">
-<div style="background:#1a1428;margin:4vh auto;padding:24px;max-width:680px;border-radius:12px;border:2px solid #4a3f58">
-<h2 style="margin:0 0 20px 0;color:#e8d8ff;font-size:24px">🎨 CUSTOMIZE AVATAR</h2>
-<div id="avCustomControls" style="display:grid;grid-template-columns:1fr 1fr;gap:16px 24px"></div>
-<div style="margin-top:24px;display:flex;gap:12px;justify-content:flex-end">
-<button id="avResetBtn" style="padding:10px 20px;background:#4a2a2a;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-weight:600">RESET TO DEFAULTS</button>
-<button id="avSaveBtn" style="padding:10px 32px;background:#5a3f78;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-weight:600">SAVE & CLOSE</button>
-</div>
+<div id="avatarCustomizer">
+<h2>🎨 CUSTOMIZE AVATAR</h2>
+<p class="avNote">Change the face and the whole outfit. Your pilot updates live in the room, and the look is saved with this account.</p>
+<div id="avCustomControls"></div>
+<div id="avActions">
+<button id="avResetBtn" type="button">RESET</button>
+<button id="avSaveBtn" type="button">SAVE &amp; CLOSE</button>
 </div>
 </div>
 <div id="hud">
@@ -861,6 +874,7 @@ const AVATAR_DEFAULTS={
   headwearColor:0x2de0ff
 };
 let avatarCustomization=JSON.parse(JSON.stringify(AVATAR_DEFAULTS));
+let customizingAvatar=false;
 // ---------- Scene: dusk over open water ----------
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0xb8d4e6);  // More realistic sky blue
@@ -2172,12 +2186,13 @@ function applySave(s){
   for(const k in OLD_STYLE) if(b.ownedStyles&&b.ownedStyles[k]) money+=OLD_STYLE[k];
   for(const k in OLD_EXTRA) if(b.extras&&b.extras[k]!==undefined) money+=OLD_EXTRA[k];
   baseCfg={name:String(b.name||'').slice(0,18), outfit:OUTFITS[b.outfit]?b.outfit:'pink', room:sanitizeRoom(b.room), dest:cleanDest(b.dest)};
-  avatarCustomization=s.avatar?JSON.parse(JSON.stringify(s.avatar)):JSON.parse(JSON.stringify(AVATAR_DEFAULTS));
+  avatarCustomization=normalizeAvatar(s.avatar);
   if(typeof setRouteWorld==='function'&&typeof routeInfo!=='undefined'&&routeInfo&&routeInfo.miles) setRouteWorld(tripMiles());   // rebuild the world for the saved destination
   buildRoom();
   applySkin(curSkin); applyDrone(curDrone);
   P.batt=maxBattF();
   moneyHUD();
+  rebuildAvatars();
 }
 function saveGame(){
   if(!account) return;
@@ -2998,14 +3013,14 @@ function makePerson(){
   });
   
   // More realistic limb function using cylinders with rounded ends
-  const limb=(mat,w,h,px,py,isShoulder)=>{ 
+  const limb=(upperMat,lowerMat,w,h,px,py)=>{ 
     const piv=new THREE.Group(); 
     piv.position.set(px,py,0);
     const upperH=h*0.55, lowerH=h*0.48;
     
     // Upper limb segment
     const upper=new THREE.Mesh(new THREE.CylinderGeometry(w/2,w*0.95/2,upperH,12));
-    upper.material=mat;
+    upper.material=upperMat;
     upper.position.y=-upperH/2-w/2;
     upper.castShadow=true;
     piv.add(upper);
@@ -3016,7 +3031,7 @@ function makePerson(){
     
     // Lower limb segment - slightly thinner
     const lower=new THREE.Mesh(new THREE.CylinderGeometry(w*0.8/2,w*0.7/2,lowerH,12));
-    lower.material=mat;
+    lower.material=lowerMat;
     lower.position.y=-lowerH/2-w*0.4;
     lower.castShadow=true;
     joint.add(lower);
@@ -3027,8 +3042,9 @@ function makePerson(){
     return piv; 
   };
   
-  // Legs with better proportions (height 1.65 total)
-  const legL=limb(bottomMat,0.22,1.65,-0.24,1.05), legR=limb(bottomMat,0.22,1.65,0.24,1.05);
+  // Legs with better proportions (height 1.65 total). Shorts and skirts leave the lower leg bare.
+  const legLowerMat=(av.bottomStyle==='shorts'||av.bottomStyle==='skirt')?skin:bottomMat;
+  const legL=limb(bottomMat,legLowerMat,0.22,1.65,-0.24,1.05), legR=limb(bottomMat,legLowerMat,0.22,1.65,0.24,1.05);
   for(const L of [legL,legR]){ 
     const sh=new THREE.Mesh(new THREE.BoxGeometry(0.3,0.12,0.38),shoesMat); 
     sh.position.set(0,-1.7,0.08); 
@@ -3051,10 +3067,23 @@ function makePerson(){
   torsoLower.position.y=-0.18;
   torsoLower.castShadow=true;
   torsoG.add(torsoLower);
+  if(av.topStyle==='jacket'){
+    const coat=new THREE.Mesh(new THREE.CylinderGeometry(0.44,0.52,0.8,16,1,true),topMat);
+    coat.position.y=0.32;
+    coat.castShadow=true;
+    torsoG.add(coat);
+  }
   g.add(torsoG);
+  if(av.bottomStyle==='skirt'){
+    const skirt=new THREE.Mesh(new THREE.CylinderGeometry(0.28,0.58,0.48,16),bottomMat);
+    skirt.position.y=1.32;
+    skirt.castShadow=true;
+    g.add(skirt);
+  }
   
-  // Arms with better proportions
-  const armL=limb(topMat,0.16,1.05,-0.58,2.35,true), armR=limb(topMat,0.16,1.05,0.58,2.35,true);
+  // Arms with better proportions. A tank top leaves the arms bare.
+  const armMat=av.topStyle==='tank'?skin:topMat;
+  const armL=limb(armMat,armMat,0.16,1.05,-0.58,2.35), armR=limb(armMat,armMat,0.16,1.05,0.58,2.35);
   for(const Ar of [armL,armR]){ 
     const hnd=new THREE.Mesh(new THREE.SphereGeometry(0.09,10,8),skin); 
     hnd.position.y=-1.2;
@@ -3069,9 +3098,11 @@ function makePerson(){
   neck.castShadow=true;
   g.add(neck);
   
-  // Head - more proportional
+  // Head - more proportional, with a face shape the player can change
   const head=new THREE.Mesh(new THREE.SphereGeometry(0.36,20,16),skin); 
   head.position.y=3.2; 
+  const faceScale=av.faceShape==='round'?[1.12,1.04,1.12]:av.faceShape==='square'?[1.16,1.1,0.9]:[1,1,1];
+  head.scale.set(faceScale[0],faceScale[1],faceScale[2]);
   head.castShadow=true; 
   g.add(head);
   
@@ -3120,12 +3151,30 @@ function makePerson(){
     g.add(goat);
   }
   
-  // Eyes - customizable color
+  // Eyes, brows, nose and mouth — each follows the saved face settings
+  const eyeMat=new THREE.MeshBasicMaterial({color:av.eyeColor});
   for(const ex of [-0.14,0.14]){ 
-    const e=new THREE.Mesh(new THREE.SphereGeometry(0.05,8,6),new THREE.MeshBasicMaterial({color:av.eyeColor})); 
-    e.position.set(ex,3.24,0.32); 
+    const e=new THREE.Mesh(new THREE.SphereGeometry(0.05,8,6),eyeMat); 
+    e.position.set(ex*faceScale[0],3.24,0.32*faceScale[2]); 
     g.add(e); 
   }
+  const browH=av.eyebrowStyle==='thick'?0.055:av.eyebrowStyle==='thin'?0.018:0.032;
+  const browMat=new THREE.MeshStandardMaterial({color:av.hairColor,roughness:0.7,metalness:0.05});
+  for(const ex of [-0.13,0.13]){
+    const brow=new THREE.Mesh(new THREE.BoxGeometry(0.12,browH,0.035),browMat);
+    brow.position.set(ex*faceScale[0],3.34,0.34*faceScale[2]);
+    brow.rotation.z=ex<0?0.15:-0.15;
+    g.add(brow);
+  }
+  const noseS=av.noseSize==='small'?0.65:av.noseSize==='large'?1.45:1;
+  const nose=new THREE.Mesh(new THREE.SphereGeometry(0.04*noseS,8,6),skin);
+  nose.scale.set(0.75,1.15,1.35);
+  nose.position.set(0,3.12,0.36*faceScale[2]+0.02);
+  g.add(nose);
+  const mouthW=av.mouthSize==='small'?0.08:av.mouthSize==='large'?0.22:0.14;
+  const mouth=new THREE.Mesh(new THREE.BoxGeometry(mouthW,0.028,0.03),new THREE.MeshStandardMaterial({color:0x8d4038,roughness:0.55}));
+  mouth.position.set(0,2.98,0.34*faceScale[2]);
+  g.add(mouth);
   
   // Headwear
   if(av.headwear==='goggles'){
@@ -3177,8 +3226,8 @@ function makePerson(){
   g.userData={legL,legR,armL,armR,ph:0};
   return g;
 }
-const roomPerson=makePerson(); roomScene.add(roomPerson);
-const roofPerson=makePerson(); roofPerson.visible=false; scene.add(roofPerson);
+let roomPerson=makePerson(); roomScene.add(roomPerson);
+let roofPerson=makePerson(); roofPerson.visible=false; scene.add(roofPerson);
 const carryDrone=makeMiniDrone(); carryDrone.visible=false;
 let carrying=false, decorating=false, decoSel=null, decoRot=0, pickMode=false, walkHintT='';
 let decoHistory=[]; // Undo history for placed items
@@ -3349,6 +3398,10 @@ function exitToHangar(){
   openHome();
 }
 function walkKey(e){
+  if(customizingAvatar){
+    if(e.code==='Escape') closeAvatarCustomizer(true);
+    return;
+  }
   if(e.code==='Escape'){
     if(decoSel||pickMode){ decoSel=null; pickMode=false; renderDeco(); return; }
     if(decorating){ toggleDeco(); return; }
@@ -3374,6 +3427,11 @@ function stepWalk(dt,t){
   let hint='';
   if($('overlay').style.display==='flex'){ mv.x=0; mv.z=0; }
   if(walk==='room'){
+    if(customizingAvatar){
+      mv.x=0; mv.z=0;
+      rp.x=0; rp.z=0.4; rp.h=0; rp.y=0;
+      roomCamDist=9; roomCamAngle=0.15; roomCamHeight=0.72; roomCamTargetX=0;
+    }
     const moving=moveP(rp,mv.x,mv.z,dt,roomFree);
     rp.y=stairY(rp.x,rp.z);
     roomPerson.position.set(rp.x,rp.y,rp.z); roomPerson.rotation.y=rp.h;
@@ -3506,8 +3564,8 @@ function renderDeco(){
   });
   const or=$('dOutfit'); or.innerHTML='';
   Object.keys(OUTFITS).forEach(id=>{
-    const b=document.createElement('button'); b.className='sw'+(baseCfg.outfit===id?' sel':''); b.style.background=hex(OUTFITS[id]); b.title=id;
-    b.addEventListener('click',()=>{ baseCfg.outfit=id; applyOutfit(); saveGame(); renderDeco(); });
+    const b=document.createElement('button'); b.className='sw'+(avatarCustomization.topColor===OUTFITS[id]?' sel':''); b.style.background=hex(OUTFITS[id]); b.title=id;
+    b.addEventListener('click',()=>{ baseCfg.outfit=id; avatarCustomization.topColor=OUTFITS[id]; applyOutfit(); rebuildAvatars(); saveGame(); renderDeco(); });
     or.appendChild(b);
   });
   $('dRot').classList.toggle('on',!!decoRot);
@@ -4853,6 +4911,125 @@ function loop(){
   drawMap();
   renderer.render(scene,camera);
 }
+function normalizeAvatar(src){
+  const out=JSON.parse(JSON.stringify(AVATAR_DEFAULTS));
+  if(!src||typeof src!=='object') return out;
+  for(const k in out){
+    if(src[k]===undefined||src[k]===null||src[k]==='') continue;
+    if(typeof out[k]==='number'){
+      const n=typeof src[k]==='number'?src[k]:parseInt(String(src[k]).replace(/^#/,''),16);
+      if(isFinite(n)) out[k]=n&0xffffff;
+    }else out[k]=String(src[k]);
+  }
+  return out;
+}
+function colorHex(n){ return '#'+((Number(n)||0)&0xffffff).toString(16).padStart(6,'0'); }
+function disposePerson(obj){
+  const seen=new Set();
+  obj.traverse(o=>{
+    if(!o.isMesh) return;
+    if(o.geometry&&!seen.has(o.geometry)){ seen.add(o.geometry); o.geometry.dispose(); }
+    const mats=Array.isArray(o.material)?o.material:[o.material];
+    mats.forEach(m=>{ if(m&&!seen.has(m)){ seen.add(m); if(m.dispose) m.dispose(); } });
+  });
+}
+function replacePerson(current){
+  const parent=current.parent;
+  const pos=current.position.clone();
+  const rot=current.rotation.clone();
+  const vis=current.visible;
+  const waving=!!(current.userData&&current.userData.waving);
+  const hadCarry=carryDrone&&carryDrone.parent===current;
+  if(hadCarry) current.remove(carryDrone);
+  const neu=makePerson();
+  neu.position.copy(pos);
+  neu.rotation.copy(rot);
+  neu.visible=vis;
+  neu.userData.waving=waving;
+  if(parent){ parent.remove(current); parent.add(neu); }
+  if(hadCarry) attachCarry(neu);
+  disposePerson(current);
+  return neu;
+}
+function rebuildAvatars(){
+  if(!roomPerson||!roofPerson) return;
+  roomPerson=replacePerson(roomPerson);
+  roofPerson=replacePerson(roofPerson);
+}
+function closeAvatarCustomizer(save){
+  customizingAvatar=false;
+  const panel=$('avatarCustomizer');
+  if(panel) panel.style.display='none';
+  if(save) saveGame();
+  if(walk==='room'){
+    rp.x=RX0+(R_SPAWN.c+0.5)*CELL; rp.z=RZ0+(R_SPAWN.r+0.5)*CELL; rp.h=Math.PI; rp.y=0;
+    roomCamDist=16; roomCamAngle=0.8; roomCamHeight=0.75;
+  }
+}
+function openAvatarCustomizer(){
+  if(!account){ initAccount(); return; }
+  const panel=$('avatarCustomizer');
+  const controls=$('avCustomControls');
+  if(!panel||!controls) return;
+  $('home').style.display='none';
+  $('signup').style.display='none';
+  if(walk!=='room') enterRoom();
+  customizingAvatar=true;
+  panel.style.display='block';
+  controls.innerHTML='';
+  const addControl=(label,type,key,options)=>{
+    const lab=document.createElement('label');
+    lab.appendChild(document.createTextNode(label));
+    let input;
+    if(type==='color'){
+      input=document.createElement('input');
+      input.type='color';
+      input.value=colorHex(avatarCustomization[key]);
+      input.addEventListener('input',()=>{
+        avatarCustomization[key]=parseInt(input.value.slice(1),16);
+        rebuildAvatars();
+      });
+    }else{
+      input=document.createElement('select');
+      (options||[]).forEach(opt=>{
+        const option=document.createElement('option');
+        option.value=opt.v; option.textContent=opt.n;
+        if(avatarCustomization[key]===opt.v) option.selected=true;
+        input.appendChild(option);
+      });
+      input.addEventListener('change',()=>{
+        avatarCustomization[key]=input.value;
+        rebuildAvatars();
+      });
+    }
+    lab.appendChild(input);
+    controls.appendChild(lab);
+  };
+  addControl('FACE SHAPE','select','faceShape',[{v:'normal',n:'Normal'},{v:'round',n:'Round'},{v:'square',n:'Square'}]);
+  addControl('SKIN TONE','color','skinTone');
+  addControl('EYE COLOR','color','eyeColor');
+  addControl('EYEBROWS','select','eyebrowStyle',[{v:'thin',n:'Thin'},{v:'normal',n:'Normal'},{v:'thick',n:'Thick'}]);
+  addControl('NOSE','select','noseSize',[{v:'small',n:'Small'},{v:'normal',n:'Normal'},{v:'large',n:'Large'}]);
+  addControl('MOUTH','select','mouthSize',[{v:'small',n:'Small'},{v:'normal',n:'Normal'},{v:'large',n:'Large'}]);
+  addControl('HAIR STYLE','select','hairStyle',[{v:'short',n:'Short'},{v:'long',n:'Long'},{v:'ponytail',n:'Ponytail'},{v:'bun',n:'Bun'},{v:'bald',n:'Bald'}]);
+  addControl('HAIR COLOR','color','hairColor');
+  addControl('FACIAL HAIR','select','facialHair',[{v:'none',n:'None'},{v:'beard',n:'Beard'},{v:'mustache',n:'Mustache'},{v:'goatee',n:'Goatee'}]);
+  addControl('FACIAL HAIR COLOR','color','facialHairColor');
+  addControl('TOP','select','topStyle',[{v:'shirt',n:'Shirt'},{v:'jacket',n:'Jacket'},{v:'tank',n:'Tank top'}]);
+  addControl('TOP COLOR','color','topColor');
+  addControl('BOTTOM','select','bottomStyle',[{v:'pants',n:'Pants'},{v:'shorts',n:'Shorts'},{v:'skirt',n:'Skirt'}]);
+  addControl('BOTTOM COLOR','color','bottomColor');
+  addControl('SHOES','color','shoesColor');
+  addControl('HEADWEAR','select','headwear',[{v:'none',n:'None'},{v:'goggles',n:'Goggles'},{v:'cap',n:'Cap'},{v:'headband',n:'Headband'}]);
+  addControl('HEADWEAR COLOR','color','headwearColor');
+}
+if($('avSaveBtn')) $('avSaveBtn').addEventListener('click',()=>closeAvatarCustomizer(true));
+if($('avResetBtn')) $('avResetBtn').addEventListener('click',()=>{
+  avatarCustomization=normalizeAvatar(null);
+  rebuildAvatars();
+  openAvatarCustomizer();
+  saveGame();
+});
 loadDB(); loadBest();
 // if we're on a host with no account API (e.g. a static deploy), fall back to local accounts
 if(REMOTE){
@@ -4885,58 +5062,6 @@ loop();
   }
   window.addEventListener('hashchange',route); route();
 })();
-
-// ========== AVATAR CUSTOMIZER SYSTEM ==========
-function openAvatarCustomizer(){
-  const panel=$('avatarCustomizer');
-  const controls=$('avCustomControls');
-  panel.style.display='block';
-  controls.innerHTML='';
-  const addControl=(label,type,key,options)=>{
-    const div=document.createElement('div');
-    div.style.cssText='display:flex;flex-direction:column;gap:6px';
-    const lbl=document.createElement('div');
-    lbl.style.cssText='color:#b8a8d8;font-size:12px;font-weight:600;letter-spacing:0.5px';
-    lbl.textContent=label;
-    div.appendChild(lbl);
-    let input;
-    if(type==='color'){
-      input=document.createElement('input');
-      input.type='color';
-      input.value='#'+avatarCustomization[key].toString(16).padStart(6,'0');
-      input.style.cssText='width:100%;height:40px;border:2px solid #4a3f58;border-radius:6px;background:#2a1f38;cursor:pointer';
-      input.oninput=()=>{ avatarCustomization[key]=parseInt(input.value.slice(1),16); refreshPilot(); };
-    }else if(type==='select'){
-      input=document.createElement('select');
-      input.style.cssText='padding:10px;background:#2a1f38;color:#e8d8ff;border:2px solid #4a3f58;border-radius:6px;font-size:14px;cursor:pointer';
-      options.forEach(opt=>{
-        const option=document.createElement('option');
-        option.value=opt.v;
-        option.textContent=opt.n;
-        if(avatarCustomization[key]===opt.v) option.selected=true;
-        input.appendChild(option);
-      });
-      input.onchange=()=>{ avatarCustomization[key]=input.value; refreshPilot(); };
-    }
-    div.appendChild(input);
-    controls.appendChild(div);
-  };
-  addControl('SKIN TONE','color','skinTone');
-  addControl('EYE COLOR','color','eyeColor');
-  addControl('HAIR STYLE','select','hairStyle',[{v:'short',n:'Short'},{v:'long',n:'Long'},{v:'ponytail',n:'Ponytail'},{v:'bun',n:'Bun'},{v:'bald',n:'Bald'}]);
-  addControl('HAIR COLOR','color','hairColor');
-  addControl('FACIAL HAIR','select','facialHair',[{v:'none',n:'None'},{v:'beard',n:'Beard'},{v:'mustache',n:'Mustache'},{v:'goatee',n:'Goatee'}]);
-  addControl('FACIAL HAIR COLOR','color','facialHairColor');
-  addControl('TOP COLOR','color','topColor');
-  addControl('BOTTOM COLOR','color','bottomColor');
-  addControl('SHOES COLOR','color','shoesColor');
-  addControl('HEADWEAR','select','headwear',[{v:'none',n:'None'},{v:'goggles',n:'Goggles'},{v:'cap',n:'Cap'},{v:'headband',n:'Headband'}]);
-  addControl('HEADWEAR COLOR','color','headwearColor');
-}
-$('avSaveBtn').onclick=()=>{ $('avatarCustomizer').style.display='none'; if(typeof saveGame==='function') saveGame(); };
-$('avResetBtn').onclick=()=>{ if(confirm('Reset avatar to default appearance?')){ avatarCustomization=JSON.parse(JSON.stringify(AVATAR_DEFAULTS)); openAvatarCustomizer(); refreshPilot(); if(typeof saveGame==='function') saveGame(); } };
-function refreshPilot(){ if(typeof pilot!=='undefined'&&pilot&&pilot.parent){ const p=pilot.position.clone(),r=pilot.rotation.clone(); pilot.parent.remove(pilot); pilot=makePerson(); pilot.position.copy(p); pilot.rotation.copy(r); pilot.scale.set(0.62,0.62,0.62); walkingG.add(pilot); } }
-window.openAvatarCustomizer=openAvatarCustomizer;
 
 </script>
 </body>
