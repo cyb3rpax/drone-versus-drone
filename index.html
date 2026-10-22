@@ -820,6 +820,7 @@
   <button id="overlayBtn">FLY AGAIN</button>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script></script>
 <script>
 (function(){
 'use strict';
@@ -832,27 +833,51 @@ const scene=new THREE.Scene();
 scene.background=new THREE.Color(0xa9bfc4);
 scene.fog=new THREE.Fog(0xb8cad0,200,850);
 const camera=new THREE.PerspectiveCamera(62,innerWidth/innerHeight,0.1,1300);
-const renderer=new THREE.WebGLRenderer({antialias:true});
+const renderer=new THREE.WebGLRenderer({
+  antialias:true,
+  powerPreference:'high-performance',
+  stencil:false
+});
 renderer.setSize(innerWidth,innerHeight);
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 renderer.shadowMap.enabled=true;
 renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.shadowMap.autoUpdate=true;
 renderer.outputEncoding=THREE.sRGBEncoding;
 renderer.toneMapping=THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure=0.95;
+renderer.toneMappingExposure=1.2;
+renderer.physicallyCorrectLights=true;
 document.body.appendChild(renderer.domElement);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
-const hemi=new THREE.HemisphereLight(0xeaf4f8,0x8a9ca8,0.82); scene.add(hemi);
-const sun=new THREE.DirectionalLight(0xfff8e8,1.15);
-sun.position.set(-160,180,240);
+
+// Enhanced lighting for photorealism
+const amb=new THREE.AmbientLight(0xb3c9d9,0.3);
+scene.add(amb);
+const hemi=new THREE.HemisphereLight(0xe8f4fa,0x7a8c98,0.6);
+scene.add(hemi);
+
+// Main sun with enhanced settings
+const sun=new THREE.DirectionalLight(0xfff9ed,2.5);
+sun.position.set(-160,240,200);
 sun.castShadow=true;
-sun.shadow.mapSize.set(2048,2048);
-sun.shadow.camera.left=-230; sun.shadow.camera.right=230;
-sun.shadow.camera.top=230; sun.shadow.camera.bottom=-230;
-sun.shadow.camera.near=10; sun.shadow.camera.far=800;
-sun.shadow.bias=-0.0004;
-sun.shadow.radius=2.2;
+sun.shadow.mapSize.set(4096,4096);
+sun.shadow.camera.left=-280; sun.shadow.camera.right=280;
+sun.shadow.camera.top=280; sun.shadow.camera.bottom=-280;
+sun.shadow.camera.near=50; sun.shadow.camera.far=1000;
+sun.shadow.bias=-0.0001;
+sun.shadow.radius=1.8;
+sun.shadow.normalBias=0.02;
 scene.add(sun); scene.add(sun.target);
+
+// Fill light for softer shadows
+const fillLight=new THREE.DirectionalLight(0xaac8e4,0.8);
+fillLight.position.set(120,-80,100);
+scene.add(fillLight);
+
+// Rim light for definition
+const rimLight=new THREE.DirectionalLight(0xffeedd,0.4);
+rimLight.position.set(0,100,-200);
+scene.add(rimLight);
 
 // ---- dusk sky dome, sun disk, stars & clouds ----
 const dome=new THREE.Mesh(new THREE.SphereGeometry(1080,24,16), new THREE.ShaderMaterial({
@@ -925,10 +950,16 @@ let MILE=1140;                              // 1 mile = 30 seconds of flying at 
 const BOUND={x:900, zMin:-1250, zMax:950};    // zMin follows Harmony when it moves
 let DRAINF=1;                                 // battery pacing: one charge ≈ 60% one-way on any route length
 
-// sea with real moving waves and sunset glint
+// sea with real moving waves and sunset glint - HYPER REALISTIC
 const seaGeo=new THREE.PlaneGeometry(4200,30000,64,150);  // ocean long enough for ~36 real miles at the new scale
-const sea=new THREE.Mesh(seaGeo, new THREE.MeshPhongMaterial({
-  color:0x1b4b63, shininess:95, specular:0x9fc0cc, transparent:true, opacity:0.97
+const sea=new THREE.Mesh(seaGeo, new THREE.MeshStandardMaterial({
+  color:0x1f5270,
+  roughness:0.12,
+  metalness:0.88,
+  emissive:0x0d2a3a,
+  emissiveIntensity:0.15,
+  transparent:true,
+  opacity:0.94
 }));
 sea.rotation.x=-Math.PI/2; sea.position.z=-13800; scene.add(sea);
 
@@ -943,8 +974,20 @@ function addSolid(x,y,z,w,h,d){ solids.push({min:new THREE.Vector3(x-w/2,y-h/2,z
 const BASE_ZONE=40;
 (function buildCove(){
   SOLID_TAG='the cliffs by your home';
-  const rockMat=new THREE.MeshStandardMaterial({map:rockTex,roughness:1});
-  const sandMat=new THREE.MeshStandardMaterial({map:sandTex,roughness:1});
+  const rockMat=new THREE.MeshStandardMaterial({
+    map:rockTex,
+    roughness:0.85,
+    metalness:0.08,
+    emissive:0x2a2620,
+    emissiveIntensity:0.03
+  });
+  const sandMat=new THREE.MeshStandardMaterial({
+    map:sandTex,
+    roughness:0.95,
+    metalness:0.02,
+    emissive:0x4a4230,
+    emissiveIntensity:0.04
+  });
   const beach=new THREE.Mesh(new THREE.CylinderGeometry(90,100,4,26), sandMat);
   beach.position.set(COVE.x,1,COVE.z); scene.add(beach);
   const shopBox={x0:COVE.x-55-26,x1:COVE.x-55+26,z0:COVE.z-30-40,z1:COVE.z-30+8};
@@ -980,11 +1023,29 @@ function buildBase(){
   for(const so of baseSolids){ const k=solids.indexOf(so); if(k>=0) solids.splice(k,1); }
   baseSolids.length=0;
   const H=HOUSE_HALF, wallH=ROOF_Y-3;
-  const wall=new THREE.MeshStandardMaterial({color:0xd4cec2,roughness:0.85,metalness:0.02});
+  const wall=new THREE.MeshStandardMaterial({
+    color:0xe4ddd2,
+    roughness:0.78,
+    metalness:0.04,
+    emissive:0xfaf8f5,
+    emissiveIntensity:0.05
+  });
   bMesh(new THREE.BoxGeometry(H*2,wallH,H*2),wall,0,3+wallH/2,0);
   // storey band + windows on all four sides
-  bMesh(new THREE.BoxGeometry(H*2+0.6,0.6,H*2+0.6),new THREE.MeshStandardMaterial({color:0x6b6f76,roughness:0.8,metalness:0.1}),0,3+wallH/2,0);
-  const winM=new THREE.MeshStandardMaterial({color:0x2a3a48,emissive:0xffcd88,emissiveIntensity:0.4,roughness:0.15,metalness:0.5});
+  bMesh(new THREE.BoxGeometry(H*2+0.6,0.6,H*2+0.6),new THREE.MeshStandardMaterial({
+    color:0x6b6f76,
+    roughness:0.65,
+    metalness:0.25
+  }),0,3+wallH/2,0);
+  const winM=new THREE.MeshStandardMaterial({
+    color:0x2a3a48,
+    emissive:0xffcd88,
+    emissiveIntensity:0.6,
+    roughness:0.08,
+    metalness:0.65,
+    transparent:true,
+    opacity:0.95
+  });
   for(const fl of [0,1]) for(let k=-2;k<=2;k++){
     const y=3+3.4+fl*(wallH/2);
     bMesh(new THREE.BoxGeometry(3.2,2.6,0.3),winM,k*5.4,y,H+0.05);
@@ -1070,9 +1131,21 @@ const harmonyBoxes=[];
 const islands=[];                                 // rock positions for the minimap
 const landDiscs=[];                               // grassy islands: ground height + tree placement
 const terrainMeshes=[];
-const trunkMat=new THREE.MeshStandardMaterial({color:0x453427,roughness:1});
-const rockMatT=new THREE.MeshStandardMaterial({map:rockTex,roughness:1});
-const coneMatT=new THREE.MeshStandardMaterial({color:0x2e6a4a,roughness:1});
+const trunkMat=new THREE.MeshStandardMaterial({
+  color:0x453427,
+  roughness:0.92,
+  metalness:0.02,
+  emissive:0x2a1f15,
+  emissiveIntensity:0.04
+});
+const rockMatT=new THREE.MeshStandardMaterial({map:rockTex,roughness:0.88,metalness:0.06});
+const coneMatT=new THREE.MeshStandardMaterial({
+  color:0x2e6a4a,
+  roughness:0.88,
+  metalness:0.04,
+  emissive:0x1a3f2a,
+  emissiveIntensity:0.06
+});
 function onLand(x,z){ for(const d of landDiscs){ if(Math.hypot(x-d.x,z-d.z)<d.r) return true; } return false; }
 function farFromPads(x,z,m){
   return Math.hypot(x-COVE.x,z-COVE.z)>m && Math.hypot(x-HARMONY.x,z-HARMONY.z)>m && Math.hypot(x-SHOP.x,z-SHOP.z)>Math.min(m,70);
@@ -1100,7 +1173,13 @@ function spotFree(x,z,m){
   return true;
 }
 function fits(x,z,halfW){ return spotFree(x,z,halfW+6); }
-const roadMat=new THREE.MeshStandardMaterial({color:0x59544f,roughness:1});
+const roadMat=new THREE.MeshStandardMaterial({
+  color:0x59544f,
+  roughness:0.95,
+  metalness:0.03,
+  emissive:0x2a2620,
+  emissiveIntensity:0.02
+});
 const fieldMats=[0xa89a63,0x7f8c52,0x93995f,0x8c7f57].map(c=>new THREE.MeshStandardMaterial({color:c,roughness:1}));
 const animalMats=[0xece8de,0x8a6248,0x4a4a48].map(c=>new THREE.MeshStandardMaterial({color:c,roughness:1}));
 const winTexCache=[];
@@ -2541,21 +2620,47 @@ function sanitizeRoom(r){
 }
 function room(){ if(!baseCfg.room) baseCfg.room=defaultRoom(); return baseCfg.room; }
 
-// ---------- 3D: room scene (improved lighting) ----------
+// ---------- 3D: room scene (hyper-realistic lighting) ----------
 const roomScene=new THREE.Scene();
 roomScene.background=new THREE.Color(0x0d0a18);
-roomScene.fog=new THREE.Fog(0x0d0a18,30,50);
-roomScene.add(new THREE.HemisphereLight(0xfff8ee,0x3a3448,0.85));
-roomScene.add(new THREE.AmbientLight(0xffeedd,0.35));
-const rLamp=new THREE.PointLight(0xffeacc,0.95,40); rLamp.position.set(0,RWALL-0.4,0); rLamp.castShadow=true; 
-rLamp.shadow.mapSize.width=1024; rLamp.shadow.mapSize.height=1024;
+roomScene.fog=new THREE.Fog(0x0d0a18,40,80);
+
+// Layered ambient lighting for realism
+roomScene.add(new THREE.AmbientLight(0xfff5ee,0.25));
+roomScene.add(new THREE.HemisphereLight(0xfff8ee,0x4a3448,0.7));
+
+// Main ceiling light with realistic falloff
+const rLamp=new THREE.PointLight(0xfff2d8,1.8,50,2); 
+rLamp.position.set(0,RWALL-0.4,0); 
+rLamp.castShadow=true;
+rLamp.shadow.mapSize.width=2048; 
+rLamp.shadow.mapSize.height=2048;
+rLamp.shadow.bias=-0.0002;
+rLamp.shadow.radius=2.0;
 roomScene.add(rLamp);
-const rSun=new THREE.DirectionalLight(0xffffff,0.6); rSun.position.set(-6,14,12); rSun.castShadow=true;
-rSun.shadow.mapSize.width=2048; rSun.shadow.mapSize.height=2048;
-rSun.shadow.camera.left=-15; rSun.shadow.camera.right=15;
-rSun.shadow.camera.top=15; rSun.shadow.camera.bottom=-15;
-rSun.shadow.bias=-0.0003;
+
+// Window sunlight - strong directional
+const rSun=new THREE.DirectionalLight(0xfffbf5,1.2); 
+rSun.position.set(-8,16,14); 
+rSun.castShadow=true;
+rSun.shadow.mapSize.width=2048; 
+rSun.shadow.mapSize.height=2048;
+rSun.shadow.camera.left=-18; rSun.shadow.camera.right=18;
+rSun.shadow.camera.top=18; rSun.shadow.camera.bottom=-18;
+rSun.shadow.bias=-0.0001;
+rSun.shadow.normalBias=0.02;
 roomScene.add(rSun);
+
+// Soft fill light from opposite side
+const rFill=new THREE.DirectionalLight(0xb8d4f0,0.4);
+rFill.position.set(10,8,-8);
+roomScene.add(rFill);
+
+// Ambient occlusion approximation with subtle downlight
+const rAO=new THREE.DirectionalLight(0x4a3a50,0.15);
+rAO.position.set(0,-1,0);
+roomScene.add(rAO);
+
 const roomCam=new THREE.PerspectiveCamera(56,innerWidth/innerHeight,0.1,200);
 const roomStatic=new THREE.Group(), furnGroup=new THREE.Group();
 roomScene.add(roomStatic); roomScene.add(furnGroup);
@@ -2563,7 +2668,13 @@ const furnAnims=[];
 // Camera control state
 let roomCamDist=20, roomCamAngle=0.8, roomCamHeight=0.75, roomCamTargetX=0;
 let isDraggingCam=false, lastMouseX=0, lastMouseY=0;
-const shirtMat=new THREE.MeshStandardMaterial({color:OUTFITS.pink,roughness:0.8});
+const shirtMat=new THREE.MeshStandardMaterial({
+  color:OUTFITS.pink,
+  roughness:0.88,
+  metalness:0.02,
+  emissive:0x000000,
+  emissiveIntensity:0
+});
 function rb(g,w,h,d,col,x,y,z,opt){
   const o=opt||{};
   const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),
@@ -2768,10 +2879,30 @@ function makeCapsule(radius,height,segments){
 
 function makePerson(){
   const g=new THREE.Group();
-  const skin=new THREE.MeshStandardMaterial({color:0xf4c4a0,roughness:0.6,metalness:0.05});
-  const pants=new THREE.MeshStandardMaterial({color:0x2b3348,roughness:0.85});
-  const dark=new THREE.MeshStandardMaterial({color:0x1a1a1a,roughness:0.9});
-  const hair=new THREE.MeshStandardMaterial({color:0x3a2618,roughness:0.85});
+  // Photorealistic skin material
+  const skin=new THREE.MeshStandardMaterial({
+    color:0xffd4b0,
+    roughness:0.45,
+    metalness:0.08,
+    emissive:0xffb898,
+    emissiveIntensity:0.08
+  });
+  // Realistic fabric materials
+  const pants=new THREE.MeshStandardMaterial({
+    color:0x2d3854,
+    roughness:0.92,
+    metalness:0.02
+  });
+  const dark=new THREE.MeshStandardMaterial({
+    color:0x1a1a1a,
+    roughness:0.75,
+    metalness:0.15
+  });
+  const hair=new THREE.MeshStandardMaterial({
+    color:0x3a2618,
+    roughness:0.65,
+    metalness:0.25
+  });
   
   // More realistic limb function using cylinders with rounded ends
   const limb=(mat,w,h,px,py,isShoulder)=>{ 
