@@ -568,6 +568,16 @@
 </style>
 </head>
 <body>
+<div id="avatarCustomizer" style="display:none;position:fixed;z-index:1000;left:0;top:0;width:100%;height:100%;overflow:auto;background:rgba(10,5,18,0.92)">
+<div style="background:#1a1428;margin:4vh auto;padding:24px;max-width:680px;border-radius:12px;border:2px solid #4a3f58">
+<h2 style="margin:0 0 20px 0;color:#e8d8ff;font-size:24px">🎨 CUSTOMIZE AVATAR</h2>
+<div id="avCustomControls" style="display:grid;grid-template-columns:1fr 1fr;gap:16px 24px"></div>
+<div style="margin-top:24px;display:flex;gap:12px;justify-content:flex-end">
+<button id="avResetBtn" style="padding:10px 20px;background:#4a2a2a;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-weight:600">RESET TO DEFAULTS</button>
+<button id="avSaveBtn" style="padding:10px 32px;background:#5a3f78;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-weight:600">SAVE & CLOSE</button>
+</div>
+</div>
+</div>
 <div id="hud">
   <div id="topbar">
     <div id="mission">FLY TO HARMONY</div>
@@ -714,6 +724,7 @@
     <label class="hbLbl">BASE NAME <input id="hbName" maxlength="18" placeholder="The Cove"></label>
     <div class="hbNote">Your home base is a loft with a launch pad on the roof. Walk around as your pilot, decorate your room, grab your drone off the workbench and take the stairs up to fly.</div>
     <button id="hbRoom">🏠 GO TO MY ROOM</button>
+    <button id="hbCustomize" style="margin-top:8px">🎨 CUSTOMIZE AVATAR</button>
   </div>
   <div class="hSect"><h2>MISSION BUILDER ✈</h2>
     <div id="mbWrap">
@@ -828,6 +839,28 @@
 let baseCfg={name:'',outfit:'pink',room:null,dest:null};
 let walk=null;   // null = flying · 'room' = inside your home · 'roof' = on the launch pad
 let custom=null, missionClock=0, birdMul=1, windMul=0, duskOn=false, bestTimes={};
+
+// Avatar customization system
+const AVATAR_DEFAULTS={
+  skinTone:0xffd4b0,
+  faceShape:'normal',
+  eyeColor:0x0a0a0a,
+  eyebrowStyle:'normal',
+  noseSize:'normal',
+  mouthSize:'normal',
+  hairStyle:'short',
+  hairColor:0x3a2618,
+  facialHair:'none',
+  facialHairColor:0x3a2618,
+  topStyle:'shirt',
+  topColor:0xff2d95,
+  bottomStyle:'pants',
+  bottomColor:0x2d3854,
+  shoesColor:0x1a1a1a,
+  headwear:'goggles',
+  headwearColor:0x2de0ff
+};
+let avatarCustomization=JSON.parse(JSON.stringify(AVATAR_DEFAULTS));
 // ---------- Scene: dusk over open water ----------
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0xb8d4e6);  // More realistic sky blue
@@ -2114,7 +2147,7 @@ async function hashPass(p){
   }
 }
 function snapshotSave(){
-  return {money,trips,up:Object.assign({},up),ownedSkins:Object.assign({},ownedSkins),curSkin,ownedDrones:Object.assign({},ownedDrones),curDrone,ownedFX:Object.assign({},ownedFX),curFX,base:JSON.parse(JSON.stringify(baseCfg)),route:routeInfo};
+  return {money,trips,up:Object.assign({},up),ownedSkins:Object.assign({},ownedSkins),curSkin,ownedDrones:Object.assign({},ownedDrones),curDrone,ownedFX:Object.assign({},ownedFX),curFX,base:JSON.parse(JSON.stringify(baseCfg)),route:routeInfo,avatar:JSON.parse(JSON.stringify(avatarCustomization||AVATAR_DEFAULTS))};
 }
 function applySave(s){
   s=s||{};
@@ -2139,6 +2172,7 @@ function applySave(s){
   for(const k in OLD_STYLE) if(b.ownedStyles&&b.ownedStyles[k]) money+=OLD_STYLE[k];
   for(const k in OLD_EXTRA) if(b.extras&&b.extras[k]!==undefined) money+=OLD_EXTRA[k];
   baseCfg={name:String(b.name||'').slice(0,18), outfit:OUTFITS[b.outfit]?b.outfit:'pink', room:sanitizeRoom(b.room), dest:cleanDest(b.dest)};
+  avatarCustomization=s.avatar?JSON.parse(JSON.stringify(s.avatar)):JSON.parse(JSON.stringify(AVATAR_DEFAULTS));
   if(typeof setRouteWorld==='function'&&typeof routeInfo!=='undefined'&&routeInfo&&routeInfo.miles) setRouteWorld(tripMiles());   // rebuild the world for the saved destination
   buildRoom();
   applySkin(curSkin); applyDrone(curDrone);
@@ -2923,30 +2957,43 @@ function makeCapsule(radius,height,segments){
 }
 
 function makePerson(){
+  const av=avatarCustomization;
   const g=new THREE.Group();
-  // Photorealistic skin material
+  
+  // Dynamic skin material based on customization
   const skin=new THREE.MeshStandardMaterial({
-    color:0xffd4b0,
+    color:av.skinTone,
     roughness:0.45,
     metalness:0.08,
-    emissive:0xffb898,
-    emissiveIntensity:0.08
+    emissive:av.skinTone,
+    emissiveIntensity:0.05
   });
-  // Realistic fabric materials
-  const pants=new THREE.MeshStandardMaterial({
-    color:0x2d3854,
+  
+  // Dynamic outfit materials
+  const topMat=new THREE.MeshStandardMaterial({
+    color:av.topColor,
+    roughness:0.88,
+    metalness:0.02
+  });
+  const bottomMat=new THREE.MeshStandardMaterial({
+    color:av.bottomColor,
     roughness:0.92,
     metalness:0.02
   });
-  const dark=new THREE.MeshStandardMaterial({
-    color:0x1a1a1a,
+  const shoesMat=new THREE.MeshStandardMaterial({
+    color:av.shoesColor,
     roughness:0.75,
     metalness:0.15
   });
-  const hair=new THREE.MeshStandardMaterial({
-    color:0x3a2618,
+  const hairMat=new THREE.MeshStandardMaterial({
+    color:av.hairColor,
     roughness:0.65,
     metalness:0.25
+  });
+  const facialHairMat=new THREE.MeshStandardMaterial({
+    color:av.facialHairColor,
+    roughness:0.75,
+    metalness:0.15
   });
   
   // More realistic limb function using cylinders with rounded ends
@@ -2980,9 +3027,9 @@ function makePerson(){
   };
   
   // Legs with better proportions (height 1.65 total)
-  const legL=limb(pants,0.22,1.65,-0.24,1.05), legR=limb(pants,0.22,1.65,0.24,1.05);
+  const legL=limb(bottomMat,0.22,1.65,-0.24,1.05), legR=limb(bottomMat,0.22,1.65,0.24,1.05);
   for(const L of [legL,legR]){ 
-    const sh=new THREE.Mesh(new THREE.BoxGeometry(0.3,0.12,0.38),dark); 
+    const sh=new THREE.Mesh(new THREE.BoxGeometry(0.3,0.12,0.38),shoesMat); 
     sh.position.set(0,-1.7,0.08); 
     sh.castShadow=true;
     L.add(sh); 
@@ -2992,13 +3039,13 @@ function makePerson(){
   const torsoG=new THREE.Group();
   torsoG.position.y=1.7;
   const torsoUpper=new THREE.Mesh(
-    new THREE.CylinderGeometry(0.38,0.45,0.72,16),shirtMat
+    new THREE.CylinderGeometry(0.38,0.45,0.72,16),topMat
   );
   torsoUpper.position.y=0.36;
   torsoUpper.castShadow=true;
   torsoG.add(torsoUpper);
   const torsoLower=new THREE.Mesh(
-    new THREE.CylinderGeometry(0.45,0.42,0.36,16),pants
+    new THREE.CylinderGeometry(0.45,0.42,0.36,16),bottomMat
   );
   torsoLower.position.y=-0.18;
   torsoLower.castShadow=true;
@@ -3006,7 +3053,7 @@ function makePerson(){
   g.add(torsoG);
   
   // Arms with better proportions
-  const armL=limb(shirtMat,0.16,1.05,-0.58,2.35,true), armR=limb(shirtMat,0.16,1.05,0.58,2.35,true);
+  const armL=limb(topMat,0.16,1.05,-0.58,2.35,true), armR=limb(topMat,0.16,1.05,0.58,2.35,true);
   for(const Ar of [armL,armR]){ 
     const hnd=new THREE.Mesh(new THREE.SphereGeometry(0.09,10,8),skin); 
     hnd.position.y=-1.2;
@@ -3027,49 +3074,104 @@ function makePerson(){
   head.castShadow=true; 
   g.add(head);
   
-  // Hair - more natural looking
-  const hr=new THREE.Mesh(new THREE.SphereGeometry(0.38,20,14,0,Math.PI*2,0,Math.PI*0.6),hair); 
-  hr.position.y=3.28; 
-  g.add(hr);
+  // Hair - multiple styles based on customization
+  if(av.hairStyle==='short'){
+    const hr=new THREE.Mesh(new THREE.SphereGeometry(0.38,20,14,0,Math.PI*2,0,Math.PI*0.6),hairMat); 
+    hr.position.y=3.28; 
+    g.add(hr);
+  }else if(av.hairStyle==='long'){
+    const hr=new THREE.Mesh(new THREE.SphereGeometry(0.40,20,16,0,Math.PI*2,0,Math.PI*0.75),hairMat); 
+    hr.position.y=3.25; 
+    g.add(hr);
+    const back=new THREE.Mesh(new THREE.BoxGeometry(0.6,0.8,0.3),hairMat);
+    back.position.set(0,2.8,-0.4);
+    g.add(back);
+  }else if(av.hairStyle==='ponytail'){
+    const hr=new THREE.Mesh(new THREE.SphereGeometry(0.38,20,14,0,Math.PI*2,0,Math.PI*0.6),hairMat); 
+    hr.position.y=3.28; 
+    g.add(hr);
+    const pony=new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.06,0.6,8),hairMat);
+    pony.position.set(0,2.95,-0.5);
+    pony.rotation.x=Math.PI*0.15;
+    g.add(pony);
+  }else if(av.hairStyle==='bun'){
+    const hr=new THREE.Mesh(new THREE.SphereGeometry(0.38,20,14,0,Math.PI*2,0,Math.PI*0.5),hairMat); 
+    hr.position.y=3.28; 
+    g.add(hr);
+    const bun=new THREE.Mesh(new THREE.SphereGeometry(0.18,12,10),hairMat);
+    bun.position.set(0,3.45,-0.3);
+    g.add(bun);
+  }
+  // (hairStyle==='bald' renders no hair)
   
-  // Eyes - more defined
+  // Facial hair
+  if(av.facialHair==='beard'){
+    const beard=new THREE.Mesh(new THREE.SphereGeometry(0.28,16,12,0,Math.PI*2,Math.PI*0.5,Math.PI*0.5),facialHairMat);
+    beard.position.set(0,3.0,0.2);
+    g.add(beard);
+  }else if(av.facialHair==='mustache'){
+    const must=new THREE.Mesh(new THREE.BoxGeometry(0.35,0.08,0.15),facialHairMat);
+    must.position.set(0,3.12,0.35);
+    g.add(must);
+  }else if(av.facialHair==='goatee'){
+    const goat=new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.08,0.25,10),facialHairMat);
+    goat.position.set(0,2.92,0.28);
+    g.add(goat);
+  }
+  
+  // Eyes - customizable color
   for(const ex of [-0.14,0.14]){ 
-    const e=new THREE.Mesh(new THREE.SphereGeometry(0.05,8,6),new THREE.MeshBasicMaterial({color:0x0a0a0a})); 
+    const e=new THREE.Mesh(new THREE.SphereGeometry(0.05,8,6),new THREE.MeshBasicMaterial({color:av.eyeColor})); 
     e.position.set(ex,3.24,0.32); 
     g.add(e); 
   }
   
-  // Pilot goggles - sleeker design
-  const goggleFrame=new THREE.Mesh(
-    new THREE.TorusGeometry(0.16,0.04,8,16),
-    new THREE.MeshStandardMaterial({color:0x2a2d33,metalness:0.7,roughness:0.3})
-  );
-  goggleFrame.position.set(-0.14,3.22,0.28);
-  goggleFrame.rotation.y=Math.PI/2;
-  g.add(goggleFrame);
-  
-  const goggleFrame2=goggleFrame.clone();
-  goggleFrame2.position.x=0.14;
-  g.add(goggleFrame2);
-  
-  const goggleLens=new THREE.Mesh(
-    new THREE.CircleGeometry(0.14,16),
-    new THREE.MeshStandardMaterial({color:0x2de0ff,metalness:0.6,roughness:0.15,transparent:true,opacity:0.6})
-  );
-  goggleLens.position.set(-0.14,3.22,0.34);
-  g.add(goggleLens);
-  
-  const goggleLens2=goggleLens.clone();
-  goggleLens2.position.x=0.14;
-  g.add(goggleLens2);
-  
-  const goggleBridge=new THREE.Mesh(
-    new THREE.CylinderGeometry(0.03,0.03,0.28,8),
-    new THREE.MeshStandardMaterial({color:0x2a2d33,metalness:0.7,roughness:0.3})
-  );
-  goggleBridge.rotation.z=Math.PI/2;
-  goggleBridge.position.set(0,3.22,0.3);
-  g.add(goggleBridge);
+  // Headwear
+  if(av.headwear==='goggles'){
+    const goggleFrame=new THREE.Mesh(
+      new THREE.TorusGeometry(0.16,0.04,8,16),
+      new THREE.MeshStandardMaterial({color:0x2a2d33,metalness:0.7,roughness:0.3})
+    );
+    goggleFrame.position.set(-0.14,3.22,0.28);
+    goggleFrame.rotation.y=Math.PI/2;
+    g.add(goggleFrame);
+    
+    const goggleFrame2=goggleFrame.clone();
+    goggleFrame2.position.x=0.14;
+    g.add(goggleFrame2);
+    
+    const goggleLens=new THREE.Mesh(
+      new THREE.CircleGeometry(0.14,16),
+      new THREE.MeshStandardMaterial({color:av.headwearColor,metalness:0.6,roughness:0.15,transparent:true,opacity:0.6})
+    );
+    goggleLens.position.set(-0.14,3.22,0.34);
+    g.add(goggleLens);
+    
+    const goggleLens2=goggleLens.clone();
+    goggleLens2.position.x=0.14;
+    g.add(goggleLens2);
+    
+    const goggleBridge=new THREE.Mesh(
+      new THREE.CylinderGeometry(0.03,0.03,0.28,8),
+      new THREE.MeshStandardMaterial({color:0x2a2d33,metalness:0.7,roughness:0.3})
+    );
+    goggleBridge.rotation.z=Math.PI/2;
+    goggleBridge.position.set(0,3.22,0.3);
+    g.add(goggleBridge);
+  }else if(av.headwear==='cap'){
+    const cap=new THREE.Mesh(new THREE.CylinderGeometry(0.42,0.38,0.2,16),new THREE.MeshStandardMaterial({color:av.headwearColor,roughness:0.85}));
+    cap.position.y=3.48;
+    g.add(cap);
+    const bill=new THREE.Mesh(new THREE.BoxGeometry(0.6,0.05,0.4),new THREE.MeshStandardMaterial({color:av.headwearColor,roughness:0.85}));
+    bill.position.set(0,3.4,0.5);
+    g.add(bill);
+  }else if(av.headwear==='headband'){
+    const band=new THREE.Mesh(new THREE.TorusGeometry(0.38,0.05,8,20,Math.PI*1.5),new THREE.MeshStandardMaterial({color:av.headwearColor,roughness:0.8}));
+    band.position.y=3.25;
+    band.rotation.x=-Math.PI*0.15;
+    g.add(band);
+  }
+  // (headwear==='none' renders nothing)
   
   g.userData={legL,legR,armL,armR,ph:0};
   return g;
@@ -4782,6 +4884,59 @@ loop();
   }
   window.addEventListener('hashchange',route); route();
 })();
+
+// ========== AVATAR CUSTOMIZER SYSTEM ==========
+function openAvatarCustomizer(){
+  const panel=$('avatarCustomizer');
+  const controls=$('avCustomControls');
+  panel.style.display='block';
+  controls.innerHTML='';
+  const addControl=(label,type,key,options)=>{
+    const div=document.createElement('div');
+    div.style.cssText='display:flex;flex-direction:column;gap:6px';
+    const lbl=document.createElement('div');
+    lbl.style.cssText='color:#b8a8d8;font-size:12px;font-weight:600;letter-spacing:0.5px';
+    lbl.textContent=label;
+    div.appendChild(lbl);
+    let input;
+    if(type==='color'){
+      input=document.createElement('input');
+      input.type='color';
+      input.value='#'+avatarCustomization[key].toString(16).padStart(6,'0');
+      input.style.cssText='width:100%;height:40px;border:2px solid #4a3f58;border-radius:6px;background:#2a1f38;cursor:pointer';
+      input.oninput=()=>{ avatarCustomization[key]=parseInt(input.value.slice(1),16); refreshPilot(); };
+    }else if(type==='select'){
+      input=document.createElement('select');
+      input.style.cssText='padding:10px;background:#2a1f38;color:#e8d8ff;border:2px solid #4a3f58;border-radius:6px;font-size:14px;cursor:pointer';
+      options.forEach(opt=>{
+        const option=document.createElement('option');
+        option.value=opt.v;
+        option.textContent=opt.n;
+        if(avatarCustomization[key]===opt.v) option.selected=true;
+        input.appendChild(option);
+      });
+      input.onchange=()=>{ avatarCustomization[key]=input.value; refreshPilot(); };
+    }
+    div.appendChild(input);
+    controls.appendChild(div);
+  };
+  addControl('SKIN TONE','color','skinTone');
+  addControl('EYE COLOR','color','eyeColor');
+  addControl('HAIR STYLE','select','hairStyle',[{v:'short',n:'Short'},{v:'long',n:'Long'},{v:'ponytail',n:'Ponytail'},{v:'bun',n:'Bun'},{v:'bald',n:'Bald'}]);
+  addControl('HAIR COLOR','color','hairColor');
+  addControl('FACIAL HAIR','select','facialHair',[{v:'none',n:'None'},{v:'beard',n:'Beard'},{v:'mustache',n:'Mustache'},{v:'goatee',n:'Goatee'}]);
+  addControl('FACIAL HAIR COLOR','color','facialHairColor');
+  addControl('TOP COLOR','color','topColor');
+  addControl('BOTTOM COLOR','color','bottomColor');
+  addControl('SHOES COLOR','color','shoesColor');
+  addControl('HEADWEAR','select','headwear',[{v:'none',n:'None'},{v:'goggles',n:'Goggles'},{v:'cap',n:'Cap'},{v:'headband',n:'Headband'}]);
+  addControl('HEADWEAR COLOR','color','headwearColor');
+}
+$('avSaveBtn').onclick=()=>{ $('avatarCustomizer').style.display='none'; saveGame(); };
+$('avResetBtn').onclick=()=>{ if(confirm('Reset avatar to default appearance?')){ avatarCustomization=JSON.parse(JSON.stringify(AVATAR_DEFAULTS)); openAvatarCustomizer(); refreshPilot(); saveGame(); } };
+function refreshPilot(){ if(pilot&&pilot.parent){ const p=pilot.position.clone(),r=pilot.rotation.clone(); pilot.parent.remove(pilot); pilot=makePerson(); pilot.position.copy(p); pilot.rotation.copy(r); pilot.scale.set(0.62,0.62,0.62); walkingG.add(pilot); } }
+window.openAvatarCustomizer=openAvatarCustomizer;
+
 </script>
 </body>
 </html>
