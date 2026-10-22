@@ -2615,6 +2615,7 @@ if($('hbName')) $('hbName').addEventListener('change',()=>{
 });
 if($('hbChange')) $('hbChange').addEventListener('click',()=>{ changeHomeAddress(); });
 if($('hbRoom')) $('hbRoom').addEventListener('click',()=>{ if(!account){ initAccount(); return; } $('home').style.display='none'; enterRoom(); });
+if($('hbCustomize')) $('hbCustomize').addEventListener('click',()=>{ if(!account){ initAccount(); return; } openAvatarCustomizer(); });
 function changeHomeAddress(){ $('home').style.display='none'; showAddr(); }
 // ================= HOME: your room, your pilot, the stairs to the roof =================
 const CELL=1.5, RCOLS=14, RROWS=10, RWALL=6;
