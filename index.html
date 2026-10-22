@@ -3076,7 +3076,7 @@ function walkKey(e){
     exitToHangar(); return;
   }
   if(walk==='room'){
-    if(e.code==='KeyE'||(e.code==='Space'&&!decorating)){ pickUpDrone(); return; }
+    if(e.code==='KeyE'&&!decorating||(e.code==='Space'&&!decorating)){ pickUpDrone(); return; }
     if(e.code==='KeyR'&&decorating){ decoRotDegrees=(decoRotDegrees+45)%360; decoRot=Math.floor(decoRotDegrees/90); renderDeco(); return; }
     if(e.code==='KeyQ'&&decorating){ decoRotDegrees=(decoRotDegrees-15+360)%360; decoRot=Math.floor(decoRotDegrees/90); renderDeco(); return; }
     if(e.code==='KeyE'&&decorating){ decoRotDegrees=(decoRotDegrees+15)%360; decoRot=Math.floor(decoRotDegrees/90); renderDeco(); return; }
