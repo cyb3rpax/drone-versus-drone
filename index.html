@@ -4933,9 +4933,9 @@ function openAvatarCustomizer(){
   addControl('HEADWEAR','select','headwear',[{v:'none',n:'None'},{v:'goggles',n:'Goggles'},{v:'cap',n:'Cap'},{v:'headband',n:'Headband'}]);
   addControl('HEADWEAR COLOR','color','headwearColor');
 }
-$('avSaveBtn').onclick=()=>{ $('avatarCustomizer').style.display='none'; saveGame(); };
-$('avResetBtn').onclick=()=>{ if(confirm('Reset avatar to default appearance?')){ avatarCustomization=JSON.parse(JSON.stringify(AVATAR_DEFAULTS)); openAvatarCustomizer(); refreshPilot(); saveGame(); } };
-function refreshPilot(){ if(pilot&&pilot.parent){ const p=pilot.position.clone(),r=pilot.rotation.clone(); pilot.parent.remove(pilot); pilot=makePerson(); pilot.position.copy(p); pilot.rotation.copy(r); pilot.scale.set(0.62,0.62,0.62); walkingG.add(pilot); } }
+$('avSaveBtn').onclick=()=>{ $('avatarCustomizer').style.display='none'; if(typeof saveGame==='function') saveGame(); };
+$('avResetBtn').onclick=()=>{ if(confirm('Reset avatar to default appearance?')){ avatarCustomization=JSON.parse(JSON.stringify(AVATAR_DEFAULTS)); openAvatarCustomizer(); refreshPilot(); if(typeof saveGame==='function') saveGame(); } };
+function refreshPilot(){ if(typeof pilot!=='undefined'&&pilot&&pilot.parent){ const p=pilot.position.clone(),r=pilot.rotation.clone(); pilot.parent.remove(pilot); pilot=makePerson(); pilot.position.copy(p); pilot.rotation.copy(r); pilot.scale.set(0.62,0.62,0.62); walkingG.add(pilot); } }
 window.openAvatarCustomizer=openAvatarCustomizer;
 
 </script>
