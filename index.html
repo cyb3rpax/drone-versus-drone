@@ -94,6 +94,20 @@
   #decoTools button.on{border-color:#ff2d95;color:#ff9bd0}
   #decoMsg{font-size:11px;color:#ffb3d9;min-height:14px;margin-top:6px}
   #fade{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;transition:opacity .3s;z-index:60}
+  #avatarCustomizer{display:none;position:fixed;z-index:45;top:0;right:0;bottom:0;width:min(400px,100%);overflow:auto;background:rgba(16,10,28,.94);border-left:2px solid #6a5088;color:#f3ecff;font-family:'Segoe UI',Arial,sans-serif;padding:18px 16px 28px;box-sizing:border-box}
+  #avatarCustomizer h2{margin:0 0 6px;font-size:20px;letter-spacing:.4px}
+  #avatarCustomizer .avNote{font-size:12px;color:#b8a8d8;margin:0 0 14px;line-height:1.45}
+  #avCustomControls{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px}
+  #avCustomControls label{display:flex;flex-direction:column;gap:6px;font-size:11px;letter-spacing:.4px;color:#cbbbe4;font-weight:700}
+  #avCustomControls input[type=color]{width:100%;height:36px;border:2px solid #4a3f58;border-radius:6px;background:#2a1f38;padding:0;cursor:pointer}
+  #avCustomControls select{padding:8px;background:#2a1f38;color:#e8d8ff;border:2px solid #4a3f58;border-radius:6px;font-size:14px}
+  #avActions{margin-top:16px;display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+  #avActions button{padding:10px 16px;border:none;border-radius:6px;cursor:pointer;font-weight:700;color:#fff;font-family:inherit}
+  #avResetBtn{background:#6a3030}
+  #avSaveBtn{background:#5a3f78}
+  @media(max-width:700px){
+    #avatarCustomizer{top:auto;left:0;width:100%;max-height:54vh;border-left:none;border-top:2px solid #6a5088}
+  }
   #chatBox{position:fixed;right:14px;bottom:14px;z-index:50;font-family:'Segoe UI',Arial,sans-serif;display:none}
   #chatToggle{position:relative;padding:9px 14px;border-radius:10px;border:1px solid #ff2d95;background:rgba(14,8,28,.9);color:#ffd0ea;font-size:12px;font-weight:700;letter-spacing:1px;cursor:pointer;box-shadow:0 0 16px rgba(255,45,149,.35)}
   #chatToggle:hover{background:rgba(255,45,149,.3);color:#fff}
@@ -568,6 +582,15 @@
 </style>
 </head>
 <body>
+<div id="avatarCustomizer">
+<h2>🎨 CUSTOMIZE AVATAR</h2>
+<p class="avNote">Change the face and the whole outfit. Your pilot updates live in the room, and the look is saved with this account.</p>
+<div id="avCustomControls"></div>
+<div id="avActions">
+<button id="avResetBtn" type="button">RESET</button>
+<button id="avSaveBtn" type="button">SAVE &amp; CLOSE</button>
+</div>
+</div>
 <div id="hud">
   <div id="topbar">
     <div id="mission">FLY TO HARMONY</div>
@@ -714,6 +737,7 @@
     <label class="hbLbl">BASE NAME <input id="hbName" maxlength="18" placeholder="The Cove"></label>
     <div class="hbNote">Your home base is a loft with a launch pad on the roof. Walk around as your pilot, decorate your room, grab your drone off the workbench and take the stairs up to fly.</div>
     <button id="hbRoom">🏠 GO TO MY ROOM</button>
+    <button id="hbCustomize" style="margin-top:8px">🎨 CUSTOMIZE AVATAR</button>
   </div>
   <div class="hSect"><h2>MISSION BUILDER ✈</h2>
     <div id="mbWrap">
@@ -820,6 +844,7 @@
   <button id="overlayBtn">FLY AGAIN</button>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script></script>
 <script>
 (function(){
 'use strict';
@@ -827,32 +852,80 @@
 let baseCfg={name:'',outfit:'pink',room:null,dest:null};
 let walk=null;   // null = flying · 'room' = inside your home · 'roof' = on the launch pad
 let custom=null, missionClock=0, birdMul=1, windMul=0, duskOn=false, bestTimes={};
+
+// Avatar customization system
+const AVATAR_DEFAULTS={
+  skinTone:0xffd4b0,
+  faceShape:'normal',
+  eyeColor:0x0a0a0a,
+  eyebrowStyle:'normal',
+  noseSize:'normal',
+  mouthSize:'normal',
+  hairStyle:'short',
+  hairColor:0x3a2618,
+  facialHair:'none',
+  facialHairColor:0x3a2618,
+  topStyle:'shirt',
+  topColor:0xff2d95,
+  bottomStyle:'pants',
+  bottomColor:0x2d3854,
+  shoesColor:0x1a1a1a,
+  headwear:'goggles',
+  headwearColor:0x2de0ff
+};
+let avatarCustomization=JSON.parse(JSON.stringify(AVATAR_DEFAULTS));
+let customizingAvatar=false;
 // ---------- Scene: dusk over open water ----------
 const scene=new THREE.Scene();
-scene.background=new THREE.Color(0xa9bfc4);
-scene.fog=new THREE.Fog(0xb4c6c8,240,1000);
+scene.background=new THREE.Color(0xb8d4e6);  // More realistic sky blue
+scene.fog=new THREE.FogExp2(0xc4dae8,0.00035);  // Atmospheric perspective
+scene.fog=new THREE.Fog(0xb8cad0,200,850);
 const camera=new THREE.PerspectiveCamera(62,innerWidth/innerHeight,0.1,1300);
-const renderer=new THREE.WebGLRenderer({antialias:true});
+const renderer=new THREE.WebGLRenderer({
+  antialias:true,
+  powerPreference:'high-performance',
+  stencil:false
+});
 renderer.setSize(innerWidth,innerHeight);
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 renderer.shadowMap.enabled=true;
 renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.shadowMap.autoUpdate=true;
 renderer.outputEncoding=THREE.sRGBEncoding;
 renderer.toneMapping=THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure=0.95;
+renderer.toneMappingExposure=1.2;
+renderer.physicallyCorrectLights=true;
 document.body.appendChild(renderer.domElement);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
-const hemi=new THREE.HemisphereLight(0xe8f2f6,0x7fa090,0.72); scene.add(hemi);
-const sun=new THREE.DirectionalLight(0xfff2dc,1.0);
-sun.position.set(-160,180,240);
+
+// Enhanced lighting for photorealism
+const amb=new THREE.AmbientLight(0xb3c9d9,0.3);
+scene.add(amb);
+const hemi=new THREE.HemisphereLight(0xe8f4fa,0x7a8c98,0.6);
+scene.add(hemi);
+
+// Main sun with enhanced settings
+const sun=new THREE.DirectionalLight(0xfff9ed,2.5);
+sun.position.set(-160,240,200);
 sun.castShadow=true;
-sun.shadow.mapSize.set(2048,2048);
-sun.shadow.camera.left=-230; sun.shadow.camera.right=230;
-sun.shadow.camera.top=230; sun.shadow.camera.bottom=-230;
-sun.shadow.camera.near=10; sun.shadow.camera.far=800;
-sun.shadow.bias=-0.0005;
-sun.shadow.radius=2.5;
+sun.shadow.mapSize.set(4096,4096);
+sun.shadow.camera.left=-280; sun.shadow.camera.right=280;
+sun.shadow.camera.top=280; sun.shadow.camera.bottom=-280;
+sun.shadow.camera.near=50; sun.shadow.camera.far=1000;
+sun.shadow.bias=-0.0001;
+sun.shadow.radius=1.8;
+sun.shadow.normalBias=0.02;
 scene.add(sun); scene.add(sun.target);
+
+// Fill light for softer shadows
+const fillLight=new THREE.DirectionalLight(0xaac8e4,0.8);
+fillLight.position.set(120,-80,100);
+scene.add(fillLight);
+
+// Rim light for definition
+const rimLight=new THREE.DirectionalLight(0xffeedd,0.4);
+rimLight.position.set(0,100,-200);
+scene.add(rimLight);
 
 // ---- dusk sky dome, sun disk, stars & clouds ----
 const dome=new THREE.Mesh(new THREE.SphereGeometry(1080,24,16), new THREE.ShaderMaterial({
@@ -874,8 +947,15 @@ function glowTex(r,g,b){
   x.fillStyle=gr; x.fillRect(0,0,128,128);
   return new THREE.CanvasTexture(c);
 }
-const sunSprite=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex(255,252,240),fog:false,transparent:true,opacity:0.6,depthWrite:false}));
-sunSprite.scale.set(190,190,1); scene.add(sunSprite);
+const sunSprite=new THREE.Sprite(new THREE.SpriteMaterial({
+  map:glowTex(255,250,235),
+  fog:false,
+  transparent:true,
+  opacity:0.75,
+  depthWrite:false,
+  blending:THREE.AdditiveBlending
+}));
+sunSprite.scale.set(220,220,1); scene.add(sunSprite);
 let starField=null;
 (function stars(){
   const g=new THREE.BufferGeometry(), v=[];
@@ -925,10 +1005,16 @@ let MILE=1140;                              // 1 mile = 30 seconds of flying at 
 const BOUND={x:900, zMin:-1250, zMax:950};    // zMin follows Harmony when it moves
 let DRAINF=1;                                 // battery pacing: one charge ≈ 60% one-way on any route length
 
-// sea with real moving waves and sunset glint
+// sea with real moving waves and sunset glint - HYPER REALISTIC
 const seaGeo=new THREE.PlaneGeometry(4200,30000,64,150);  // ocean long enough for ~36 real miles at the new scale
-const sea=new THREE.Mesh(seaGeo, new THREE.MeshPhongMaterial({
-  color:0x1b4b63, shininess:95, specular:0x9fc0cc, transparent:true, opacity:0.97
+const sea=new THREE.Mesh(seaGeo, new THREE.MeshStandardMaterial({
+  color:0x1f5270,
+  roughness:0.12,
+  metalness:0.88,
+  emissive:0x0d2a3a,
+  emissiveIntensity:0.15,
+  transparent:true,
+  opacity:0.94
 }));
 sea.rotation.x=-Math.PI/2; sea.position.z=-13800; scene.add(sea);
 
@@ -943,8 +1029,20 @@ function addSolid(x,y,z,w,h,d){ solids.push({min:new THREE.Vector3(x-w/2,y-h/2,z
 const BASE_ZONE=40;
 (function buildCove(){
   SOLID_TAG='the cliffs by your home';
-  const rockMat=new THREE.MeshStandardMaterial({map:rockTex,roughness:1});
-  const sandMat=new THREE.MeshStandardMaterial({map:sandTex,roughness:1});
+  const rockMat=new THREE.MeshStandardMaterial({
+    map:rockTex,
+    roughness:0.85,
+    metalness:0.08,
+    emissive:0x2a2620,
+    emissiveIntensity:0.03
+  });
+  const sandMat=new THREE.MeshStandardMaterial({
+    map:sandTex,
+    roughness:0.95,
+    metalness:0.02,
+    emissive:0x4a4230,
+    emissiveIntensity:0.04
+  });
   const beach=new THREE.Mesh(new THREE.CylinderGeometry(90,100,4,26), sandMat);
   beach.position.set(COVE.x,1,COVE.z); scene.add(beach);
   const shopBox={x0:COVE.x-55-26,x1:COVE.x-55+26,z0:COVE.z-30-40,z1:COVE.z-30+8};
@@ -980,11 +1078,29 @@ function buildBase(){
   for(const so of baseSolids){ const k=solids.indexOf(so); if(k>=0) solids.splice(k,1); }
   baseSolids.length=0;
   const H=HOUSE_HALF, wallH=ROOF_Y-3;
-  const wall=new THREE.MeshStandardMaterial({color:0xcfc6b8,roughness:0.9});
+  const wall=new THREE.MeshStandardMaterial({
+    color:0xe4ddd2,
+    roughness:0.78,
+    metalness:0.04,
+    emissive:0xfaf8f5,
+    emissiveIntensity:0.05
+  });
   bMesh(new THREE.BoxGeometry(H*2,wallH,H*2),wall,0,3+wallH/2,0);
   // storey band + windows on all four sides
-  bMesh(new THREE.BoxGeometry(H*2+0.6,0.6,H*2+0.6),new THREE.MeshStandardMaterial({color:0x6b6f76}),0,3+wallH/2,0);
-  const winM=new THREE.MeshStandardMaterial({color:0x2a3a48,emissive:0xffc978,emissiveIntensity:0.35,roughness:0.2,metalness:0.4});
+  bMesh(new THREE.BoxGeometry(H*2+0.6,0.6,H*2+0.6),new THREE.MeshStandardMaterial({
+    color:0x6b6f76,
+    roughness:0.65,
+    metalness:0.25
+  }),0,3+wallH/2,0);
+  const winM=new THREE.MeshStandardMaterial({
+    color:0x2a3a48,
+    emissive:0xffcd88,
+    emissiveIntensity:0.6,
+    roughness:0.08,
+    metalness:0.65,
+    transparent:true,
+    opacity:0.95
+  });
   for(const fl of [0,1]) for(let k=-2;k<=2;k++){
     const y=3+3.4+fl*(wallH/2);
     bMesh(new THREE.BoxGeometry(3.2,2.6,0.3),winM,k*5.4,y,H+0.05);
@@ -1044,12 +1160,18 @@ const harmonyBoxes=[];
 (function buildHarmony(){
   const base=new THREE.Mesh(new THREE.CylinderGeometry(110,120,4.6,30), new THREE.MeshStandardMaterial({color:0x5a646e,roughness:0.95}));
   base.position.set(0,1.35,0); harmonyG.add(base);   // sits proud of terrain & waves — no coplanar flicker
-  const cols=[0x8a6a4a,0x9a7a5a,0x76626e,0x6a7484];
+  const cols=[0x9a7552,0xaa8562,0x7f6575,0x72788a];  // More realistic brown/grey tones
   for(let i=0;i<22;i++){
     const a=Math.random()*Math.PI*2, r=25+Math.random()*75;
     const x=Math.cos(a)*r, z=Math.sin(a)*r;
     const w=24+Math.random()*30, h=25+Math.random()*66, d=24+Math.random()*30;
-    const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d), new THREE.MeshLambertMaterial({color:cols[i%4]}));
+    const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d), new THREE.MeshStandardMaterial({
+      color:cols[i%4],
+      roughness:0.82,
+      metalness:0.08,
+      emissive:cols[i%4],
+      emissiveIntensity:0.04
+    }));
     m.position.set(x,h/2+2,z); harmonyG.add(m);
     harmonyBoxes.push({x,z,w,h,d});
     if(Math.random()<0.5){ const lt=new THREE.PointLight(0xffc884,0.5,20); lt.position.set(x,h+3,z); harmonyG.add(lt); }
@@ -1070,9 +1192,21 @@ const harmonyBoxes=[];
 const islands=[];                                 // rock positions for the minimap
 const landDiscs=[];                               // grassy islands: ground height + tree placement
 const terrainMeshes=[];
-const trunkMat=new THREE.MeshStandardMaterial({color:0x453427,roughness:1});
-const rockMatT=new THREE.MeshStandardMaterial({map:rockTex,roughness:1});
-const coneMatT=new THREE.MeshStandardMaterial({color:0x2e6a4a,roughness:1});
+const trunkMat=new THREE.MeshStandardMaterial({
+  color:0x453427,
+  roughness:0.92,
+  metalness:0.02,
+  emissive:0x2a1f15,
+  emissiveIntensity:0.04
+});
+const rockMatT=new THREE.MeshStandardMaterial({map:rockTex,roughness:0.88,metalness:0.06});
+const coneMatT=new THREE.MeshStandardMaterial({
+  color:0x2e6a4a,
+  roughness:0.88,
+  metalness:0.04,
+  emissive:0x1a3f2a,
+  emissiveIntensity:0.06
+});
 function onLand(x,z){ for(const d of landDiscs){ if(Math.hypot(x-d.x,z-d.z)<d.r) return true; } return false; }
 function farFromPads(x,z,m){
   return Math.hypot(x-COVE.x,z-COVE.z)>m && Math.hypot(x-HARMONY.x,z-HARMONY.z)>m && Math.hypot(x-SHOP.x,z-SHOP.z)>Math.min(m,70);
@@ -1100,7 +1234,13 @@ function spotFree(x,z,m){
   return true;
 }
 function fits(x,z,halfW){ return spotFree(x,z,halfW+6); }
-const roadMat=new THREE.MeshStandardMaterial({color:0x59544f,roughness:1});
+const roadMat=new THREE.MeshStandardMaterial({
+  color:0x59544f,
+  roughness:0.95,
+  metalness:0.03,
+  emissive:0x2a2620,
+  emissiveIntensity:0.02
+});
 const fieldMats=[0xa89a63,0x7f8c52,0x93995f,0x8c7f57].map(c=>new THREE.MeshStandardMaterial({color:c,roughness:1}));
 const animalMats=[0xece8de,0x8a6248,0x4a4a48].map(c=>new THREE.MeshStandardMaterial({color:c,roughness:1}));
 const winTexCache=[];
@@ -1391,7 +1531,14 @@ function buildTown(cx,cz,r){
   landDiscs.push({x:cx,z:cz,r:r});
   const tint=new THREE.Color(0xb9c4a6); tint.offsetHSL((Math.random()-0.5)*0.04,(Math.random()-0.5)*0.1,(Math.random()-0.5)*0.07);
   const land=addT(new THREE.Mesh(new THREE.CylinderGeometry(r,r+24,4,44),
-    new THREE.MeshStandardMaterial({map:grassTex,color:tint,roughness:1})),false);
+    new THREE.MeshStandardMaterial({
+      map:grassTex,
+      color:tint,
+      roughness:0.92,
+      metalness:0.03,
+      emissive:0x2a3420,
+      emissiveIntensity:0.05
+    })),false);
   land.position.set(cx,1,cz);
 
   const mainLen=Math.min(r*1.7, 1500), crossLen=Math.min(r*1.3, 1100);
@@ -1551,13 +1698,37 @@ function spawnAllFlocks(){
 spawnAllFlocks();
 let birdCd=0;
 
-// ---------- Drone (quadcopter) ----------
+// ---------- Drone (quadcopter) - HYPER REALISTIC ----------
 function makeDrone(bodyColor,accent){
   const g=new THREE.Group();
-  const bodyMat=new THREE.MeshStandardMaterial({color:bodyColor,metalness:0.7,roughness:0.35});
-  const noseMat=new THREE.MeshStandardMaterial({color:accent,metalness:0.5,roughness:0.4});
-  const darkMat=new THREE.MeshStandardMaterial({color:0x1c222e,metalness:0.3,roughness:0.85});
-  const rotMat=new THREE.MeshStandardMaterial({color:accent,metalness:0.4,roughness:0.5,transparent:true,opacity:0.85});
+  const bodyMat=new THREE.MeshStandardMaterial({
+    color:bodyColor,
+    metalness:0.85,
+    roughness:0.25,
+    emissive:bodyColor,
+    emissiveIntensity:0.05
+  });
+  const noseMat=new THREE.MeshStandardMaterial({
+    color:accent,
+    metalness:0.75,
+    roughness:0.3,
+    emissive:accent,
+    emissiveIntensity:0.08
+  });
+  const darkMat=new THREE.MeshStandardMaterial({
+    color:0x1c222e,
+    metalness:0.45,
+    roughness:0.75,
+    emissive:0x0a0d14,
+    emissiveIntensity:0.04
+  });
+  const rotMat=new THREE.MeshStandardMaterial({
+    color:accent,
+    metalness:0.6,
+    roughness:0.4,
+    transparent:true,
+    opacity:0.85
+  });
   const blurMat=new THREE.MeshBasicMaterial({color:accent,transparent:true,opacity:0.13,side:THREE.DoubleSide,depthWrite:false});
   const hull=new THREE.Mesh(new THREE.BoxGeometry(1.25,0.42,2.0), bodyMat); g.add(hull);
   const canopy=new THREE.Mesh(new THREE.BoxGeometry(0.85,0.24,1.15), noseMat); canopy.position.set(0,0.3,-0.15); g.add(canopy);
@@ -1990,7 +2161,7 @@ async function hashPass(p){
   }
 }
 function snapshotSave(){
-  return {money,trips,up:Object.assign({},up),ownedSkins:Object.assign({},ownedSkins),curSkin,ownedDrones:Object.assign({},ownedDrones),curDrone,ownedFX:Object.assign({},ownedFX),curFX,base:JSON.parse(JSON.stringify(baseCfg)),route:routeInfo};
+  return {money,trips,up:Object.assign({},up),ownedSkins:Object.assign({},ownedSkins),curSkin,ownedDrones:Object.assign({},ownedDrones),curDrone,ownedFX:Object.assign({},ownedFX),curFX,base:JSON.parse(JSON.stringify(baseCfg)),route:routeInfo,avatar:JSON.parse(JSON.stringify(avatarCustomization||AVATAR_DEFAULTS))};
 }
 function applySave(s){
   s=s||{};
@@ -2015,11 +2186,13 @@ function applySave(s){
   for(const k in OLD_STYLE) if(b.ownedStyles&&b.ownedStyles[k]) money+=OLD_STYLE[k];
   for(const k in OLD_EXTRA) if(b.extras&&b.extras[k]!==undefined) money+=OLD_EXTRA[k];
   baseCfg={name:String(b.name||'').slice(0,18), outfit:OUTFITS[b.outfit]?b.outfit:'pink', room:sanitizeRoom(b.room), dest:cleanDest(b.dest)};
+  avatarCustomization=normalizeAvatar(s.avatar);
   if(typeof setRouteWorld==='function'&&typeof routeInfo!=='undefined'&&routeInfo&&routeInfo.miles) setRouteWorld(tripMiles());   // rebuild the world for the saved destination
   buildRoom();
   applySkin(curSkin); applyDrone(curDrone);
   P.batt=maxBattF();
   moneyHUD();
+  rebuildAvatars();
 }
 function saveGame(){
   if(!account) return;
@@ -2457,6 +2630,7 @@ if($('hbName')) $('hbName').addEventListener('change',()=>{
 });
 if($('hbChange')) $('hbChange').addEventListener('click',()=>{ changeHomeAddress(); });
 if($('hbRoom')) $('hbRoom').addEventListener('click',()=>{ if(!account){ initAccount(); return; } $('home').style.display='none'; enterRoom(); });
+if($('hbCustomize')) $('hbCustomize').addEventListener('click',()=>{ if(!account){ initAccount(); return; } openAvatarCustomizer(); });
 function changeHomeAddress(){ $('home').style.display='none'; showAddr(); }
 // ================= HOME: your room, your pilot, the stairs to the roof =================
 const CELL=1.5, RCOLS=14, RROWS=10, RWALL=6;
@@ -2541,18 +2715,61 @@ function sanitizeRoom(r){
 }
 function room(){ if(!baseCfg.room) baseCfg.room=defaultRoom(); return baseCfg.room; }
 
-// ---------- 3D: room scene ----------
+// ---------- 3D: room scene (hyper-realistic lighting) ----------
 const roomScene=new THREE.Scene();
 roomScene.background=new THREE.Color(0x0d0a18);
-roomScene.add(new THREE.HemisphereLight(0xfff4e6,0x3a3448,0.75));
-roomScene.add(new THREE.AmbientLight(0xffffff,0.22));
-const rLamp=new THREE.PointLight(0xffe2b8,0.75,40); rLamp.position.set(0,RWALL-0.4,0); roomScene.add(rLamp);
-const rSun=new THREE.DirectionalLight(0xffffff,0.45); rSun.position.set(-6,14,12); roomScene.add(rSun);
+roomScene.fog=new THREE.Fog(0x0d0a18,40,80);
+
+// Layered ambient lighting for realism
+roomScene.add(new THREE.AmbientLight(0xfff5ee,0.25));
+roomScene.add(new THREE.HemisphereLight(0xfff8ee,0x4a3448,0.7));
+
+// Main ceiling light with realistic falloff
+const rLamp=new THREE.PointLight(0xfff2d8,1.8,50,2); 
+rLamp.position.set(0,RWALL-0.4,0); 
+rLamp.castShadow=true;
+rLamp.shadow.mapSize.width=2048; 
+rLamp.shadow.mapSize.height=2048;
+rLamp.shadow.bias=-0.0002;
+rLamp.shadow.radius=2.0;
+roomScene.add(rLamp);
+
+// Window sunlight - strong directional
+const rSun=new THREE.DirectionalLight(0xfffbf5,1.2); 
+rSun.position.set(-8,16,14); 
+rSun.castShadow=true;
+rSun.shadow.mapSize.width=2048; 
+rSun.shadow.mapSize.height=2048;
+rSun.shadow.camera.left=-18; rSun.shadow.camera.right=18;
+rSun.shadow.camera.top=18; rSun.shadow.camera.bottom=-18;
+rSun.shadow.bias=-0.0001;
+rSun.shadow.normalBias=0.02;
+roomScene.add(rSun);
+
+// Soft fill light from opposite side
+const rFill=new THREE.DirectionalLight(0xb8d4f0,0.4);
+rFill.position.set(10,8,-8);
+roomScene.add(rFill);
+
+// Ambient occlusion approximation with subtle downlight
+const rAO=new THREE.DirectionalLight(0x4a3a50,0.15);
+rAO.position.set(0,-1,0);
+roomScene.add(rAO);
+
 const roomCam=new THREE.PerspectiveCamera(56,innerWidth/innerHeight,0.1,200);
 const roomStatic=new THREE.Group(), furnGroup=new THREE.Group();
 roomScene.add(roomStatic); roomScene.add(furnGroup);
 const furnAnims=[];
-const shirtMat=new THREE.MeshStandardMaterial({color:OUTFITS.pink,roughness:0.8});
+// Camera control state
+let roomCamDist=20, roomCamAngle=0.8, roomCamHeight=0.75, roomCamTargetX=0;
+let isDraggingCam=false, lastMouseX=0, lastMouseY=0;
+const shirtMat=new THREE.MeshStandardMaterial({
+  color:OUTFITS.pink,
+  roughness:0.88,
+  metalness:0.02,
+  emissive:0x000000,
+  emissiveIntensity:0
+});
 function rb(g,w,h,d,col,x,y,z,opt){
   const o=opt||{};
   const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),
@@ -2738,32 +2955,286 @@ function buildFurniture(){
   }
   roomGridCache=roomGrid(R.placed,-1);
 }
-// ---------- the pilot ----------
-function makePerson(){
+// ---------- the pilot (improved realistic model) ----------
+// Helper function to create capsule-like geometry using cylinders and spheres
+function makeCapsule(radius,height,segments){
   const g=new THREE.Group();
-  const skin=new THREE.MeshStandardMaterial({color:0xe0b08a,roughness:0.8});
-  const pants=new THREE.MeshStandardMaterial({color:0x2b3348,roughness:0.9});
-  const dark=new THREE.MeshStandardMaterial({color:0x1a1a1a,roughness:0.9});
-  const hair=new THREE.MeshStandardMaterial({color:0x3a2618,roughness:0.9});
-  const limb=(mat,w,h,d,px,py)=>{ const piv=new THREE.Group(); piv.position.set(px,py,0);
-    const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat); m.position.y=-h/2; m.castShadow=true; piv.add(m); g.add(piv); return piv; };
-  const legL=limb(pants,0.3,1.15,0.34,-0.2,1.2), legR=limb(pants,0.3,1.15,0.34,0.2,1.2);
-  for(const L of [legL,legR]){ const sh=new THREE.Mesh(new THREE.BoxGeometry(0.32,0.16,0.48),dark); sh.position.set(0,-1.18,0.07); L.add(sh); }
-  const torso=new THREE.Mesh(new THREE.BoxGeometry(0.85,1.0,0.48),shirtMat); torso.position.y=1.7; torso.castShadow=true; g.add(torso);
-  const armL=limb(shirtMat,0.24,0.95,0.26,-0.56,2.15), armR=limb(shirtMat,0.24,0.95,0.26,0.56,2.15);
-  for(const Ar of [armL,armR]){ const hnd=new THREE.Mesh(new THREE.SphereGeometry(0.13,8,6),skin); hnd.position.y=-1.0; Ar.add(hnd); }
-  const head=new THREE.Mesh(new THREE.SphereGeometry(0.33,16,12),skin); head.position.y=2.55; head.castShadow=true; g.add(head);
-  const hr=new THREE.Mesh(new THREE.SphereGeometry(0.35,16,10,0,Math.PI*2,0,Math.PI/2),hair); hr.position.y=2.6; g.add(hr);
-  for(const ex of [-0.12,0.12]){ const e=new THREE.Mesh(new THREE.SphereGeometry(0.045,6,5),dark); e.position.set(ex,2.58,0.3); g.add(e); }
-  const vis=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.1,0.25),new THREE.MeshStandardMaterial({color:0x2de0ff,metalness:0.5,roughness:0.2}));
-  vis.position.set(0,2.62,0.2); g.add(vis);                       // pilot goggles
+  const cyl=new THREE.Mesh(new THREE.CylinderGeometry(radius,radius,height,segments));
+  g.add(cyl);
+  const top=new THREE.Mesh(new THREE.SphereGeometry(radius,segments,Math.ceil(segments/2)));
+  top.position.y=height/2;
+  top.scale.y=0.7;
+  g.add(top);
+  const bottom=new THREE.Mesh(new THREE.SphereGeometry(radius,segments,Math.ceil(segments/2)));
+  bottom.position.y=-height/2;
+  bottom.scale.y=0.7;
+  g.add(bottom);
+  return g;
+}
+
+function makePerson(){
+  const av=avatarCustomization;
+  const g=new THREE.Group();
+  
+  // Dynamic skin material based on customization
+  const skin=new THREE.MeshStandardMaterial({
+    color:av.skinTone,
+    roughness:0.45,
+    metalness:0.08,
+    emissive:av.skinTone,
+    emissiveIntensity:0.05
+  });
+  
+  // Dynamic outfit materials
+  const topMat=new THREE.MeshStandardMaterial({
+    color:av.topColor,
+    roughness:0.88,
+    metalness:0.02
+  });
+  const bottomMat=new THREE.MeshStandardMaterial({
+    color:av.bottomColor,
+    roughness:0.92,
+    metalness:0.02
+  });
+  const shoesMat=new THREE.MeshStandardMaterial({
+    color:av.shoesColor,
+    roughness:0.75,
+    metalness:0.15
+  });
+  const hairMat=new THREE.MeshStandardMaterial({
+    color:av.hairColor,
+    roughness:0.65,
+    metalness:0.25
+  });
+  const facialHairMat=new THREE.MeshStandardMaterial({
+    color:av.facialHairColor,
+    roughness:0.75,
+    metalness:0.15
+  });
+  
+  // More realistic limb function using cylinders with rounded ends
+  const limb=(upperMat,lowerMat,w,h,px,py)=>{ 
+    const piv=new THREE.Group(); 
+    piv.position.set(px,py,0);
+    const upperH=h*0.55, lowerH=h*0.48;
+    
+    // Upper limb segment
+    const upper=new THREE.Mesh(new THREE.CylinderGeometry(w/2,w*0.95/2,upperH,12));
+    upper.material=upperMat;
+    upper.position.y=-upperH/2-w/2;
+    upper.castShadow=true;
+    piv.add(upper);
+    
+    // Joint
+    const joint=new THREE.Group();
+    joint.position.y=-upperH-w/2;
+    
+    // Lower limb segment - slightly thinner
+    const lower=new THREE.Mesh(new THREE.CylinderGeometry(w*0.8/2,w*0.7/2,lowerH,12));
+    lower.material=lowerMat;
+    lower.position.y=-lowerH/2-w*0.4;
+    lower.castShadow=true;
+    joint.add(lower);
+    piv.add(joint);
+    
+    piv.userData={upper,joint,lower};
+    g.add(piv); 
+    return piv; 
+  };
+  
+  // Legs with better proportions (height 1.65 total). Shorts and skirts leave the lower leg bare.
+  const legLowerMat=(av.bottomStyle==='shorts'||av.bottomStyle==='skirt')?skin:bottomMat;
+  const legL=limb(bottomMat,legLowerMat,0.22,1.65,-0.24,1.05), legR=limb(bottomMat,legLowerMat,0.22,1.65,0.24,1.05);
+  for(const L of [legL,legR]){ 
+    const sh=new THREE.Mesh(new THREE.BoxGeometry(0.3,0.12,0.38),shoesMat); 
+    sh.position.set(0,-1.7,0.08); 
+    sh.castShadow=true;
+    L.add(sh); 
+  }
+  
+  // Torso - more anatomically correct
+  const torsoG=new THREE.Group();
+  torsoG.position.y=1.7;
+  const torsoUpper=new THREE.Mesh(
+    new THREE.CylinderGeometry(0.38,0.45,0.72,16),topMat
+  );
+  torsoUpper.position.y=0.36;
+  torsoUpper.castShadow=true;
+  torsoG.add(torsoUpper);
+  const torsoLower=new THREE.Mesh(
+    new THREE.CylinderGeometry(0.45,0.42,0.36,16),bottomMat
+  );
+  torsoLower.position.y=-0.18;
+  torsoLower.castShadow=true;
+  torsoG.add(torsoLower);
+  if(av.topStyle==='jacket'){
+    const coat=new THREE.Mesh(new THREE.CylinderGeometry(0.44,0.52,0.8,16,1,true),topMat);
+    coat.position.y=0.32;
+    coat.castShadow=true;
+    torsoG.add(coat);
+  }
+  g.add(torsoG);
+  if(av.bottomStyle==='skirt'){
+    const skirt=new THREE.Mesh(new THREE.CylinderGeometry(0.28,0.58,0.48,16),bottomMat);
+    skirt.position.y=1.32;
+    skirt.castShadow=true;
+    g.add(skirt);
+  }
+  
+  // Arms with better proportions. A tank top leaves the arms bare.
+  const armMat=av.topStyle==='tank'?skin:topMat;
+  const armL=limb(armMat,armMat,0.16,1.05,-0.58,2.35), armR=limb(armMat,armMat,0.16,1.05,0.58,2.35);
+  for(const Ar of [armL,armR]){ 
+    const hnd=new THREE.Mesh(new THREE.SphereGeometry(0.09,10,8),skin); 
+    hnd.position.y=-1.2;
+    hnd.scale.set(1,1.3,1.3);
+    hnd.castShadow=true;
+    Ar.add(hnd); 
+  }
+  
+  // Neck
+  const neck=new THREE.Mesh(new THREE.CylinderGeometry(0.14,0.16,0.28,12),skin);
+  neck.position.y=2.86;
+  neck.castShadow=true;
+  g.add(neck);
+  
+  // Head - more proportional, with a face shape the player can change
+  const head=new THREE.Mesh(new THREE.SphereGeometry(0.36,20,16),skin); 
+  head.position.y=3.2; 
+  const faceScale=av.faceShape==='round'?[1.12,1.04,1.12]:av.faceShape==='square'?[1.16,1.1,0.9]:[1,1,1];
+  head.scale.set(faceScale[0],faceScale[1],faceScale[2]);
+  head.castShadow=true; 
+  g.add(head);
+  
+  // Hair - multiple styles based on customization
+  if(av.hairStyle==='short'){
+    const hr=new THREE.Mesh(new THREE.SphereGeometry(0.38,20,14,0,Math.PI*2,0,Math.PI*0.6),hairMat); 
+    hr.position.y=3.28; 
+    g.add(hr);
+  }else if(av.hairStyle==='long'){
+    const hr=new THREE.Mesh(new THREE.SphereGeometry(0.40,20,16,0,Math.PI*2,0,Math.PI*0.75),hairMat); 
+    hr.position.y=3.25; 
+    g.add(hr);
+    const back=new THREE.Mesh(new THREE.BoxGeometry(0.6,0.8,0.3),hairMat);
+    back.position.set(0,2.8,-0.4);
+    g.add(back);
+  }else if(av.hairStyle==='ponytail'){
+    const hr=new THREE.Mesh(new THREE.SphereGeometry(0.38,20,14,0,Math.PI*2,0,Math.PI*0.6),hairMat); 
+    hr.position.y=3.28; 
+    g.add(hr);
+    const pony=new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.06,0.6,8),hairMat);
+    pony.position.set(0,2.95,-0.5);
+    pony.rotation.x=Math.PI*0.15;
+    g.add(pony);
+  }else if(av.hairStyle==='bun'){
+    const hr=new THREE.Mesh(new THREE.SphereGeometry(0.38,20,14,0,Math.PI*2,0,Math.PI*0.5),hairMat); 
+    hr.position.y=3.28; 
+    g.add(hr);
+    const bun=new THREE.Mesh(new THREE.SphereGeometry(0.18,12,10),hairMat);
+    bun.position.set(0,3.45,-0.3);
+    g.add(bun);
+  }
+  // (hairStyle==='bald' renders no hair)
+  
+  // Facial hair
+  if(av.facialHair==='beard'){
+    const beard=new THREE.Mesh(new THREE.SphereGeometry(0.28,16,12,0,Math.PI*2,Math.PI*0.5,Math.PI*0.5),facialHairMat);
+    beard.position.set(0,3.0,0.2);
+    g.add(beard);
+  }else if(av.facialHair==='mustache'){
+    const must=new THREE.Mesh(new THREE.BoxGeometry(0.35,0.08,0.15),facialHairMat);
+    must.position.set(0,3.12,0.35);
+    g.add(must);
+  }else if(av.facialHair==='goatee'){
+    const goat=new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.08,0.25,10),facialHairMat);
+    goat.position.set(0,2.92,0.28);
+    g.add(goat);
+  }
+  
+  // Eyes, brows, nose and mouth — each follows the saved face settings
+  const eyeMat=new THREE.MeshBasicMaterial({color:av.eyeColor});
+  for(const ex of [-0.14,0.14]){ 
+    const e=new THREE.Mesh(new THREE.SphereGeometry(0.05,8,6),eyeMat); 
+    e.position.set(ex*faceScale[0],3.24,0.32*faceScale[2]); 
+    g.add(e); 
+  }
+  const browH=av.eyebrowStyle==='thick'?0.055:av.eyebrowStyle==='thin'?0.018:0.032;
+  const browMat=new THREE.MeshStandardMaterial({color:av.hairColor,roughness:0.7,metalness:0.05});
+  for(const ex of [-0.13,0.13]){
+    const brow=new THREE.Mesh(new THREE.BoxGeometry(0.12,browH,0.035),browMat);
+    brow.position.set(ex*faceScale[0],3.34,0.34*faceScale[2]);
+    brow.rotation.z=ex<0?0.15:-0.15;
+    g.add(brow);
+  }
+  const noseS=av.noseSize==='small'?0.65:av.noseSize==='large'?1.45:1;
+  const nose=new THREE.Mesh(new THREE.SphereGeometry(0.04*noseS,8,6),skin);
+  nose.scale.set(0.75,1.15,1.35);
+  nose.position.set(0,3.12,0.36*faceScale[2]+0.02);
+  g.add(nose);
+  const mouthW=av.mouthSize==='small'?0.08:av.mouthSize==='large'?0.22:0.14;
+  const mouth=new THREE.Mesh(new THREE.BoxGeometry(mouthW,0.028,0.03),new THREE.MeshStandardMaterial({color:0x8d4038,roughness:0.55}));
+  mouth.position.set(0,2.98,0.34*faceScale[2]);
+  g.add(mouth);
+  
+  // Headwear
+  if(av.headwear==='goggles'){
+    const goggleFrame=new THREE.Mesh(
+      new THREE.TorusGeometry(0.16,0.04,8,16),
+      new THREE.MeshStandardMaterial({color:0x2a2d33,metalness:0.7,roughness:0.3})
+    );
+    goggleFrame.position.set(-0.14,3.22,0.28);
+    goggleFrame.rotation.y=Math.PI/2;
+    g.add(goggleFrame);
+    
+    const goggleFrame2=goggleFrame.clone();
+    goggleFrame2.position.x=0.14;
+    g.add(goggleFrame2);
+    
+    const goggleLens=new THREE.Mesh(
+      new THREE.CircleGeometry(0.14,16),
+      new THREE.MeshStandardMaterial({color:av.headwearColor,metalness:0.6,roughness:0.15,transparent:true,opacity:0.6})
+    );
+    goggleLens.position.set(-0.14,3.22,0.34);
+    g.add(goggleLens);
+    
+    const goggleLens2=goggleLens.clone();
+    goggleLens2.position.x=0.14;
+    g.add(goggleLens2);
+    
+    const goggleBridge=new THREE.Mesh(
+      new THREE.CylinderGeometry(0.03,0.03,0.28,8),
+      new THREE.MeshStandardMaterial({color:0x2a2d33,metalness:0.7,roughness:0.3})
+    );
+    goggleBridge.rotation.z=Math.PI/2;
+    goggleBridge.position.set(0,3.22,0.3);
+    g.add(goggleBridge);
+  }else if(av.headwear==='cap'){
+    const cap=new THREE.Mesh(new THREE.CylinderGeometry(0.42,0.38,0.2,16),new THREE.MeshStandardMaterial({color:av.headwearColor,roughness:0.85}));
+    cap.position.y=3.48;
+    g.add(cap);
+    const bill=new THREE.Mesh(new THREE.BoxGeometry(0.6,0.05,0.4),new THREE.MeshStandardMaterial({color:av.headwearColor,roughness:0.85}));
+    bill.position.set(0,3.4,0.5);
+    g.add(bill);
+  }else if(av.headwear==='headband'){
+    const band=new THREE.Mesh(new THREE.TorusGeometry(0.38,0.05,8,20,Math.PI*1.5),new THREE.MeshStandardMaterial({color:av.headwearColor,roughness:0.8}));
+    band.position.y=3.25;
+    band.rotation.x=-Math.PI*0.15;
+    g.add(band);
+  }
+  // (headwear==='none' renders nothing)
+  
   g.userData={legL,legR,armL,armR,ph:0};
   return g;
 }
-const roomPerson=makePerson(); roomScene.add(roomPerson);
-const roofPerson=makePerson(); roofPerson.visible=false; scene.add(roofPerson);
+let roomPerson=makePerson(); roomScene.add(roomPerson);
+let roofPerson=makePerson(); roofPerson.visible=false; scene.add(roofPerson);
 const carryDrone=makeMiniDrone(); carryDrone.visible=false;
 let carrying=false, decorating=false, decoSel=null, decoRot=0, pickMode=false, walkHintT='';
+let decoHistory=[]; // Undo history for placed items
+let decoRotDegrees=0; // Fine rotation in degrees (0-360)
+let decoSnapToGrid=true; // Grid snapping enabled by default
+let decoSnapToWalls=true; // Wall snapping enabled
+let touchStartPos=null, touchStartTime=0;
 const rp={x:0,z:0,y:0,h:Math.PI};        // room pilot
 const fp2={x:0,z:0,h:Math.PI};          // roof pilot (offsets from COVE)
 const decoGhost=new THREE.Mesh(new THREE.BoxGeometry(1,0.3,1),new THREE.MeshBasicMaterial({color:0x4dffd2,transparent:true,opacity:0.45,depthWrite:false}));
@@ -2783,11 +3254,32 @@ function dropCarry(){ if(carryDrone.parent) carryDrone.parent.remove(carryDrone)
 function animPerson(pr,moving,dt,t){
   const u=pr.userData;
   if(moving) u.ph+=dt*9; else u.ph*=0.8;
-  const sw=Math.sin(u.ph)*(moving?0.65:0);
-  u.legL.rotation.x=sw; u.legR.rotation.x=-sw;
-  if(carrying&&pr===(walk==='roof'?roofPerson:roomPerson)){ u.armL.rotation.x=u.armR.rotation.x=-1.25; u.armL.rotation.z=u.armR.rotation.z=0; }
-  else if(u.waving){ u.armR.rotation.x=0; u.armR.rotation.z=2.6+Math.sin(t*8)*0.35; u.armL.rotation.x=0; u.armL.rotation.z=0; }
-  else { u.armL.rotation.x=-sw*0.8; u.armR.rotation.x=sw*0.8; u.armL.rotation.z=u.armR.rotation.z=0; }
+  const sw=Math.sin(u.ph)*(moving?0.55:0);
+  
+  // Natural walking animation with knee bends
+  u.legL.rotation.x=sw*0.8; 
+  u.legR.rotation.x=-sw*0.8;
+  if(u.legL.userData.joint) u.legL.userData.joint.rotation.x=Math.max(0,-sw*1.2);
+  if(u.legR.userData.joint) u.legR.userData.joint.rotation.x=Math.max(0,sw*1.2);
+  
+  if(carrying&&pr===(walk==='roof'?roofPerson:roomPerson)){ 
+    u.armL.rotation.x=u.armR.rotation.x=-1.1; 
+    u.armL.rotation.z=u.armR.rotation.z=0; 
+    if(u.armL.userData.joint){ u.armL.userData.joint.rotation.x=-0.4; u.armR.userData.joint.rotation.x=-0.4; }
+  }
+  else if(u.waving){ 
+    u.armR.rotation.x=-0.1; 
+    u.armR.rotation.z=2.4+Math.sin(t*8)*0.4; 
+    u.armL.rotation.x=0; 
+    u.armL.rotation.z=0; 
+    if(u.armR.userData.joint) u.armR.userData.joint.rotation.x=0.2;
+  }
+  else { 
+    u.armL.rotation.x=-sw*0.6; 
+    u.armR.rotation.x=sw*0.6; 
+    u.armL.rotation.z=u.armR.rotation.z=0; 
+    if(u.armL.userData.joint){ u.armL.userData.joint.rotation.x=-0.15; u.armR.userData.joint.rotation.x=-0.15; }
+  }
 }
 function wavePilot(t){ animPerson(roofPerson,false,0.016,t); }
 // ---------- collisions ----------
@@ -2850,6 +3342,8 @@ function enterRoom(){
   setHUDForWalk(true); renderDeco();
   for(const k in keys) keys[k]=false;
 }
+// Expose for testing
+window.enterRoom=enterRoom;
 function styleCarry(){                    // a wrecked drone hangs crooked with a drooping arm
   carryDrone.rotation.set(0,0,broken?0.45:0);
   if(benchDrone) benchDrone.rotation.set(0,0,broken?0.35:0);
@@ -2904,14 +3398,25 @@ function exitToHangar(){
   openHome();
 }
 function walkKey(e){
+  if(customizingAvatar){
+    if(e.code==='Escape') closeAvatarCustomizer(true);
+    return;
+  }
   if(e.code==='Escape'){
     if(decoSel||pickMode){ decoSel=null; pickMode=false; renderDeco(); return; }
     if(decorating){ toggleDeco(); return; }
     exitToHangar(); return;
   }
   if(walk==='room'){
-    if(e.code==='KeyE'||(e.code==='Space'&&!decorating)){ pickUpDrone(); return; }
-    if(e.code==='KeyR'&&decorating){ decoRot^=1; renderDeco(); return; }
+    if(e.code==='KeyE'&&!decorating||(e.code==='Space'&&!decorating)){ pickUpDrone(); return; }
+    if(e.code==='KeyR'&&decorating){ decoRotDegrees=(decoRotDegrees+45)%360; decoRot=Math.floor(decoRotDegrees/90); renderDeco(); return; }
+    if(e.code==='KeyQ'&&decorating){ decoRotDegrees=(decoRotDegrees-15+360)%360; decoRot=Math.floor(decoRotDegrees/90); renderDeco(); return; }
+    if(e.code==='KeyE'&&decorating){ decoRotDegrees=(decoRotDegrees+15)%360; decoRot=Math.floor(decoRotDegrees/90); renderDeco(); return; }
+    if(e.code==='ArrowLeft'&&decorating&&e.shiftKey){ decoRotDegrees=(decoRotDegrees-15+360)%360; decoRot=Math.floor(decoRotDegrees/90); renderDeco(); return; }
+    if(e.code==='ArrowRight'&&decorating&&e.shiftKey){ decoRotDegrees=(decoRotDegrees+15)%360; decoRot=Math.floor(decoRotDegrees/90); renderDeco(); return; }
+    if((e.code==='KeyZ'||e.code==='Backspace')&&decorating&&(e.ctrlKey||e.metaKey)){ undoDeco(); return; }
+    if(e.code==='KeyG'&&decorating){ decoSnapToGrid=!decoSnapToGrid; $('decoMsg').textContent='Grid snap: '+(decoSnapToGrid?'ON':'OFF'); return; }
+    if(e.code==='Escape'&&decorating){ decoSel=null; pickMode=false; renderDeco(); return; }
   } else if(walk==='roof'){
     if(e.code==='Space'||e.code==='KeyE'){ launchFromRoof(); return; }
   }
@@ -2922,6 +3427,11 @@ function stepWalk(dt,t){
   let hint='';
   if($('overlay').style.display==='flex'){ mv.x=0; mv.z=0; }
   if(walk==='room'){
+    if(customizingAvatar){
+      mv.x=0; mv.z=0;
+      rp.x=0; rp.z=0.4; rp.h=0; rp.y=0;
+      roomCamDist=9; roomCamAngle=0.15; roomCamHeight=0.72; roomCamTargetX=0;
+    }
     const moving=moveP(rp,mv.x,mv.z,dt,roomFree);
     rp.y=stairY(rp.x,rp.z);
     roomPerson.position.set(rp.x,rp.y,rp.z); roomPerson.rotation.y=rp.h;
@@ -2935,14 +3445,22 @@ function stepWalk(dt,t){
       else if(a.type==='spin') a.obj.rotation.y+=dt*1.2;
     }
     if(benchDrone&&benchDrone.visible) benchDrone.rotation.y=Math.sin(t*0.6)*0.2;
-    if(decorating) hint=pickMode?'✋ Click a piece of furniture to put it back in storage':(decoSel?'Click the floor to place · R rotate · Esc cancel':'🛠 Pick something from the panel · Esc when done');
+    if(decorating) hint=pickMode?'✋ Click furniture to pick up · Ctrl+Z undo · Esc done':(decoSel?('Click to place · R +45° · Q/E ±15° · '+decoRotDegrees+'° · Ctrl+Z undo · Esc cancel'):'🛠 Pick an item · R rotate · Q/E fine rotate · Ctrl+Z undo · Esc done');
     else if(broken&&carrying) hint=nearBench()?'Press E to put your broken drone down on the repair desk':'🔧 Your drone is wrecked — carry it to the repair desk (back-left)';
     else if(broken) hint=nearBench()?'Press E to order the part and repair it':'🔧 Walk to the repair desk to fix your drone';
-    else if(!carrying) hint=nearBench()?'Press E to grab your drone':'Walk to the repair desk (back-left) and grab your drone · WASD / arrows to walk';
-    else hint=(rp.x>STAIR_X0&&rp.z<STAIR_Z1)?'Keep climbing ↑':'Take the stairs (back-right) up to the roof ↑';
-    const cx=decorating?0:Math.max(-4,Math.min(4,rp.x*0.35));
+    else if(!carrying) hint=nearBench()?'Press E to grab your drone':'Walk to the repair desk (back-left) and grab your drone · WASD / arrows to walk · Right-click + drag to rotate camera · Scroll to zoom';
+    else hint=(rp.x>STAIR_X0&&rp.z<STAIR_Z1)?'Keep climbing ↑':'Take the stairs (back-right) up to the roof ↑ · Right-click + drag to rotate camera';
+    const cx=decorating?0:roomCamTargetX;
+    // Smooth orbit camera controls
+    roomCamTargetX=Math.max(-4,Math.min(4,rp.x*0.35));
+    const targetCamX=cx+Math.sin(roomCamAngle)*roomCamDist;
+    const targetCamZ=Math.cos(roomCamAngle)*roomCamDist;
+    const targetCamY=roomCamDist*roomCamHeight;
     roomCam.aspect=innerWidth/innerHeight; roomCam.updateProjectionMatrix();
-    roomCam.position.set(cx,16,17.5); roomCam.lookAt(cx,0.5,-0.8);
+    roomCam.position.x+=(targetCamX-roomCam.position.x)*0.15;
+    roomCam.position.y+=(targetCamY-roomCam.position.y)*0.15;
+    roomCam.position.z+=(targetCamZ-roomCam.position.z)*0.15;
+    roomCam.lookAt(cx,2,-0.8);
     $('walkCoins').textContent='🪙 '+money;
     renderer.render(roomScene,roomCam);
   } else if(walk==='roof'){
@@ -2961,10 +3479,23 @@ function stepWalk(dt,t){
 }
 // ---------- decorating ----------
 function toggleDeco(){
-  decorating=!decorating; decoSel=null; pickMode=false;
+  decorating=!decorating; decoSel=null; pickMode=false; decoRotDegrees=0; decoRot=0;
   $('decoPanel').style.display=decorating?'block':'none';
   $('wDeco').classList.toggle('on',decorating);
   renderDeco();
+}
+function undoDeco(){
+  if(decoHistory.length===0){ $('decoMsg').textContent='Nothing to undo.'; return; }
+  const last=decoHistory.pop();
+  const R=room();
+  if(last.action==='place'){
+    const idx=R.placed.findIndex(it=>it.id===last.item.id&&it.c===last.item.c&&it.r===last.item.r);
+    if(idx>=0){ R.placed.splice(idx,1); R.inv[last.item.id]=(R.inv[last.item.id]||0)+1; }
+  } else if(last.action==='pick'){
+    R.placed.push(last.item); R.inv[last.item.id]=(R.inv[last.item.id]||0)-1;
+  }
+  buildFurniture(); saveGame(); renderDeco();
+  $('decoMsg').textContent='Undone! (Ctrl+Z to undo more)';
 }
 function decoPlaceAt(id,c,r,rot){
   const R=room();
@@ -2978,6 +3509,8 @@ function decoPlaceAt(id,c,r,rot){
   }
   if(msg) return msg;
   R.inv[id]--; R.placed.push(it);
+  decoHistory.push({action:'place',item:Object.assign({},it)});
+  if(decoHistory.length>20) decoHistory.shift();
   buildFurniture(); saveGame();
   if(!(R.inv[id]>0)) decoSel=null;
   renderDeco(); return '';
@@ -2986,6 +3519,8 @@ function decoPickAt(c,r){
   const R=room(), g=roomGrid(R.placed,-1), k=g[c]&&g[c][r];
   if(!k) return false;
   const it=R.placed.splice(k.i,1)[0];
+  decoHistory.push({action:'pick',item:Object.assign({},it)});
+  if(decoHistory.length>20) decoHistory.shift();
   R.inv[it.id]=(R.inv[it.id]||0)+1;
   buildFurniture(); saveGame(); renderDeco(); return true;
 }
@@ -3005,7 +3540,7 @@ function renderDeco(){
     b.innerHTML='<span class="ic">'+f.ic+'</span>'+f.n+(have?'<span class="ow">×'+have+' · PLACE</span>':'<span class="pr">🪙 '+f.cost+'</span>');
     b.addEventListener('click',()=>{
       if(!(R.inv[id]>0)&&!buyFurn(id)) return;
-      decoSel=id; pickMode=false; $('decoMsg').textContent='Click the floor to place your '+f.n.toLowerCase()+'.'; renderDeco();
+      decoSel=id; pickMode=false; decoRotDegrees=0; decoRot=0; $('decoMsg').textContent='Click/tap to place · R +45° · Q/E ±15° · Ctrl+Z undo'; renderDeco();
     });
     panel.appendChild(b);
   });
@@ -3029,17 +3564,18 @@ function renderDeco(){
   });
   const or=$('dOutfit'); or.innerHTML='';
   Object.keys(OUTFITS).forEach(id=>{
-    const b=document.createElement('button'); b.className='sw'+(baseCfg.outfit===id?' sel':''); b.style.background=hex(OUTFITS[id]); b.title=id;
-    b.addEventListener('click',()=>{ baseCfg.outfit=id; applyOutfit(); saveGame(); renderDeco(); });
+    const b=document.createElement('button'); b.className='sw'+(avatarCustomization.topColor===OUTFITS[id]?' sel':''); b.style.background=hex(OUTFITS[id]); b.title=id;
+    b.addEventListener('click',()=>{ baseCfg.outfit=id; avatarCustomization.topColor=OUTFITS[id]; applyOutfit(); rebuildAvatars(); saveGame(); renderDeco(); });
     or.appendChild(b);
   });
   $('dRot').classList.toggle('on',!!decoRot);
+  $('dRot').textContent='↻ ROTATE '+(decoRotDegrees||0)+'° (R/Q/E)';
   $('dPick').classList.toggle('on',pickMode);
   if(!decorating) decoGhost.visible=false;
 }
 $('wDeco').addEventListener('click',()=>{ if(walk==='room') toggleDeco(); });
 $('wHangar').addEventListener('click',()=>exitToHangar());
-$('dRot').addEventListener('click',()=>{ decoRot^=1; renderDeco(); });
+$('dRot').addEventListener('click',()=>{ decoRotDegrees=(decoRotDegrees+45)%360; decoRot=Math.floor(decoRotDegrees/90); renderDeco(); });
 $('dPick').addEventListener('click',()=>{ pickMode=!pickMode; decoSel=null; renderDeco(); });
 const rayc=new THREE.Raycaster(), mouseV=new THREE.Vector2(), floorPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0), hitV=new THREE.Vector3();
 function cellFromMouse(e){
@@ -3083,6 +3619,108 @@ addEventListener('mousedown',e=>{
   $('decoMsg').textContent=msg||('Placed! '+(decoSel?'Click again to place another.':''));
   decoGhost.visible=!!decoSel&&decoGhost.visible;
 });
+// Camera controls for room mode
+addEventListener('mousedown',e=>{
+  if(walk!=='room'||e.target!==renderer.domElement) return;
+  if(e.button===2||e.button===1||(e.button===0&&e.shiftKey)){ // Right click, middle click, or shift+left
+    isDraggingCam=true;
+    lastMouseX=e.clientX;
+    lastMouseY=e.clientY;
+    e.preventDefault();
+  }
+});
+addEventListener('mouseup',e=>{
+  isDraggingCam=false;
+});
+addEventListener('mousemove',e=>{
+  if(isDraggingCam&&walk==='room'){
+    const dx=e.clientX-lastMouseX;
+    const dy=e.clientY-lastMouseY;
+    roomCamAngle+=dx*0.005;
+    roomCamHeight=Math.max(0.4,Math.min(1.2,roomCamHeight-dy*0.002));
+    lastMouseX=e.clientX;
+    lastMouseY=e.clientY;
+    e.preventDefault();
+  }
+});
+addEventListener('wheel',e=>{
+  if(walk==='room'&&e.target===renderer.domElement){
+    roomCamDist=Math.max(10,Math.min(30,roomCamDist+e.deltaY*0.02));
+    e.preventDefault();
+  }
+});
+addEventListener('contextmenu',e=>{
+  if(e.target===renderer.domElement) e.preventDefault();
+});
+// Touch support for furniture placement and camera
+addEventListener('touchstart',e=>{
+  if(walk!=='room'||e.target!==renderer.domElement) return;
+  touchStartPos={x:e.touches[0].clientX,y:e.touches[0].clientY};
+  touchStartTime=Date.now();
+  if(decorating&&decoSel&&e.touches.length===1){
+    // Single touch for placing
+    const cf=cellFromMouse({clientX:e.touches[0].clientX,clientY:e.touches[0].clientY,target:e.target});
+    if(cf){ ghostCell=cf; }
+  } else if(e.touches.length===2){
+    // Two-finger for camera
+    isDraggingCam=true;
+    lastMouseX=(e.touches[0].clientX+e.touches[1].clientX)/2;
+    lastMouseY=(e.touches[0].clientX+e.touches[1].clientY)/2;
+  }
+},false);
+addEventListener('touchmove',e=>{
+  if(walk!=='room'||e.target!==renderer.domElement) return;
+  if(decorating&&decoSel&&e.touches.length===1){
+    // Update ghost preview
+    const cf=cellFromMouse({clientX:e.touches[0].clientX,clientY:e.touches[0].clientY,target:e.target});
+    if(cf){
+      ghostCell=cf;
+      const it=ghostItem(cf), [w,d]=fp(it);
+      const bad=canPlace(room(),it);
+      decoGhost.visible=true; decoGhost.scale.set(w*CELL,1,d*CELL);
+      decoGhost.position.set(RX0+(it.c+w/2)*CELL,0.15,RZ0+(it.r+d/2)*CELL);
+      decoGhost.material.color.set(bad?0xff4a4a:0x4dffd2);
+    }
+    e.preventDefault();
+  } else if(isDraggingCam&&e.touches.length===2){
+    // Two-finger camera control
+    const midX=(e.touches[0].clientX+e.touches[1].clientX)/2;
+    const midY=(e.touches[0].clientY+e.touches[1].clientY)/2;
+    const dx=midX-lastMouseX, dy=midY-lastMouseY;
+    roomCamAngle+=dx*0.008;
+    roomCamHeight=Math.max(0.4,Math.min(1.2,roomCamHeight-dy*0.003));
+    lastMouseX=midX; lastMouseY=midY;
+    // Pinch to zoom
+    const dist=Math.hypot(e.touches[1].clientX-e.touches[0].clientX,e.touches[1].clientY-e.touches[0].clientY);
+    if(touchStartPos.dist) roomCamDist=Math.max(10,Math.min(30,roomCamDist-(dist-touchStartPos.dist)*0.05));
+    touchStartPos.dist=dist;
+    e.preventDefault();
+  }
+},false);
+addEventListener('touchend',e=>{
+  if(walk!=='room'||e.target!==renderer.domElement) return;
+  if(decorating&&e.touches.length===0&&touchStartPos){
+    const dur=Date.now()-touchStartTime;
+    const dist=e.changedTouches.length?Math.hypot(e.changedTouches[0].clientX-touchStartPos.x,e.changedTouches[0].clientY-touchStartPos.y):0;
+    if(dur<500&&dist<20){ // Quick tap
+      if(pickMode){
+        const cf=cellFromMouse({clientX:touchStartPos.x,clientY:touchStartPos.y,target:e.target});
+        if(cf&&!decoPickAt(Math.floor(cf.fx),Math.floor(cf.fz))) $('decoMsg').textContent='Nothing there to pick up.';
+        else $('decoMsg').textContent='Put back in storage.';
+      } else if(decoSel){
+        const cf=cellFromMouse({clientX:touchStartPos.x,clientY:touchStartPos.y,target:e.target});
+        if(cf){
+          const it=ghostItem(cf);
+          const msg=decoPlaceAt(it.id,it.c,it.r,it.rot);
+          $('decoMsg').textContent=msg||('Placed! '+(decoSel?'Tap again to place another.':''));
+          decoGhost.visible=!!decoSel&&decoGhost.visible;
+        }
+      }
+    }
+  }
+  isDraggingCam=false;
+  touchStartPos=null;
+},false);
 
 // ---------- pilot chat (global, open/close, live presence) ----------
 let chatOpen=false, chatLast=0, chatSeen=0, chatTimer=null, chatMsgs=[];
@@ -4273,6 +4911,125 @@ function loop(){
   drawMap();
   renderer.render(scene,camera);
 }
+function normalizeAvatar(src){
+  const out=JSON.parse(JSON.stringify(AVATAR_DEFAULTS));
+  if(!src||typeof src!=='object') return out;
+  for(const k in out){
+    if(src[k]===undefined||src[k]===null||src[k]==='') continue;
+    if(typeof out[k]==='number'){
+      const n=typeof src[k]==='number'?src[k]:parseInt(String(src[k]).replace(/^#/,''),16);
+      if(isFinite(n)) out[k]=n&0xffffff;
+    }else out[k]=String(src[k]);
+  }
+  return out;
+}
+function colorHex(n){ return '#'+((Number(n)||0)&0xffffff).toString(16).padStart(6,'0'); }
+function disposePerson(obj){
+  const seen=new Set();
+  obj.traverse(o=>{
+    if(!o.isMesh) return;
+    if(o.geometry&&!seen.has(o.geometry)){ seen.add(o.geometry); o.geometry.dispose(); }
+    const mats=Array.isArray(o.material)?o.material:[o.material];
+    mats.forEach(m=>{ if(m&&!seen.has(m)){ seen.add(m); if(m.dispose) m.dispose(); } });
+  });
+}
+function replacePerson(current){
+  const parent=current.parent;
+  const pos=current.position.clone();
+  const rot=current.rotation.clone();
+  const vis=current.visible;
+  const waving=!!(current.userData&&current.userData.waving);
+  const hadCarry=carryDrone&&carryDrone.parent===current;
+  if(hadCarry) current.remove(carryDrone);
+  const neu=makePerson();
+  neu.position.copy(pos);
+  neu.rotation.copy(rot);
+  neu.visible=vis;
+  neu.userData.waving=waving;
+  if(parent){ parent.remove(current); parent.add(neu); }
+  if(hadCarry) attachCarry(neu);
+  disposePerson(current);
+  return neu;
+}
+function rebuildAvatars(){
+  if(!roomPerson||!roofPerson) return;
+  roomPerson=replacePerson(roomPerson);
+  roofPerson=replacePerson(roofPerson);
+}
+function closeAvatarCustomizer(save){
+  customizingAvatar=false;
+  const panel=$('avatarCustomizer');
+  if(panel) panel.style.display='none';
+  if(save) saveGame();
+  if(walk==='room'){
+    rp.x=RX0+(R_SPAWN.c+0.5)*CELL; rp.z=RZ0+(R_SPAWN.r+0.5)*CELL; rp.h=Math.PI; rp.y=0;
+    roomCamDist=16; roomCamAngle=0.8; roomCamHeight=0.75;
+  }
+}
+function openAvatarCustomizer(){
+  if(!account){ initAccount(); return; }
+  const panel=$('avatarCustomizer');
+  const controls=$('avCustomControls');
+  if(!panel||!controls) return;
+  $('home').style.display='none';
+  $('signup').style.display='none';
+  if(walk!=='room') enterRoom();
+  customizingAvatar=true;
+  panel.style.display='block';
+  controls.innerHTML='';
+  const addControl=(label,type,key,options)=>{
+    const lab=document.createElement('label');
+    lab.appendChild(document.createTextNode(label));
+    let input;
+    if(type==='color'){
+      input=document.createElement('input');
+      input.type='color';
+      input.value=colorHex(avatarCustomization[key]);
+      input.addEventListener('input',()=>{
+        avatarCustomization[key]=parseInt(input.value.slice(1),16);
+        rebuildAvatars();
+      });
+    }else{
+      input=document.createElement('select');
+      (options||[]).forEach(opt=>{
+        const option=document.createElement('option');
+        option.value=opt.v; option.textContent=opt.n;
+        if(avatarCustomization[key]===opt.v) option.selected=true;
+        input.appendChild(option);
+      });
+      input.addEventListener('change',()=>{
+        avatarCustomization[key]=input.value;
+        rebuildAvatars();
+      });
+    }
+    lab.appendChild(input);
+    controls.appendChild(lab);
+  };
+  addControl('FACE SHAPE','select','faceShape',[{v:'normal',n:'Normal'},{v:'round',n:'Round'},{v:'square',n:'Square'}]);
+  addControl('SKIN TONE','color','skinTone');
+  addControl('EYE COLOR','color','eyeColor');
+  addControl('EYEBROWS','select','eyebrowStyle',[{v:'thin',n:'Thin'},{v:'normal',n:'Normal'},{v:'thick',n:'Thick'}]);
+  addControl('NOSE','select','noseSize',[{v:'small',n:'Small'},{v:'normal',n:'Normal'},{v:'large',n:'Large'}]);
+  addControl('MOUTH','select','mouthSize',[{v:'small',n:'Small'},{v:'normal',n:'Normal'},{v:'large',n:'Large'}]);
+  addControl('HAIR STYLE','select','hairStyle',[{v:'short',n:'Short'},{v:'long',n:'Long'},{v:'ponytail',n:'Ponytail'},{v:'bun',n:'Bun'},{v:'bald',n:'Bald'}]);
+  addControl('HAIR COLOR','color','hairColor');
+  addControl('FACIAL HAIR','select','facialHair',[{v:'none',n:'None'},{v:'beard',n:'Beard'},{v:'mustache',n:'Mustache'},{v:'goatee',n:'Goatee'}]);
+  addControl('FACIAL HAIR COLOR','color','facialHairColor');
+  addControl('TOP','select','topStyle',[{v:'shirt',n:'Shirt'},{v:'jacket',n:'Jacket'},{v:'tank',n:'Tank top'}]);
+  addControl('TOP COLOR','color','topColor');
+  addControl('BOTTOM','select','bottomStyle',[{v:'pants',n:'Pants'},{v:'shorts',n:'Shorts'},{v:'skirt',n:'Skirt'}]);
+  addControl('BOTTOM COLOR','color','bottomColor');
+  addControl('SHOES','color','shoesColor');
+  addControl('HEADWEAR','select','headwear',[{v:'none',n:'None'},{v:'goggles',n:'Goggles'},{v:'cap',n:'Cap'},{v:'headband',n:'Headband'}]);
+  addControl('HEADWEAR COLOR','color','headwearColor');
+}
+if($('avSaveBtn')) $('avSaveBtn').addEventListener('click',()=>closeAvatarCustomizer(true));
+if($('avResetBtn')) $('avResetBtn').addEventListener('click',()=>{
+  avatarCustomization=normalizeAvatar(null);
+  rebuildAvatars();
+  openAvatarCustomizer();
+  saveGame();
+});
 loadDB(); loadBest();
 // if we're on a host with no account API (e.g. a static deploy), fall back to local accounts
 if(REMOTE){
@@ -4305,6 +5062,7 @@ loop();
   }
   window.addEventListener('hashchange',route); route();
 })();
+
 </script>
 </body>
 </html>
